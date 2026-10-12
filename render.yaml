@@ -1,0 +1,18 @@
+# One-click deploy on Render (https://render.com/deploy). WebSockets work out of the box.
+services:
+  - type: web
+    name: objecttalk
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 8787
+      - key: DATA_DIR
+        value: /tmp/objecttalk
+      - key: RODIN_API_KEY
+        sync: false
+      - key: ENABLE_LLM
+        value: '0'
+      - key: ANTHROPIC_API_KEY
+        sync: false

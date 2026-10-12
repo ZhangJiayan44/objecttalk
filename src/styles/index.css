@@ -1,0 +1,162 @@
+@import 'tailwindcss';
+
+/*
+ * ObjectTalk claymorphism design system.
+ * Palette and card/button recipe follow the "playful educational platform"
+ * reference: chunky ink outlines, offset shadows, soft pastel fills.
+ */
+@theme {
+  --font-sans: 'Nunito Variable', 'Nunito', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fredoka Variable', 'Fredoka', ui-rounded, system-ui, sans-serif;
+
+  --color-ink: #2d3748;
+  --color-muted: #64748b;
+  --color-line: #e2e8f0;
+  --color-cream: #fff9f5;
+  --color-peach: #fdbcb4;
+  --color-peach-deep: #f5a69d;
+  --color-sky: #add8e6;
+  --color-sky-deep: #8bc4d6;
+  --color-cta: #22c55e;
+  --color-cta-deep: #16a34a;
+  --color-lavender: #e6e6fa;
+  --color-mint: #98ff98;
+  --color-sun: #ffd166;
+  --color-coral: #ff6b6b;
+  --color-grape: #9b7bf2;
+
+  --radius-clay: 24px;
+  --shadow-clay: 6px 6px 0 var(--color-ink), inset 0 -4px 0 rgb(0 0 0 / 0.1);
+  --shadow-clay-sm: 4px 4px 0 var(--color-ink), inset 0 -3px 0 rgb(0 0 0 / 0.08);
+  --shadow-clay-xs: 2px 2px 0 var(--color-ink);
+
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-wiggle: wiggle 0.5s ease-in-out;
+  --animate-pop: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-2deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(2deg);
+    }
+  }
+  @keyframes wiggle {
+    0%,
+    100% {
+      transform: rotate(0);
+    }
+    25% {
+      transform: rotate(-6deg);
+    }
+    75% {
+      transform: rotate(6deg);
+    }
+  }
+  @keyframes pop {
+    from {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+  body {
+    @apply bg-cream font-sans text-ink antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
+  ::selection {
+    background: var(--color-sun);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-grape);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .clay-card {
+    @apply rounded-[var(--radius-clay)] border-[3px] border-ink bg-white;
+    box-shadow: var(--shadow-clay);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+  .clay-card-hover:hover {
+    box-shadow: 4px 4px 0 var(--color-ink), inset 0 -4px 0 rgb(0 0 0 / 0.1);
+    transform: translate(2px, 2px);
+  }
+  .clay-sm {
+    @apply rounded-2xl border-[3px] border-ink;
+    box-shadow: var(--shadow-clay-sm);
+  }
+  .clay-chip {
+    @apply inline-flex items-center gap-2 rounded-full border-[3px] border-ink px-4 py-1.5 text-sm font-bold whitespace-nowrap;
+  }
+  .btn-clay {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-[3px] border-ink px-6 py-3 font-bold text-ink select-none;
+    box-shadow: 4px 4px 0 var(--color-ink);
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s,
+      background-color 0.15s;
+  }
+  .btn-clay:hover:not(:disabled) {
+    box-shadow: 2px 2px 0 var(--color-ink);
+    transform: translate(2px, 2px);
+  }
+  .btn-clay:active:not(:disabled) {
+    box-shadow: 0 0 0 var(--color-ink);
+    transform: translate(4px, 4px);
+  }
+  .btn-clay:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+  .kbd {
+    @apply inline-flex min-w-6 items-center justify-center rounded-md border-2 border-ink bg-white px-1.5 font-display text-xs font-semibold leading-5;
+    box-shadow: 0 2px 0 var(--color-ink);
+  }
+  .input-clay {
+    @apply w-full rounded-2xl border-[3px] border-ink bg-white px-4 py-3 font-semibold text-ink placeholder:text-muted/70 focus:outline-none;
+    box-shadow: inset 0 3px 0 rgb(0 0 0 / 0.06);
+  }
+  .input-clay:focus {
+    box-shadow:
+      inset 0 3px 0 rgb(0 0 0 / 0.06),
+      0 0 0 3px var(--color-sun);
+  }
+  .blob {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  .dot-grid {
+    background-image: radial-gradient(rgb(45 55 72 / 0.12) 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

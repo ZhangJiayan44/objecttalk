@@ -1,0 +1,78 @@
+{
+  "description": "Provenance of the 5 built-in ObjectTalk objects. Generated via the Hyper3D MCP (rodin_create_uploads -> PUT -> rodin_generate -> rodin_wait -> rodin_get_result) from inside Claude Code, then optimized with scripts/optimize-models.ts.",
+  "generatedAt": "2026-10-13",
+  "settings": {
+    "mode": "image-to-3D (plus a short guiding prompt)",
+    "tier": "Gen-2.5-High",
+    "mesh_mode": "Raw",
+    "quality_override": 20000,
+    "geometry_file_format": "glb",
+    "material": "PBR (base_basic_pbr.glb)",
+    "note": "Raw + glb + <=20k faces qualifies for Rodin fast mode; each generation finished in under a minute."
+  },
+  "referencePipeline": [
+    "Source: Microsoft Fluent Emoji 3D (MIT), github.com/microsoft/fluentui-emoji: single object, transparent background, consistent playful style",
+    "Review: every candidate checked by eye (whole object visible, centred, clean alpha); all 16 candidates: assets/rodin/candidates.jpg, final 5 after preparation: assets/rodin/review.jpg",
+    "Prepare: premultiplied-alpha rotate (rocket +45 deg upright, sneaker +28 deg to level the sole), trim, pad to 80%, Lanczos upscale to 1024x1024 PNG"
+  ],
+  "optimization": "dedup + prune + weld, centre (base at y=0), normalize largest side to 1 unit, WebP textures 1024px q82, meshopt geometry",
+  "items": [
+    {
+      "id": "rocket",
+      "file": "public/models/rocket.glb",
+      "generationId": "b0b3ebca-979c-4049-bcbe-0d2a2cade86b",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/b0b3ebca-979c-4049-bcbe-0d2a2cade86b",
+      "reference": "assets/rodin/refs/rocket.png (Fluent Emoji 'Rocket', rotated upright)",
+      "prompt": "A cute cartoon toy rocket standing upright, glossy white body, red nose cone and red fins, round blue window, small orange flame at the bottom, stylized 3D emoji toy style",
+      "rawBytes": 8892392,
+      "optimizedBytes": 367276,
+      "triangles": 20000
+    },
+    {
+      "id": "teddy",
+      "file": "public/models/teddy_bear.glb",
+      "generationId": "d2b71161-a27a-448b-93bc-cbbed50cea45",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/d2b71161-a27a-448b-93bc-cbbed50cea45",
+      "reference": "assets/rodin/refs/teddy_bear.png (Fluent Emoji 'Teddy bear')",
+      "prompt": "A cute sitting teddy bear plush toy, soft orange-brown body, round ears, light tan belly and paw pads, stylized 3D emoji toy style",
+      "rawBytes": 8142488,
+      "optimizedBytes": 242096,
+      "triangles": 20000
+    },
+    {
+      "id": "cupcake",
+      "file": "public/models/cupcake.glb",
+      "generationId": "adcfcb14-d4fb-4cc8-8c32-62c762475518",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/adcfcb14-d4fb-4cc8-8c32-62c762475518",
+      "reference": "assets/rodin/refs/cupcake.png (Fluent Emoji 'Cupcake')",
+      "prompt": "A cute cupcake with swirled pink frosting and colorful sprinkles in a ribbed blue paper cup, stylized 3D emoji toy style",
+      "rawBytes": 8000920,
+      "optimizedBytes": 315632,
+      "triangles": 20000
+    },
+    {
+      "id": "sneaker",
+      "file": "public/models/sneaker.glb",
+      "generationId": "72eac080-bff7-408c-86ec-7dc0ac721f81",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/72eac080-bff7-408c-86ec-7dc0ac721f81",
+      "reference": "assets/rodin/refs/sneaker.png (Fluent Emoji 'Running shoe', sole levelled)",
+      "prompt": "A cute stylized running shoe sneaker, light lavender and white upper with purple side stripes, white laces, thick light purple sole, stylized 3D emoji toy style",
+      "rawBytes": 7847308,
+      "optimizedBytes": 264160,
+      "triangles": 20000
+    },
+    {
+      "id": "controller",
+      "file": "public/models/game_controller.glb",
+      "generationId": "d025ef10-aa6b-47ba-88d2-d3332fd90269",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/d025ef10-aa6b-47ba-88d2-d3332fd90269",
+      "reference": "assets/rodin/refs/game_controller.png (Fluent Emoji 'Video game')",
+      "prompt": "A cute stylized purple game controller gamepad with two thumbsticks, a D-pad and four colorful round buttons, stylized 3D emoji toy style",
+      "rawBytes": 6937516,
+      "optimizedBytes": 251336,
+      "triangles": 20000,
+      "notes": "Generated standing up (front view reference); laid flat in-engine via catalog rotation [-90deg, 0, 0] with automatic re-seating."
+    }
+  ],
+  "totals": { "rawBytes": 39820624, "optimizedBytes": 1440500, "reduction": "96.4%" }
+}
