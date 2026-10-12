@@ -1,13 +1,17 @@
 import confetti from 'canvas-confetti';
-import { BookOpen, Eye, EyeOff, LogOut, Volume2, VolumeX } from 'lucide-react';
+import { BookOpen, Eye, EyeOff, Headphones, LogOut, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import type { ServerInfo } from '@shared/protocol';
 import { useNavigate } from 'react-router';
 import { getKind } from '@shared/catalog';
 import { entityLabel } from '@shared/spatial';
 import type { Role } from '@shared/types';
 import { RoomScene, type Pointer } from '@/components/three/RoomScene';
 import { btn, Kbd, Modal, RoleBadge, Tip } from '@/components/ui';
+import { fetchInfo } from '@/lib/api';
 import { serverNow, useGame, useGameClient } from '@/lib/game-client';
+import { useVoiceLink } from '@/lib/voice';
 import { sfx } from '@/lib/sfx';
 import { ChatDock } from './ChatDock';
 
@@ -185,6 +189,16 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title }:
   const [phrases, setPhrases] = useState(false);
   const [labels, setLabels] = useState(true);
   const [muted, setMuted] = useState(sfx.muted);
+  const [voiceOn, setVoiceOn] = useState(false);
+  const [ice, setIce] = useState<ServerInfo['iceServers']>([]);
+  const partner = st?.players.find((p) => p.role && p.role !== st.yourRole && !p.isAI && p.connected) ?? null;
+  const voice = useVoiceLink(client, voiceOn && !!partner && !embedded, partner?.id ?? null, ice);
+  useEffect(() => {
+    if (!embedded) fetchInfo().then((i) => setIce(i.iceServers)).catch(() => undefined);
+  }, [embedded]);
+  useEffect(() => {
+    if (voice.error) toast.error(voice.error);
+  }, [voice.error]);
 
   const role: Role | null = st?.yourRole ?? null;
   const isBuilder = role === 'builder' && st?.phase === 'playing';
@@ -264,6 +278,13 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title }:
               <BookOpen size={18} strokeWidth={3} />
             </button>
           </Tip>
+          {!embedded && partner && (
+            <Tip label={voiceOn ? `Voice link: ${voice.status}. Click to hang up` : 'Talk to your partner over the internet (both click this)'}>
+              <button className={btn(voice.status === 'live' ? 'primary' : voiceOn ? 'sun' : 'white', 'sm', '!px-2.5')} onClick={() => setVoiceOn((v) => !v)} aria-label="Voice link" aria-pressed={voiceOn}>
+                <Headphones size={18} strokeWidth={3} />
+              </button>
+            </Tip>
+          )}
           <Tip label={<span>Object labels <Kbd>L</Kbd></span>}>
             <button className={btn('white', 'sm', 'hidden !px-2.5 sm:inline-flex')} onClick={() => setLabels((v) => !v)} aria-label="Toggle labels">
               {labels ? <Eye size={18} strokeWidth={3} /> : <EyeOff size={18} strokeWidth={3} />}
