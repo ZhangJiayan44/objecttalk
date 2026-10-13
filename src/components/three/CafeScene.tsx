@@ -19,9 +19,11 @@ import { Avatar, ItemModel } from './models';
  */
 
 const COUNTER_H = 0.92;
+/** Top of the counter slab: the case stands on it (sharing its plane made the base flicker). */
+const COUNTER_TOP = COUNTER_H + 0.04;
 const CASE_X = -0.5;
 const CELL = 0.56;
-const SHELF_Y = [COUNTER_H + 0.62, COUNTER_H + 0.34, COUNTER_H + 0.05];
+const SHELF_Y = [COUNTER_TOP + 0.62, COUNTER_TOP + 0.34, COUNTER_TOP + 0.05];
 const TRAY = { x: 2.3, z: 0.02 };
 
 export const casePos = (c: number, r: number): [number, number, number] => [CASE_X + (c - (CAFE_COLS - 1) / 2) * CELL, SHELF_Y[r] ?? SHELF_Y[0], 0];
@@ -54,7 +56,7 @@ export interface CafeViewProps {
 function GlassCase() {
   const w = CAFE_COLS * CELL + 0.2;
   return (
-    <group position={[CASE_X, COUNTER_H, 0]}>
+    <group position={[CASE_X, COUNTER_TOP, 0]}>
       {/* base + shelves */}
       {[0.02, 0.3, 0.58].map((y, i) => (
         <mesh key={i} position={[0, y, 0]} receiveShadow castShadow={i === 0}>
@@ -62,9 +64,10 @@ function GlassCase() {
           <meshStandardMaterial color={i === 0 ? '#c98f5a' : '#ffffff'} roughness={0.3} transparent={i > 0} opacity={i > 0 ? 0.55 : 1} />
         </mesh>
       ))}
-      {/* glass on the customer side only: the barista reaches in from the open back, like a real café case */}
+      {/* glass on the customer side only: the barista reaches in from the open back, like a real café case.
+          It ends at the posts' inner faces, so no two surfaces share a plane (z-fighting flickers). */}
       <mesh position={[0, 0.46, 0.32]}>
-        <boxGeometry args={[w, 0.9, 0.012]} />
+        <boxGeometry args={[w - 0.03, 0.9, 0.012]} />
         <meshStandardMaterial color="#e8f7ff" roughness={0.05} metalness={0.1} transparent opacity={0.12} depthWrite={false} />
       </mesh>
       {[-1, 1].map((sx) => (
