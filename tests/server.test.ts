@@ -134,3 +134,13 @@ describe('realtime server', () => {
     expect(guideReviews.every((r) => r.verdict === 'clear')).toBe(true);
   }, 70000);
 });
+
+describe('levels API', () => {
+  it('lists the agent-made levels and their Rodin items', async () => {
+    const levels = await (await fetch(`${url}/api/levels`)).json();
+    const ids = levels.levels.map((l: { id: string }) => l.id);
+    expect(ids).toEqual(expect.arrayContaining(['music-room', 'fruit-market']));
+    const items = await (await fetch(`${url}/api/items`)).json();
+    expect(items.kinds.some((k: { id: string }) => k.id === 'fruit-market--apple')).toBe(true);
+  });
+});

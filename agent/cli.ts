@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 /**
- * ObjectTalk Scene Agent: batch-produces new object packs for the game.
+ * ObjectTalk Scene Agent.
  *
+ * Whole levels (v2):
+ *   npm run agent -- level "<theme>" [--engine tabletop|order] [--backend rest|cli|handoff] [--id my-level] [--yes]
+ *   npm run agent -- level-add <level> <item> <generation_id>     (after an MCP hand-off)
+ *   npm run agent -- level-finish <level>                          (optimize + validate + publish)
+ *   npm run agent -- level-validate <content/levels/x.json>
+ *   npm run agent -- setup                                         (.mcp.json + Hyper3D skill marketplace)
+ *
+ * Object packs (v1):
  *   npm run agent -- plan "breakfast table" [--count 4]
  *   npm run agent -- build <pack> [--images ./photos] [--yes] [--dry-run]
  *   npm run agent -- register <file.glb> --id panda-mug --name "panda mug" [--synonyms cup,panda] [--interest food] [--color white] [--ref ref.png] [--generation <uuid>]
  *   npm run agent -- validate [--kinds rocket,teddy] [--runs 300]
- *
- * Pipeline: plan -> source reference -> review gate -> Rodin Gen-2.5 -> optimize -> register -> validate.
- * "register" is the bridge for assets produced through the Hyper3D MCP by a coding agent.
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
@@ -25,6 +30,10 @@ import { config } from '../server/config';
 import { optimizeGlb } from '../server/services/optimize';
 import { generateModel } from '../server/services/rodin';
 import { Store } from '../server/services/store';
+import type { LevelBundle } from '../shared/levels';
+import { chooseBackend, cliLoggedIn } from './hyper3d';
+import { addGeneration, finish, generate, loadState, newRun, sourceAndReview, validateLevel, writeHandoff } from './level';
+import { writeAgentSetup } from './setup';
 import { libraryPlan, type PackPlan, type PlannedItem } from './themes';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -284,9 +293,48 @@ async function register(glbPath: string, flags: Record<string, string | boolean>
   validate([id], Number(flags.runs ?? 200));
 }
 
+/** Theme -> plan -> references -> review -> Rodin -> optimize -> validate -> publish. */
+async function level(theme: string, flags: Record<string, string | boolean>) {
+  const log = (m: string) => console.log(m);
+  const engine = flags.engine === 'order' || flags.engine === 'tabletop' ? flags.engine : undefined;
+  const existing = typeof flags.id === 'string' ? await loadState(flags.id) : null;
+  const state = existing ?? (await newRun(theme, engine, log, typeof flags.id === 'string' ? flags.id : undefined));
+  if (!Object.keys(state.references).length) await sourceAndReview(state, log);
+  const approved = Object.keys(state.references).filter((id) => !state.rejected.includes(id));
+  const backend = chooseBackend(typeof flags.backend === 'string' ? flags.backend : undefined);
+  log(`🔌 3D backend: ${backend}${backend === 'cli' ? ' (Hyper3D CLI, logged in)' : backend === 'rest' ? ' (RODIN_API_KEY)' : cliLoggedIn() ? '' : ' (no RODIN_API_KEY and no `hyper3d auth login`)'}`);
+  if (backend === 'handoff') {
+    const file = await writeHandoff(state);
+    log(`📨 Hand-off written: ${file}. A coding agent with the Hyper3D MCP (.mcp.json) can finish the ${approved.length} generations.`);
+    return;
+  }
+  if (!flags.yes) {
+    log(`⏸️ ${approved.length} references approved. Re-run with --yes --id ${state.plan.id} to spend Rodin credits.`);
+    return;
+  }
+  await generate(state, backend, log);
+  const res = await finish(state, log, Number(flags.runs ?? 200));
+  process.exitCode = res.ok ? 0 : 1;
+}
+
 async function main() {
   const { cmd, flags, positional } = args();
-  if (cmd === 'plan') await plan(positional.join(' ') || 'breakfast', Number(flags.count ?? 4));
+  if (cmd === 'level') await level(positional.join(' ') || 'music', flags);
+  else if (cmd === 'level-add') await addGeneration(positional[0], positional[1], positional[2]);
+  else if (cmd === 'level-finish') {
+    const state = await loadState(positional[0] ?? '');
+    if (!state) throw new Error(`No run "${positional[0]}" in agent/runs.`);
+    const res = await finish(state, (m) => console.log(m), Number(flags.runs ?? 200));
+    process.exitCode = res.ok ? 0 : 1;
+  } else if (cmd === 'level-validate') {
+    const bundle = JSON.parse(await readFile(positional[0], 'utf8')) as LevelBundle;
+    const v = validateLevel(bundle.level, bundle.kinds, Number(flags.runs ?? 200));
+    v.lines.forEach((l) => console.log(`   ${l}`));
+    process.exitCode = v.ok ? 0 : 1;
+  } else if (cmd === 'setup') {
+    const files = await writeAgentSetup();
+    say('🔧', `Wrote ${files.join(', ')}. Claude Code now sees the Hyper3D MCP and the official Rodin skill.`);
+  } else if (cmd === 'plan') await plan(positional.join(' ') || 'breakfast', Number(flags.count ?? 4));
   else if (cmd === 'build') await build(positional[0] ?? '', flags);
   else if (cmd === 'register') await register(positional[0] ?? '', flags);
   else if (cmd === 'validate') {
@@ -297,6 +345,13 @@ async function main() {
     process.exitCode = ok ? 0 : 1;
   } else {
     console.log(`ObjectTalk Scene Agent
+
+  npm run agent -- level "<theme>" [--engine tabletop|order] [--backend rest|cli|handoff] [--yes]
+                                                    plan + generate + validate + publish a whole playable level
+  npm run agent -- level-add <level> <item> <generation_id>   record a model made through the Hyper3D MCP
+  npm run agent -- level-finish <level>             optimize, validate and publish a level run
+  npm run agent -- level-validate <file.json>       simulate a published level
+  npm run agent -- setup                            write .mcp.json + the Hyper3D Rodin skill marketplace
 
   npm run agent -- plan "<theme>" [--count 4]       plan an object pack (Claude if ENABLE_LLM=1, else built-in library)
   npm run agent -- build <pack> [--images dir] [--yes] [--dry-run]

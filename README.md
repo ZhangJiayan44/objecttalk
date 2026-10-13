@@ -6,8 +6,8 @@
 
 **Say it clearly, so your teammate can win.**
 
-A two-player 3D English game. One player sees the goal, the other moves the objects,<br/>
-and you stand on **opposite sides of the table**: your left is their right.
+A two-player 3D game for **speaking** English. One player knows the goal, the other acts in the 3D world:<br/>
+find things on a desk, order in a café, **ask for directions while walking through a town**, hunt for lost keys.
 
 [![CI](https://github.com/wangzh12023/objecttalk/actions/workflows/ci.yml/badge.svg)](https://github.com/wangzh12023/objecttalk/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e.svg)](LICENSE)
@@ -16,28 +16,29 @@ and you stand on **opposite sides of the table**: your left is their right.
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![three.js](https://img.shields.io/badge/three.js-r185-000000?logo=three.js&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8-010101?logo=socket.io&logoColor=white)
-![Hyper3D Rodin](https://img.shields.io/badge/3D-Hyper3D%20Rodin%20Gen--2.5-9b7bf2)
-![Claude](https://img.shields.io/badge/AI-Claude%20(optional)-D97757?logo=anthropic&logoColor=white)
+![Hyper3D Rodin](https://img.shields.io/badge/3D-57%20Rodin%20Gen--2.5%20models-9b7bf2)
+![Claude](https://img.shields.io/badge/AI-Claude%20agent%20(optional)-D97757?logo=anthropic&logoColor=white)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-ff8fb8.svg)](CONTRIBUTING.md)
 
-[Quick start](#-quick-start) · [How it works](#-how-it-works) · [Features](#-features) · [Architecture](docs/ARCHITECTURE.md) · [Rodin ×4](docs/RODIN.md) · [中文文档](README.zh-CN.md)
+[Quick start](#-quick-start) · [Levels](#-levels) · [Controls](#-controls) · [AI partner](#-the-ai-partner-agent) · [Scene Agent](#-scene-agent-whole-levels-from-a-theme) · [Architecture](docs/ARCHITECTURE.md) · [Rodin ×4](docs/RODIN.md) · [中文文档](README.zh-CN.md)
 
-<img src="docs/images/duo.jpg" alt="Split-screen duo demo: the guide sees the gold target, the builder sees the same table from the other side" width="100%" />
+<img src="docs/images/city-walker.jpg" alt="Toy Town: the walker walks the 3D streets in first person and asks the navigator for directions" width="100%" />
 
 </div>
 
 ## 💡 Why
 
 Most speaking practice has no reason to be clear: an AI chat partner understands
-anything. In ObjectTalk, unclear English has a visible cost: **your teammate picks
-the wrong object**.
+anything. In ObjectTalk, unclear English has a visible cost: **your teammate walks
+the wrong way, serves the wrong coffee, picks the wrong rocket.**
 
-- 🧭 **Guide** sees the target but can't touch anything.
-- 🛠️ **Builder** can move things but never sees the target.
-- 🔄 They face each other, so *"on the left"* means two different places.
+- 🧭 One player **knows** (the target, the order card, the map, where the keys are) but can't act.
+- 🛠️ The other **acts** in the 3D world but never sees the secret.
+- 🔄 They see the world differently: across a table *"left"* flips; in a town *"turn left"* depends on where the **walker** is facing.
 
-Ninety seconds, three missions, then a replay where a coach checks **every sentence
-from your partner's side** and shows a clearer way to say it.
+Every round ends with a replay where a coach checks **every sentence from your
+partner's point of view**, shows a clearer way to say it and estimates your
+speaking level (CEFR A1 to C1).
 
 ## 🚀 Quick start
 
@@ -47,9 +48,9 @@ cd objecttalk && npm install
 npm run dev            # open http://localhost:5173
 ```
 
-That's it: no API keys, no database. Create a room, then open a second window
+No API keys, no database. Create a room, pick a level, then open a second window
 (or scan the QR code with a phone on the same Wi-Fi) to join as the other player.
-Playing alone? Choose **"I build, AI guides"**.
+Playing alone? Choose **"I build, AI guides"**. Want to just watch? Open `/demo`.
 
 <details>
 <summary><b>Production / Docker / phones with microphones</b></summary>
@@ -64,67 +65,90 @@ One-click cloud: the repo includes a [`render.yaml`](render.yaml) blueprint (Web
 Set `PUBLIC_URL` so QR codes point at your domain.
 </details>
 
-## 🎮 Ways to play
+## 🗺️ Levels
 
-| Mode | Where | Best for |
-|---|---|---|
-| 👫 **With a friend** | `/play` → *Create a room*, partner scans the QR code | the real thing: talk face to face or remotely |
-| 🤖 **With an AI partner** | `/play` → *I build, AI guides* / *I guide, AI builds* | solo practice; on *Tricky*, Nova describes things from **her** side to test you |
-| 🖥️ **Split-screen demo** | `/demo` (Autoplay on) | presenting both roles on one screen, hands-free |
-| 📺 **Spectator screen** | `/watch/CODE` | the booth's big screen: both views side by side + live transcript |
-| 📼 **Replay & coach** | `/replay/:id` | scrub through the round from either player's view |
-| ✨ **Object Studio** | `/studio` | turn a photo of **your own** object into a 3D game object with Rodin |
+| | Level | The one who knows | The one who acts | English you practise |
+|---|---|---|---|---|
+| 📚 | **Cozy Study** | 🧭 Guide sees the gold target | 🛠️ Builder picks & places on the desk | *next to / between / on YOUR left / closer to you* |
+| ☕ | **Corner Café** | 🙋 Customer holds the order card | 🧑‍🍳 Barista fills the tray from the display case | *Could I have two croissants and a large coffee? · Small or large? · Anything else?* |
+| 🏙️ | **Toy Town** | 🗺️ Navigator has the map | 🚶 Walker **walks the streets** (WASD) | *Excuse me, how do I get to…? · Turn left at the bank · It's on your right* |
+| 🛏️ | **Messy Bedroom** | 🤔 Owner remembers where things are | 🔦 Seeker **walks the room**, opens boxes | *under the bed · on top of the wardrobe · inside the toy box · warmer / colder* |
+| 🎸 | **Music Room** ✨ | 🎼 Band leader | 🧰 Roadie | instrument words + perspective (made by the Scene Agent) |
+| 🍎 | **Fruit Market** ✨ | 🛍️ Shopper with a list | 🧑‍🌾 Stallholder | *three peaches, two tomatoes, a large watermelon* (made by the Scene Agent) |
 
-## 🧩 How it works
+✨ = generated end to end by the [Scene Agent](#-scene-agent-whole-levels-from-a-theme) with Hyper3D Rodin.
+Every level has *Easy / Normal / Tricky*: on Tricky the AI partner makes the classic learner mistakes
+on purpose ("go north", describing things from its own side, forgetting a size) so you practise catching them.
 
-```mermaid
-sequenceDiagram
-  participant G as 🧭 Guide (sees target)
-  participant S as Server (rules + coach)
-  participant B as 🛠️ Builder (moves things)
-  S->>G: mission + secret target
-  S->>B: mission brief only
-  G->>B: "Pick up the mug on the left."
-  B->>G: "My left or your left?"
-  G->>B: "On YOUR right, next to the lamp."
-  B->>S: pick(mug)
-  S-->>G: ✅ success
-  S-->>B: ✅ success
-  Note over S: After 90 s: replay + sentence-by-sentence coaching
+| Cozy Study (first person) | Corner Café (customer) |
+|---|---|
+| <img src="docs/images/study.jpg" alt="Cozy Study" /> | <img src="docs/images/cafe.jpg" alt="Corner Café" /> |
+| **Toy Town: the navigator's map** | **Messy Bedroom + AI partner brain** |
+| <img src="docs/images/city-navigator.jpg" alt="Toy Town map" /> | <img src="docs/images/bedroom-agent.jpg" alt="Bedroom with the agent panel" /> |
+| **Music Room (agent-made)** | **Fruit Market (agent-made)** |
+| <img src="docs/images/music-room.jpg" alt="Music Room" /> | <img src="docs/images/fruit-market.jpg" alt="Fruit Market" /> |
+
+## 🎮 Controls
+
+Click the 3D view once and the mouse is yours, **CS-style**: moving the mouse turns your head,
+the crosshair is your pointer, click to interact, <kbd>Esc</kbd> gives the mouse back to the page.
+
+| Key | | Key | |
+|---|---|---|---|
+| <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows | walk (town, bedroom); <kbd>Shift</kbd> run | <kbd>Space</kbd> (hold) | talk (speech-to-text) |
+| click | pick up · place · add to tray · open | <kbd>Enter</kbd> | type a message instead |
+| <kbd>F</kbd> | serve the tray (café) | <kbd>1</kbd>–<kbd>6</kbd> | quick phrases for your role |
+| <kbd>E</kbd> | show / hide the mission card | <kbd>C</kbd> | captions on / off (**off by default**) |
+| <kbd>Tab</kbd> | phrasebook (with Chinese glosses) | <kbd>T</kbd> | full transcript |
+| <kbd>G</kbd> | the AI partner's reasoning | <kbd>L</kbd> | object labels |
+
+**Voice-first by design.** Reading your partner's text is not speaking practice, so captions are
+off: you *hear* the AI (and your friend's transcribed speech), can replay any line with 👂,
+peek at one line with 👁 or press <kbd>C</kbd> for captions. Phones get drag-to-look and an
+on-screen joystick.
+
+## 🤖 The AI partner (agent)
+
+Play any level with an AI partner (or watch **AI vs AI** at `/demo`). Each partner only knows
+what its role knows and only talks through the chat, like a human.
+
+- **Claude tool-use agent** (opt-in, `ENABLE_LLM=1`): every turn runs a bounded agent loop
+  (`server/agent/harness.ts`): observe the world → call **grounded tools** (`describe_target`,
+  `find_objects`, `route`, `add_to_tray`, `follow`, `go_to`, …) that read and act on the
+  authoritative game state → `say`. A **guardrail** re-reads every line from the listener's side
+  (and checks directions against the walker's heading) and bounces misleading lines back to the
+  model. Hard step limit and deadline, schema-checked tool inputs, full trace in the replay.
+- **Rule brain** (always on, offline): dialogue state per level (ticket and "small or large?" in
+  the café, step execution with corner counting in the town, "the top shelf or the bottom shelf?"
+  in the bedroom), answers the question you actually asked, never repeats itself verbatim, and
+  takes over instantly whenever Claude is off or slow.
+- Open the **AI brain** panel (<kbd>G</kbd>) to see which brain answered, every tool call and result.
+- Simulation tests run AI vs AI on every level and difficulty: all missions complete.
+
+## 🏭 Scene Agent: whole levels from a theme
+
+```bash
+npm run agent -- level "music class"          # or "fruit market", "science lab", anything
 ```
 
-The heart of the project is a **perspective-aware spatial-language engine** (`shared/`):
-the same code generates missions that always have one clear answer, powers both AI
-partners, and grades every sentence afterwards. Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## ✨ Features
-
-| | |
-|---|---|
-| 🎯 **Asymmetric 3D room**: two cameras on opposite sides; the target is sent only to the guide (enforced on the wire) | 🧠 **Spatial-language engine**: perspective frames, referring-expression generation, rule NLU, playability simulator |
-| 🔎📦 **Two mission types**: *Find* (look-alikes) and *Place* ("behind the red book, but whose behind?") | 🤖 **AI partners**: Nova reacts to what you point at; Pixel asks "Which one?" and "My left or yours?" |
-| 🎙️ **Talk naturally**: push-to-talk speech-to-text, AI voices, quick phrases, phrasebook with Chinese glosses, optional WebRTC voice | 📈 **Coach & progress**: clarity score, 4 skills, verdict + fix for every sentence, local progress dashboard |
-| 🧊 **Your interests become the level**: 5 Rodin Gen-2.5 objects (−96 % size), plus your own photos via Object Studio | 🏭 **Scene Agent**: plan → reference → review → Rodin → optimize → register → validate, for whole object packs |
-| 📼 **3D replay**: timeline with events, three camera views, synced subtitles, QR code to take it home | 📱 **Booth-ready**: QR join over LAN, phone layout, spectator screen, fully offline fallback |
-
-## 📸 Screenshots
-
-| Builder view (phone or laptop) | Coach report |
-|---|---|
-| <img src="docs/images/builder.jpg" alt="Builder view" /> | <img src="docs/images/coach.jpg" alt="Coach report" /> |
-| **3D replay** | **Object Studio (Rodin)** |
-| <img src="docs/images/replay.jpg" alt="Replay" /> | <img src="docs/images/studio.jpg" alt="Object Studio" /> |
+`plan` (Claude or the offline library: engine, roles, phrasebook, 8–12 objects) → `source`
+(Fluent Emoji 3D references, rotated upright, 1024²) → `review` (contact sheet; Claude vision
+rejects bad references) → `generate` (**Hyper3D Rodin Gen-2.5** via `RODIN_API_KEY`, the official
+**Hyper3D CLI**, or a hand-off to a coding agent with the **Hyper3D MCP**) → `optimize` (~8 MB →
+~300 KB) → `validate` (200 simulated rounds per difficulty must all be solvable) → `publish`
+(`content/levels/<id>.json`, live in the lobby without a restart). Music Room and Fruit Market
+were made this way: 20 Rodin generations, 157 MB → 5.5 MB, every check PASS.
 
 ## 🧊 Rodin at every level
 
 | Level | In ObjectTalk |
 |---|---|
-| **01 USE** | 5 hero objects generated with Rodin Gen-2.5 image-to-3D, optimized 39.8 MB → 1.44 MB |
-| **02 BUILD** | Produced through the Hyper3D MCP inside Claude Code; reusable as the `new-object-pack` skill |
+| **01 USE** | **57** Rodin Gen-2.5 models: desk objects, café menu, town buildings & landmarks, bedroom belongings, decor |
+| **02 BUILD** | All produced through the **Hyper3D MCP** inside Claude Code; the repo ships `.mcp.json` and enables the official `rodin3d-skill` plugin; workflows packaged as skills (`new-level`, `new-object-pack`) |
 | **03 CORE** | Object Studio calls the Rodin API at runtime: your photo becomes a game object |
-| **04 AGENT** | `npm run agent`: a Scene Agent that plans, generates and **validates** object packs |
+| **04 AGENT** | The **Scene Agent** generates, validates and publishes whole playable levels |
 
-Provenance (generation ids, prompts, references, sizes): [`assets/rodin/manifest.json`](assets/rodin/manifest.json) · write-up: [docs/RODIN.md](docs/RODIN.md)
+Provenance (every generation id, prompt, reference): [`assets/rodin/manifest.json`](assets/rodin/manifest.json) · write-up: [docs/RODIN.md](docs/RODIN.md)
 
 ## ⚙️ Configuration
 
@@ -134,40 +158,39 @@ Everything is optional. Copy [`.env.example`](.env.example) to `.env`:
 |---|---|---|
 | `PORT` | `8787` | Server port (production) |
 | `PUBLIC_URL` | (none) | Base URL used in QR codes when deployed |
-| `RODIN_API_KEY` | (none) | Enables live generation in Object Studio and the Scene Agent |
-| `ENABLE_LLM` + `ANTHROPIC_API_KEY` | off | Claude fallback for the AI builder, coaching rewrites, agent planning |
+| `RODIN_API_KEY` | (none) | Live generation in Object Studio and the Scene Agent |
+| `ENABLE_LLM` + `ANTHROPIC_API_KEY` | off | Claude agent for the AI partner, coaching + CEFR, agent planning & vision review |
+| `ANTHROPIC_MODEL` | `claude-opus-5-5` | Model for all Claude calls |
+| `LLM_BASE_URL` | (none) | Anthropic-compatible gateway (plain Messages API, no betas) |
+| `LLM_PARTNER` | on | Set `0` to keep Claude for coaching only |
 | `ICE_SERVERS` | public STUN | WebRTC voice link (add TURN for strict networks) |
+
+Graphics: `?fx=off|low|high` overrides the automatic post-processing level (remembered per browser).
 
 ## 🧪 Development
 
 ```bash
-npm run check          # typecheck + tests (unit + real Socket.IO games) + build
+npm run check          # typecheck + 62 tests (engines, NLU, agent harness, AI-vs-AI sims, real Socket.IO games) + build
 npm test               # vitest
-npm run agent -- validate   # playability simulation of the catalog
+npm run agent          # Scene Agent help
 ```
 
 ```
-shared/   spatial-language engine (no dependencies): room, spatial, reg, nlu, missions, analysis
-server/   Express + Socket.IO: rooms, AI partners, Rodin + Claude services, Object Studio
-src/      React 19 + React Three Fiber client: pages, 3D scene, HUD, replay
-agent/    Scene Agent CLI (object packs)
-tests/    vitest: engine, NLU, missions/coach, end-to-end games
+shared/   language engines (no dependencies): room/spatial/reg/nlu/missions (study),
+          cafe, city, bedroom, levels, coach, cefr, analysis
+server/   Express + Socket.IO: Room + level engines, AI partners (rule brains + Claude agent harness),
+          Rodin, Object Studio, agent-made level store
+src/      React 19 + React Three Fiber: first-person controls, 4 scenes + env kit, voice-first HUD, replay
+agent/    Scene Agent CLI: whole levels (v2) and object packs (v1), Hyper3D REST / CLI / MCP hand-off
+content/  published agent-made levels
+tests/    vitest: engines, NLU, agent harness, AI-vs-AI simulations, end-to-end games
 ```
-
-## 🗺️ Roadmap
-
-- [ ] Mirror Match mission (rebuild the whole table from words)
-- [ ] More rooms (kitchen, classroom, space station) from the Scene Agent
-- [ ] Teacher dashboard: class codes, common mistakes across students
-- [ ] On-device speech recognition for networks without Google speech
 
 ## 🙏 Acknowledgements
 
-Built in 48 hours for **ShanghaiTech Techathon 2026**. 3D objects by
-[Hyper3D Rodin](https://hyper3d.ai); reference art from
-[Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT);
-UI style inspired by a playful claymorphism template; 2D-over-3D interaction
-inspired by [medkit](https://github.com/bedriyan/medkit-app). Full list:
-[docs/THIRD_PARTY.md](docs/THIRD_PARTY.md).
+Built for **ShanghaiTech Techathon 2026**. 3D models by [Hyper3D Rodin](https://hyper3d.ai);
+reference art from [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT);
+UI style inspired by a playful claymorphism template; 2D-over-3D interaction inspired by
+[medkit](https://github.com/bedriyan/medkit-app). Full list: [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md).
 
 Released under the [MIT License](LICENSE).

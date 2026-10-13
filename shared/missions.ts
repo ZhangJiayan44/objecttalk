@@ -1,4 +1,4 @@
-import { allKinds, getKind, INTERESTS, LANDMARK_DEFS } from './catalog';
+import { getKind, INTERESTS, kindsFor, LANDMARK_DEFS } from './catalog';
 import { cap, describeCell, describeObject, type Candidate, type Voice } from './reg';
 import { createRng, type Rng } from './rng';
 import { LAYOUTS } from './room';
@@ -11,7 +11,7 @@ import {
   type FindMission,
   type InterestId,
   type Mission,
-  type MissionType,
+  type TableMissionType,
   type PlaceDesc,
   type PlaceMission,
   type RefDesc,
@@ -25,12 +25,14 @@ export interface RunConfig {
   difficulty: Difficulty;
   /** Extra item kinds to include first (e.g. a player's own Rodin-generated object). */
   kinds?: string[];
+  /** Item pool for the rest of the table (an agent-made level uses its own kinds). */
+  pool?: string;
 }
 
 export const GUIDE_VOICE: Voice = { speaker: 'guide', listener: 'builder' };
 
 /** Mission order for one 90-second run: find -> place -> (find|place). */
-export function missionPlan(rng: Rng): MissionType[] {
+export function missionPlan(rng: Rng): TableMissionType[] {
   return ['find', 'place', rng.chance(0.5) ? 'find' : 'place'];
 }
 
@@ -50,7 +52,7 @@ export function buildScene(cfg: RunConfig): SceneState {
   const wanted = [...(cfg.kinds ?? []), ...cfg.interests.map((i) => INTERESTS.find((x) => x.id === i)?.kind)];
   const heroes: string[] = [];
   for (const k of wanted) if (k && getKind(k) && !heroes.includes(k)) heroes.push(k);
-  const others = rng.shuffle(allKinds().filter((k) => k.source !== 'procedural' && !heroes.includes(k.id)).map((k) => k.id));
+  const others = rng.shuffle(kindsFor(cfg.pool ?? 'study').filter((k) => k.source !== 'procedural' && !heroes.includes(k.id)).map((k) => k.id));
   while (heroes.length < 3 && others.length) heroes.push(others.shift()!);
   const [a, b, c] = rng.shuffle(heroes.slice(0, 3));
 
@@ -65,6 +67,8 @@ export function buildScene(cfg: RunConfig): SceneState {
   push(b, 'small');
   push(b, 'big');
   push(c, 'regular');
+  // Two more singles from the wider Rodin pool make the table feel lived-in.
+  for (const k of others.slice(0, 2)) push(k, 'regular');
   for (const color of [...mugColors, mugColors[0]]) specs.push({ kind: 'mug', size: 'regular', color });
 
   const empty: SceneState = { layoutId: layout.id, objects: [], landmarks };
@@ -78,7 +82,7 @@ export function buildScene(cfg: RunConfig): SceneState {
   return { layoutId: layout.id, objects, landmarks };
 }
 
-function hintFor(c: Candidate<RefDesc | PlaceDesc>, type: MissionType, dupes: number): string {
+function hintFor(c: Candidate<RefDesc | PlaceDesc>, type: TableMissionType, dupes: number): string {
   const rel = c.desc.rel;
   if (rel?.type === 'leftOf' || rel?.type === 'rightOf' || ('sup' in c.desc && (c.desc.sup?.type === 'leftmost' || c.desc.sup?.type === 'rightmost')))
     return 'Your partner faces you, so their left is YOUR right. Say "your left" or use a landmark.';
@@ -151,7 +155,7 @@ export function generatePlace(scene: SceneState, index: number, difficulty: Diff
   };
 }
 
-export function generateMission(scene: SceneState, index: number, type: MissionType, difficulty: Difficulty, rng: Rng): Mission | null {
+export function generateMission(scene: SceneState, index: number, type: TableMissionType, difficulty: Difficulty, rng: Rng): Mission | null {
   const primary = type === 'find' ? generateFind(scene, index, difficulty, rng) : generatePlace(scene, index, difficulty, rng);
   if (primary) return primary;
   // Fall back to the other type so a run never stalls on an unlucky layout.
@@ -181,7 +185,7 @@ export interface PlayabilityReport {
   successRate: number;
   perspectiveShare: number;
   avgModelAnswerWords: number;
-  byType: Record<MissionType, number>;
+  byType: Record<TableMissionType, number>;
   failedSeeds: number[];
 }
 
@@ -195,7 +199,7 @@ export function simulatePlayability(base: Omit<RunConfig, 'seed'>, runs = 200, s
   let perspective = 0;
   let words = 0;
   let total = 0;
-  const byType: Record<MissionType, number> = { find: 0, place: 0 };
+  const byType: Record<TableMissionType, number> = { find: 0, place: 0 };
   const failedSeeds: number[] = [];
   for (let i = 0; i < runs; i++) {
     const seed = seed0 + i;

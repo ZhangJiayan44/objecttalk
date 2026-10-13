@@ -34,6 +34,18 @@ export const config = {
     enabled: /^(1|true|on)$/i.test(process.env.ENABLE_LLM ?? '') && !!process.env.ANTHROPIC_API_KEY,
     apiKey: process.env.ANTHROPIC_API_KEY ?? '',
     model: process.env.ANTHROPIC_MODEL ?? 'claude-opus-5-5',
+    /**
+     * Optional Anthropic-compatible gateway (e.g. a regional proxy or a provider with an
+     * Anthropic-style endpoint). Read from LLM_BASE_URL on purpose, NOT ANTHROPIC_BASE_URL,
+     * so a developer's shell configuration never redirects the game's traffic by accident.
+     */
+    baseURL: process.env.LLM_BASE_URL || 'https://api.anthropic.com',
+    /** Gateways usually lack Anthropic betas (server-side fallback, effort): send plain requests. */
+    compat: !!process.env.LLM_BASE_URL && !/(^|\.)anthropic\.com/i.test(process.env.LLM_BASE_URL),
+    /** Let Claude drive the AI partner's replies (tool-use agent). Off: Claude only coaches. */
+    partner: !/^(0|false|off)$/i.test(process.env.LLM_PARTNER ?? ''),
+    /** Hard deadline for one partner turn (the rule brain answers if Claude is slower). */
+    partnerTimeoutMs: Number(process.env.LLM_PARTNER_TIMEOUT_MS ?? 9000),
   },
   iceServers: parseIce(process.env.ICE_SERVERS) ?? [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun.qq.com:3478'] }],
   isProd: process.env.NODE_ENV === 'production',

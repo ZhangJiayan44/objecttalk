@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cellToWorld, fromFrame, toFrame } from '../shared/room';
+import { cellToWorld, COLS, fromFrame, toFrame } from '../shared/room';
 import { relationHolds, resolvePlace, resolveRef, sceneEntities } from '../shared/spatial';
 import { describeCell, describeObject } from '../shared/reg';
 import type { SceneState } from '../shared/types';
@@ -31,7 +31,7 @@ const ids = (es: { id: string }[]) => es.map((e) => e.id).sort();
 describe('perspective frames', () => {
   it('mirrors left/right and front/back between the two players', () => {
     expect(toFrame({ c: 0, r: 0 }, 'builder')).toEqual({ x: 0, y: 0 });
-    expect(toFrame({ c: 0, r: 0 }, 'guide')).toEqual({ x: 5, y: 2 });
+    expect(toFrame({ c: 0, r: 0 }, 'guide')).toEqual({ x: COLS - 1, y: 2 });
     for (const cell of [{ c: 2, r: 1 }, { c: 5, r: 0 }]) {
       expect(fromFrame(toFrame(cell, 'guide'), 'guide')).toEqual(cell);
     }
@@ -39,7 +39,7 @@ describe('perspective frames', () => {
 
   it('places the grid symmetrically around the origin', () => {
     const [x0, , z0] = cellToWorld({ c: 0, r: 0 });
-    const [x5, , z2] = cellToWorld({ c: 5, r: 2 });
+    const [x5, , z2] = cellToWorld({ c: COLS - 1, r: 2 });
     expect(x0).toBeCloseTo(-x5);
     expect(z0).toBeCloseTo(-z2);
   });

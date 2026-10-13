@@ -7,10 +7,11 @@ import express from 'express';
 import multer from 'multer';
 import { Server } from 'socket.io';
 import { INTERESTS } from '../shared/catalog';
-import type { ClientToServer, ServerInfo, ServerToClient } from '../shared/protocol';
+import type { ClientToServer, LevelsResponse, ServerInfo, ServerToClient } from '../shared/protocol';
 import type { Cell, ColorName, InterestId, Role } from '../shared/types';
 import { config } from './config';
 import { RoomManager } from './game/manager';
+import { LevelStore } from './services/levels';
 import { coachWithClaude, llmEnabled } from './services/llm';
 import { Store } from './services/store';
 import { Studio } from './services/studio';
@@ -46,6 +47,8 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
   await store.init();
   const studio = new Studio(store);
   await studio.init();
+  const levels = new LevelStore(store.dataDir);
+  await levels.init();
 
   const app = express();
   app.disable('x-powered-by');
@@ -76,14 +79,20 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
       version: VERSION,
       lanUrls: lanAddresses().map((ip) => `http://${ip}:${port}`),
       publicUrl: config.publicUrl,
-      features: { rodin: studio.enabled, llm: llmEnabled() },
+      features: { rodin: studio.enabled, llm: llmEnabled(), llmModel: llmEnabled() ? config.llm.model : undefined },
       iceServers: config.iceServers,
     };
     res.json(info);
   });
 
-  app.get('/api/items', (_req, res) => {
+  app.get('/api/items', async (_req, res) => {
+    await levels.refresh();
     res.json({ kinds: studio.kinds() });
+  });
+
+  app.get('/api/levels', async (_req, res) => {
+    const body: LevelsResponse = { levels: await levels.refresh() };
+    res.json(body);
   });
 
   app.get('/api/replays/:id', async (req, res) => {
@@ -162,7 +171,10 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
         prev.disconnect(socket.id);
         socket.leave(prev.code);
       }
-      const player = r.addPlayer({ name: str(p?.name, 24), playerId: str(p?.playerId, 20) || undefined, role: isRole(p?.role) ? p.role : null, spectate: !!p?.spectate }, socket);
+      const player = r.addPlayer(
+        { name: str(p?.name, 24), playerId: str(p?.playerId, 20) || undefined, role: isRole(p?.role) ? p.role : null, spectate: !!p?.spectate, viewAs: isRole(p?.viewAs) ? p.viewAs : null },
+        socket,
+      );
       ack({ ok: true, code: r.code, playerId: player.id });
     });
 
@@ -190,6 +202,18 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
     socket.on('act:pick', (p) => typeof p?.objectId === 'string' && room()?.pick(pid(), p.objectId));
     socket.on('act:place', (p) => isCell(p?.cell) && room()?.place(pid(), p.cell));
     socket.on('act:drop', () => room()?.drop(pid()));
+    socket.on('act:tray', (p) => typeof p?.objectId === 'string' && room()?.tray(pid(), p.objectId, !!p.add));
+    socket.on('act:serve', () => room()?.serve(pid()));
+    socket.on('act:open', (p) => typeof p?.id === 'string' && room()?.open(pid(), p.id, !!p.open));
+    let moveBudget = { count: 0, since: Date.now() };
+    socket.on('act:move', (p) => {
+      const now = Date.now();
+      if (now - moveBudget.since > 1000) moveBudget = { count: 0, since: now };
+      if (++moveBudget.count > 30) return;
+      const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);
+      const pose = { x: n(p?.x), z: n(p?.z), yaw: n(p?.yaw) };
+      if (Number.isFinite(pose.x + pose.z + pose.yaw)) room()?.move(pid(), pose);
+    });
     socket.on('chat:send', (p) => {
       const now = Date.now();
       if (now - chatBudget.since > 3000) chatBudget = { count: 0, since: now };

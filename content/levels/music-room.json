@@ -1,0 +1,338 @@
+{
+  "level": {
+    "id": "music-room",
+    "title": "Music Room",
+    "tagline": "Find & place instruments",
+    "emoji": "🎸",
+    "engine": "tabletop",
+    "skills": [
+      "instrument names",
+      "your left / my left",
+      "next to / between"
+    ],
+    "roles": {
+      "guide": {
+        "name": "Band leader",
+        "icon": "🎼",
+        "sees": "the gold target",
+        "does": "explains which instrument and where it goes"
+      },
+      "builder": {
+        "name": "Roadie",
+        "icon": "🧰",
+        "sees": "no target",
+        "does": "picks up and places the instruments"
+      }
+    },
+    "controls": "stand",
+    "guideView": "stand",
+    "durationSec": 90,
+    "missions": 3,
+    "color": "bg-mint",
+    "quick": {
+      "builder": [
+        "Which one?",
+        "My left or your left?",
+        "Is it this one?",
+        "The big one or the small one?",
+        "Got it!"
+      ],
+      "guide": [
+        "Yes, that one!",
+        "No, the other one.",
+        "Closer to you.",
+        "Farther from you.",
+        "On YOUR left.",
+        "On YOUR right."
+      ]
+    },
+    "phrases": [
+      {
+        "title": "🎸 Instruments",
+        "items": [
+          [
+            "the guitar next to the drum",
+            "鼓旁边的吉他"
+          ],
+          [
+            "the small trumpet",
+            "小号（小的那个）"
+          ],
+          [
+            "between the violin and the lamp",
+            "在小提琴和台灯之间"
+          ]
+        ]
+      },
+      {
+        "title": "🔄 Your partner’s view",
+        "items": [
+          [
+            "on your left / on your right",
+            "在你的左边 / 右边"
+          ],
+          [
+            "closer to you / farther from you",
+            "离你近 / 远"
+          ]
+        ]
+      },
+      {
+        "title": "❓ Clarify",
+        "items": [
+          [
+            "Which one do you mean?",
+            "你说的是哪一个？"
+          ],
+          [
+            "My left or your left?",
+            "我的左边还是你的左边？"
+          ],
+          [
+            "Can you say that again, please?",
+            "能再说一遍吗？"
+          ]
+        ]
+      }
+    ],
+    "generated": {
+      "theme": "music class",
+      "createdAt": 1791870502093,
+      "kinds": [
+        "music-room--guitar",
+        "music-room--trumpet",
+        "music-room--drum",
+        "music-room--violin",
+        "music-room--saxophone",
+        "music-room--maracas",
+        "music-room--microphone",
+        "music-room--accordion"
+      ],
+      "palette": {
+        "wall": "#e6e6fa",
+        "wallLow": "#9b7bf2",
+        "floor": "#d9a46c",
+        "accent": "#ffd166"
+      },
+      "sign": "Band practice!",
+      "agent": {
+        "planner": "offline level library",
+        "backend": "Hyper3D Rodin Gen-2.5-High via mcp",
+        "review": "human gate (no Claude): references come from a curated MIT 3D emoji set",
+        "generations": 8,
+        "validation": "200 simulated rounds per difficulty: all PASS"
+      }
+    }
+  },
+  "kinds": [
+    {
+      "id": "music-room--guitar",
+      "name": "guitar",
+      "plural": "guitars",
+      "synonyms": [
+        "guitar",
+        "electric guitar",
+        "guitars"
+      ],
+      "interest": "games",
+      "emoji": "🎸",
+      "model": "/models/levels/music-room/guitar.glb",
+      "ref": "/models/levels/music-room/guitar.png",
+      "baseColor": "red",
+      "footprint": 0.42,
+      "levels": [
+        "music-room"
+      ],
+      "source": "rodin",
+      "rodin": {
+        "generationId": "36195613-f87a-4f16-96e2-f7521b5fc3f1",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute red electric guitar, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Guitar\" (MIT)"
+      }
+    },
+    {
+      "id": "music-room--trumpet",
+      "name": "trumpet",
+      "plural": "trumpets",
+      "synonyms": [
+        "trumpet",
+        "horn",
+        "trumpets"
+      ],
+      "interest": "games",
+      "emoji": "🎺",
+      "model": "/models/levels/music-room/trumpet.glb",
+      "ref": "/models/levels/music-room/trumpet.png",
+      "baseColor": "yellow",
+      "footprint": 0.36,
+      "levels": [
+        "music-room"
+      ],
+      "source": "rodin",
+      "rodin": {
+        "generationId": "35710d40-e09f-4f3f-8d3b-a1d0e1eb0b06",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute golden trumpet lying on its side, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Trumpet\" (MIT)"
+      }
+    },
+    {
+      "id": "music-room--drum",
+      "name": "drum",
+      "plural": "drums",
+      "synonyms": [
+        "drum",
+        "snare drum",
+        "drums"
+      ],
+      "interest": "games",
+      "emoji": "🥁",
+      "model": "/models/levels/music-room/drum.glb",
+      "ref": "/models/levels/music-room/drum.png",
+      "baseColor": "red",
+      "footprint": 0.32,
+      "levels": [
+        "music-room"
+      ],
+      "source": "rodin",
+      "rodin": {
+        "generationId": "fc37f58a-ba2d-4b40-8077-d3854c267880",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute red toy drum with two drumsticks, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Drum\" (MIT)"
+      }
+    },
+    {
+      "id": "music-room--violin",
+      "name": "violin",
+      "plural": "violins",
+      "synonyms": [
+        "violin",
+        "fiddle",
+        "violins"
+      ],
+      "interest": "games",
+      "emoji": "🎻",
+      "model": "/models/levels/music-room/violin.glb",
+      "ref": "/models/levels/music-room/violin.png",
+      "baseColor": "brown",
+      "footprint": 0.4,
+      "levels": [
+        "music-room"
+      ],
+      "source": "rodin",
+      "rodin": {
+        "generationId": "2c03c2a0-821e-4376-a86c-a1f5b2b59248",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute brown violin with a bow, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Violin\" (MIT)"
+      }
+    },
+    {
+      "id": "music-room--saxophone",
+      "name": "saxophone",
+      "plural": "saxophones",
+      "synonyms": [
+        "saxophone",
+        "sax",
+        "saxophones"
+      ],
+      "interest": "games",
+      "emoji": "🎷",
+      "model": "/models/levels/music-room/saxophone.glb",
+      "ref": "/models/levels/music-room/saxophone.png",
+      "baseColor": "yellow",
+      "footprint": 0.38,
+      "levels": [
+        "music-room"
+      ],
+      "source": "rodin",
+      "rodin": {
+        "generationId": "4d9ad683-4189-4faa-88c6-5d842c68b11f",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute golden saxophone, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Saxophone\" (MIT)"
+      }
+    },
+    {
+      "id": "music-room--maracas",
+      "name": "pair of maracas",
+      "plural": "pairs of maracas",
+      "synonyms": [
+        "pair of maracas",
+        "maracas",
+        "maraca",
+        "shakers",
+        "pairs of maracas"
+      ],
+      "interest": "games",
+      "emoji": "🪇",
+      "model": "/models/levels/music-room/maracas.glb",
+      "ref": "/models/levels/music-room/maracas.png",
+      "baseColor": "orange",
+      "footprint": 0.3,
+      "levels": [
+        "music-room"
+      ],
+      "source": "rodin",
+      "rodin": {
+        "generationId": "e4af1aaa-70a9-416a-8dcd-b99448433096",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute pair of colorful maracas, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Maracas\" (MIT)"
+      }
+    },
+    {
+      "id": "music-room--microphone",
+      "name": "microphone",
+      "plural": "microphones",
+      "synonyms": [
+        "microphone",
+        "mic",
+        "microphones"
+      ],
+      "interest": "games",
+      "emoji": "🎤",
+      "model": "/models/levels/music-room/microphone.glb",
+      "ref": "/models/levels/music-room/microphone.png",
+      "baseColor": "purple",
+      "footprint": 0.3,
+      "levels": [
+        "music-room"
+      ],
+      "source": "rodin",
+      "rodin": {
+        "generationId": "46454ff4-baec-4aca-84fd-d51d6d173b56",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute handheld microphone standing on its handle, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Microphone\" (MIT)"
+      }
+    },
+    {
+      "id": "music-room--accordion",
+      "name": "accordion",
+      "plural": "accordions",
+      "synonyms": [
+        "accordion",
+        "accordions"
+      ],
+      "interest": "games",
+      "emoji": "🪗",
+      "model": "/models/levels/music-room/accordion.glb",
+      "ref": "/models/levels/music-room/accordion.png",
+      "baseColor": "red",
+      "footprint": 0.34,
+      "levels": [
+        "music-room"
+      ],
+      "source": "rodin",
+      "rodin": {
+        "generationId": "f732a3da-493b-4fd7-b4df-c0dc9507f632",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute red accordion, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Accordion\" (MIT)"
+      }
+    }
+  ]
+}

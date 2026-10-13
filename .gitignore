@@ -9,9 +9,10 @@ dist/
 data/
 !data/.gitkeep
 
-# agent working files (plans and runs are reproducible)
+# agent working files (plans and runs are reproducible; published levels live in content/levels)
 agent/packs/
-agent/runs/
+agent/runs/*
+!agent/runs/.gitkeep
 
 # env & secrets
 .env

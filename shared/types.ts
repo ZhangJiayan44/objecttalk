@@ -62,6 +62,10 @@ export interface ItemKind {
   rotation?: [number, number, number];
   /** Largest dimension of a regular-size instance, in metres. */
   footprint: number;
+  /** Levels this kind appears in (defaults to the study table). Agent-made levels use their own id. */
+  levels?: string[];
+  /** Can be served/placed as small and large variants (cups, drinks). */
+  sized?: boolean;
   source: 'rodin' | 'procedural';
   rodin?: {
     generationId: string;
@@ -153,12 +157,15 @@ export interface PlaceDesc {
 // Missions
 // ---------------------------------------------------------------------------
 
-export type MissionType = 'find' | 'place';
+/** Tabletop missions (study + agent-made tabletop levels). */
+export type TableMissionType = 'find' | 'place';
+/** Every mission kind across all levels: order (cafe), route (city), seek (bedroom). */
+export type MissionType = TableMissionType | 'order' | 'route' | 'seek';
 
 export interface MissionBase {
   id: string;
   index: number;
-  type: MissionType;
+  type: TableMissionType;
   /** Model answer the AI guide uses and the coach suggests, from the builder's view. */
   modelAnswer: string;
   /** Why this mission is interesting (shown to the guide as a hint). */

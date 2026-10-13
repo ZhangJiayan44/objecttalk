@@ -8,14 +8,20 @@ Guidance for AI coding agents working on ObjectTalk.
 - `npm run agent -- validate`: playability simulation of the item catalog
 
 ## Architecture in one breath
-`shared/` is the brain (spatial frames, referring-expression generation, rule NLU,
-mission generator + validator, coach analysis) and is imported by both `server/`
-(authoritative Socket.IO rooms, AI partner bots, Rodin + optional Claude services)
-and `src/` (React + R3F client). The builder's client never receives the target;
-keep that invariant in `Room.missionFor`.
+`shared/` is the brain: one language engine per level (study: spatial/reg/nlu/missions;
+`cafe.ts`, `city.ts`, `bedroom.ts`) plus the coach (`analysis.ts`, `coach.ts`, `cefr.ts`).
+`server/` runs authoritative Socket.IO rooms; level rules live in `server/game/engines/*`
+behind `LevelEngine`, AI partners in `server/game/bots/*` (rule brains) and
+`server/agent/*` (opt-in Claude tool-use harness with a `vetSay` guardrail). `src/` is the
+React + R3F client (first-person controls, one scene per level, voice-first HUD).
+`agent/` is the Scene Agent (whole levels → `content/levels`).
+Information asymmetry is enforced per viewer in each engine's `missionFor` / `world`:
+the acting player never receives the secret.
 
 ## Rules of thumb
 - New spatial wording? Add it to `shared/nlu.ts` **and** a case to `tests/nlu.test.ts`.
 - New missions must stay solvable: run `npm test` (the simulator asserts >97% success).
+- New level from a theme: use the `new-level` skill (`npm run agent -- level "<theme>"`).
 - 3D assets: use the `new-object-pack` skill; never commit raw 8 MB Rodin exports.
+- AI partner changes: keep the rule brain working offline, and run `tests/sim.test.ts` (AI vs AI on every level).
 - Claude is optional and opt-in (`ENABLE_LLM=1`); everything must still work offline.

@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "rodin3d-skills": {
+      "source": {
+        "source": "github",
+        "repo": "DeemosTech/rodin3d-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "rodin3d-skill@rodin3d-skills": true
+  }
+}

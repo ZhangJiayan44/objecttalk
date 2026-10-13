@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { __test } from '../server/game/bots';
+import { __test } from '../server/game/bots/tabletop';
 import { analyzeSession } from '../shared/analysis';
 import type { RefDesc, SceneState } from '../shared/types';
 

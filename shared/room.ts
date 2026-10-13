@@ -4,7 +4,7 @@ import type { Cell, LandmarkKind, Role } from './types';
  * Room geometry. The table is a COLS x ROWS grid centred at the origin.
  *
  *            GUIDE  (stands at -z, looks toward +z)
- *        c=0   c=1   c=2   c=3   c=4   c=5      r=0  (north, guide side)
+ *        c=0   c=1   c=2   c=3   c=4   c=5   c=6      r=0  (north, guide side)
  *        ...                                    r=1
  *        ...                                    r=2  (south, builder side)
  *            BUILDER (stands at +z, looks toward -z)
@@ -13,7 +13,7 @@ import type { Cell, LandmarkKind, Role } from './types';
  * and the guide's "in front of" is the builder's "behind". That mismatch is the
  * whole game.
  */
-export const COLS = 6;
+export const COLS = 7;
 export const ROWS = 3;
 export const CELL_W = 0.5;
 export const CELL_D = 0.5;
@@ -64,7 +64,7 @@ export const LAYOUTS: { id: string; landmarks: { kind: LandmarkKind; cell: Cell 
     id: 'cozy-a',
     landmarks: [
       { kind: 'lamp', cell: { c: 1, r: 0 } },
-      { kind: 'plant', cell: { c: 4, r: 2 } },
+      { kind: 'plant', cell: { c: 5, r: 2 } },
       { kind: 'redBook', cell: { c: 3, r: 1 } },
       { kind: 'blueBook', cell: { c: 0, r: 2 } },
     ],
@@ -72,17 +72,17 @@ export const LAYOUTS: { id: string; landmarks: { kind: LandmarkKind; cell: Cell 
   {
     id: 'cozy-b',
     landmarks: [
-      { kind: 'lamp', cell: { c: 4, r: 1 } },
+      { kind: 'lamp', cell: { c: 5, r: 1 } },
       { kind: 'plant', cell: { c: 0, r: 0 } },
       { kind: 'redBook', cell: { c: 2, r: 2 } },
-      { kind: 'blueBook', cell: { c: 5, r: 0 } },
+      { kind: 'blueBook', cell: { c: 6, r: 0 } },
     ],
   },
   {
     id: 'cozy-c',
     landmarks: [
-      { kind: 'lamp', cell: { c: 2, r: 1 } },
-      { kind: 'plant', cell: { c: 5, r: 1 } },
+      { kind: 'lamp', cell: { c: 3, r: 1 } },
+      { kind: 'plant', cell: { c: 6, r: 1 } },
       { kind: 'redBook', cell: { c: 0, r: 0 } },
       { kind: 'blueBook', cell: { c: 4, r: 2 } },
     ],

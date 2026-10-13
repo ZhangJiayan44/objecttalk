@@ -6,7 +6,7 @@ import { Lobby } from '@/components/game/Lobby';
 import { Results } from '@/components/game/Results';
 import { preloadModels } from '@/components/three/models';
 import { btn, Navbar } from '@/components/ui';
-import { loadItems } from '@/lib/api';
+import { loadItems, loadLevels } from '@/lib/api';
 import { GameContext, useGame, useGameClient } from '@/lib/game-client';
 import { getName } from '@/lib/profile';
 import { getPrimaryClient } from '@/lib/primary';
@@ -18,11 +18,13 @@ function RoomInner({ code, role, spectate }: { code: string; role: Role | null; 
   const [error, setError] = useState<string | null>(null);
   const [itemsReady, setItemsReady] = useState(false);
 
+  const levelId = st?.settings.level;
   useEffect(() => {
-    preloadModels();
-    loadItems()
-      .catch(() => undefined)
-      .finally(() => setItemsReady(true));
+    if (levelId) preloadModels(levelId);
+  }, [levelId]);
+
+  useEffect(() => {
+    Promise.all([loadItems().catch(() => undefined), loadLevels().catch(() => undefined)]).finally(() => setItemsReady(true));
   }, []);
 
   useEffect(() => {

@@ -10,40 +10,58 @@ const Showcase = lazy(() => import('@/components/three/Showcase').then((m) => ({
 
 const MISSIONS = [
   {
-    icon: '🔎',
+    icon: '📚',
+    color: 'var(--color-peach)',
+    title: 'Cozy Study',
+    by: 'Find & place on the desk',
+    desc: 'Two rockets look the same. Only the guide knows which one, and you face each other: “on YOUR left, next to the lamp”.',
+    meta: ['2 players', '90 s', 'A2–B1'],
+    live: true,
+  },
+  {
+    icon: '☕',
     color: 'var(--color-sun)',
-    title: 'Find It',
-    by: 'Core mission',
-    desc: 'Two rockets look the same. Only the guide knows which one. Describe it so your partner picks the right one.',
-    meta: ['2 players', '30 s', 'A2–B1'],
+    title: 'Corner Café',
+    by: 'Order food & drinks',
+    desc: '“Could I have two croissants and a large coffee?” The barista asks “small or large?” and fills the tray. Numbers, plurals, sizes, politeness.',
+    meta: ['2 players', '120 s', 'A2–B1'],
     live: true,
   },
   {
-    icon: '📦',
-    color: 'var(--color-lavender)',
-    title: 'Place It',
-    by: 'Core mission',
-    desc: '“Behind the red book”, but behind from whose side? Guide your partner to the exact spot.',
-    meta: ['2 players', '30 s', 'B1'],
-    live: true,
-  },
-  {
-    icon: '🪞',
+    icon: '🏙️',
     color: 'var(--color-sky)',
-    title: 'Mirror Match',
-    by: 'Next up',
-    desc: 'Rebuild your partner’s whole table from words only. Perfect for advanced perspective-taking.',
-    meta: ['2 players', '60 s', 'B2'],
-    live: false,
+    title: 'Toy Town',
+    by: 'Ask for & give directions',
+    desc: 'The walker WALKS a 3D town (WASD). The navigator has the map and must say “turn left at the bank” from the WALKER’s heading, never “go north”.',
+    meta: ['2 players', '150 s', 'A2–B2'],
+    live: true,
   },
   {
-    icon: '🏠',
+    icon: '🛏️',
+    color: 'var(--color-lavender)',
+    title: 'Messy Bedroom',
+    by: 'Find lost things',
+    desc: '“My keys are under the bed… no, on top of the wardrobe!” Walk around, look under, inside and behind, warmer or colder.',
+    meta: ['2 players', '120 s', 'A2–B1'],
+    live: true,
+  },
+  {
+    icon: '✨',
     color: 'var(--color-mint)',
-    title: 'New Rooms',
-    by: 'Scene Agent',
-    desc: 'Kitchen, classroom, space station: new rooms and object packs generated in batches by our 3D agent.',
+    title: 'Agent-made levels',
+    by: 'Scene Agent + Hyper3D Rodin',
+    desc: 'Give the agent a theme: it plans a level, sources references, generates every object with Rodin, simulates hundreds of rounds and publishes it. Music Room and Fruit Market were made this way.',
     meta: ['2 players', 'any', 'all levels'],
-    live: false,
+    live: true,
+  },
+  {
+    icon: '🎬',
+    color: 'var(--color-grape)',
+    title: 'AI vs AI',
+    by: 'Watch & learn',
+    desc: 'Two AI partners play any level live while you watch both points of view and the agents’ reasoning: hear how the conversation should go before you try.',
+    meta: ['0 players', 'any', 'all levels'],
+    live: true,
   },
 ];
 
@@ -134,7 +152,7 @@ export default function Landing() {
         <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
           <div className="text-center lg:text-left">
             <div className="clay-chip mb-6 bg-mint">
-              <span className="h-2 w-2 rounded-full bg-cta" /> New: your own objects, turned into 3D by Rodin
+              <span className="h-2 w-2 rounded-full bg-cta" /> New: café, town & bedroom levels · walk around in 3D
             </div>
             <h1 className="mb-6 text-4xl leading-tight font-bold sm:text-5xl lg:text-6xl">
               Say it <span className="text-cta">clearly</span>,
@@ -142,7 +160,7 @@ export default function Landing() {
               win it <span className="text-grape">together</span>!
             </h1>
             <p className="mx-auto mb-8 max-w-lg text-lg text-muted lg:mx-0">
-              ObjectTalk is a two-player 3D game for English learners. One of you sees the goal, the other moves the objects, and you stand on <b className="text-ink">opposite sides of the table</b>. Explain, listen, clarify, win.
+              ObjectTalk is a two-player 3D game for speaking English. One of you knows the goal, the other acts in the 3D world: find things on a desk, order in a café, <b className="text-ink">ask for directions in a town</b>, hunt for lost keys. Explain, listen, clarify, win.
             </p>
             <div className="mb-10 flex flex-col justify-center gap-4 sm:flex-row lg:justify-start">
               <Link to="/play" className={btn('primary', 'lg')}>
@@ -154,9 +172,9 @@ export default function Landing() {
             </div>
             <div className="flex justify-center gap-8 lg:justify-start">
               {[
-                ['90s', 'per challenge'],
+                ['6', 'everyday levels'],
                 ['2', 'views, 1 goal'],
-                ['5', 'Rodin 3D objects'],
+                ['57', 'Rodin 3D models'],
               ].map(([n, l]) => (
                 <div key={l} className="text-center">
                   <div className="font-display text-3xl font-bold">{n}</div>
@@ -215,11 +233,11 @@ export default function Landing() {
       <section id="missions" className="scroll-mt-28 bg-cream px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <span className="clay-chip mb-4 bg-peach">Mission catalog</span>
-            <h2 className="mb-3 text-3xl font-bold sm:text-4xl">Pick a mission, beat the clock</h2>
-            <p className="mx-auto max-w-2xl text-lg text-muted">Every mission is generated live and checked by our spatial-language engine, so there is always one clear answer.</p>
+            <span className="clay-chip mb-4 bg-peach">Levels</span>
+            <h2 className="mb-3 text-3xl font-bold sm:text-4xl">Everyday English, in places you can walk into</h2>
+            <p className="mx-auto max-w-2xl text-lg text-muted">Every mission is generated live and checked by our language engines, so there is always one clear answer, and the coach can tell you exactly what was unclear.</p>
           </div>
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {MISSIONS.map((m) => (
               <div key={m.title} className="clay-card clay-card-hover cursor-default p-6">
                 <div className="flex items-start gap-4">
