@@ -1,5 +1,5 @@
 import { QRCodeSVG } from 'qrcode.react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { SessionReport, SkillScores, Verdict } from '@shared/analysis';
 import { levelOf } from '@shared/levels';
@@ -8,6 +8,8 @@ import { Bar, btn } from '@/components/ui';
 import { fetchInfo, shareUrl } from '@/lib/api';
 import { useGame, useGameClient } from '@/lib/game-client';
 import { addSession } from '@/lib/profile';
+import { speak } from '@/lib/speech';
+import { addWord } from '@/lib/words';
 
 export const VERDICT_STYLE: Record<Verdict, { label: string; cls: string }> = {
   clear: { label: 'Clear', cls: 'bg-mint' },
@@ -47,6 +49,38 @@ export function SkillBars({ skills, names }: { skills: SessionReport['skills']; 
           <Bar value={v} color={color} />
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Phrases borrowed with the Chinese lifeline: learn them now, they are in your word book. */
+export function BorrowedWords({ report, role }: { report: SessionReport; role?: string | null }) {
+  const list = (report.lifelines ?? []).filter((l) => !role || !l.role || l.role === role);
+  if (!list.length) return null;
+  return (
+    <div className="clay-card bg-mint/40 p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="font-display text-xl font-semibold">🛟 Words you borrowed</h3>
+        <span className="text-xs font-bold text-muted">
+          {list.length} lifeline{list.length > 1 ? 's' : ''}
+          {report.lifelinePenalty ? ` · −${report.lifelinePenalty} points` : ' · free'} · saved to your word book
+        </span>
+      </div>
+      <p className="mt-1 text-sm text-muted">Say each one out loud twice. Next round, try it without the lifeline!</p>
+      <ul className="mt-3 space-y-2">
+        {list.map((l) => (
+          <li key={`${l.t}-${l.zh}`} className="flex items-center gap-3 rounded-2xl border-2 border-ink bg-white px-3 py-2">
+            <button className="shrink-0 rounded-lg border-2 border-ink bg-sun p-1 text-sm" aria-label="Hear it" onClick={() => speak(l.en, { rate: 0.85 })}>
+              🔊
+            </button>
+            <div className="min-w-0">
+              <div className="font-bold leading-snug">{l.en}</div>
+              <div className="text-sm text-muted">{l.zh}</div>
+            </div>
+            <span className={`ml-auto shrink-0 rounded-full border-2 border-ink px-2 text-[11px] font-bold ${l.used ? 'bg-mint' : 'bg-peach'}`}>{l.used ? 'you said it ✓' : 'not said yet'}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -143,6 +177,7 @@ export function Results() {
   }, []);
   const res = st.results;
   const role = st.yourRole;
+  const savedWords = useRef('');
   useEffect(() => {
     if (!res || !role) return;
     addSession({
@@ -156,8 +191,16 @@ export function Results() {
       missionsTotal: res.report.missionsTotal,
       mistakes: res.report.mistakes,
       skills: res.report.skills,
+      level: st.settings.level,
+      cefr: res.coaching?.cefr ?? res.report.cefr?.level,
+      lifelines: (res.report.lifelines ?? []).filter((l) => l.role === role).length,
     });
-  }, [res, role, st.settings.mode]);
+    // Once per game (the results object is re-sent when the LLM coaching arrives).
+    if (savedWords.current === res.replayId) return;
+    savedWords.current = res.replayId;
+    const where = levelOf(st.settings.level).title;
+    for (const l of res.report.lifelines ?? []) if (l.role === role) addWord({ en: l.en, zh: l.zh, source: 'lifeline', where });
+  }, [res, role, st.settings.mode, st.settings.level]);
 
   if (!res) {
     return (
@@ -179,6 +222,7 @@ export function Results() {
             <div>
               <div className="text-sm font-bold text-muted">Clarity score</div>
               <div className="font-display text-7xl font-bold">{r.clarity}</div>
+              {r.lifelinePenalty ? <div className="text-xs font-bold text-muted">incl. −{r.lifelinePenalty} for 中文求助</div> : null}
             </div>
             <Stars n={r.stars} />
           </div>
@@ -220,6 +264,7 @@ export function Results() {
 
         <section className="flex flex-col gap-6">
         <CefrCard report={r} coaching={res.coaching} />
+        <BorrowedWords report={r} role={role} />
         <div className="clay-card p-6">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
             <div>

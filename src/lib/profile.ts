@@ -17,6 +17,10 @@ export interface SessionSummary {
   missionsTotal: number;
   mistakes: number;
   skills: SessionReport['skills'];
+  /** Level id, CEFR band and number of Chinese lifelines (older entries may lack them). */
+  level?: string;
+  cefr?: string;
+  lifelines?: number;
 }
 
 const KEY_NAME = 'objecttalk:name';

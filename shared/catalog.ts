@@ -1,4 +1,6 @@
 import type { InterestId, ItemKind, Landmark, LandmarkKind } from './types';
+import { WAVE4_KINDS } from './wave4';
+import { withZh } from './zh';
 
 /**
  * Built-in object catalog. The five hero items were generated with Hyper3D
@@ -184,10 +186,10 @@ export const LANDMARK_DEFS: Record<LandmarkKind, Omit<Landmark, 'id' | 'cell'> &
 };
 
 /** Mutable registry so runtime-generated kinds can be merged in on both ends. */
-const registry = new Map<string, ItemKind>([...BUILTIN_KINDS, ...EXTRA_KINDS].map((k) => [k.id, k]));
+const registry = new Map<string, ItemKind>([...BUILTIN_KINDS, ...EXTRA_KINDS, ...WAVE4_KINDS].map((k) => [k.id, withZh(k)]));
 
 export function registerKinds(kinds: ItemKind[]) {
-  for (const k of kinds) registry.set(k.id, k);
+  for (const k of kinds) registry.set(k.id, withZh(k));
 }
 
 export function getKind(id: string): ItemKind | undefined {

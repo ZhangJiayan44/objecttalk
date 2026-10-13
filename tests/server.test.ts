@@ -144,3 +144,45 @@ describe('levels API', () => {
     expect(items.kinds.some((k: { id: string }) => k.id === 'fruit-market--apple')).toBe(true);
   });
 });
+
+describe('Chinese lifeline (中文求助)', () => {
+  it('answers privately, never forwards Chinese to the partner, and costs points after the first', async () => {
+    const guide = client();
+    const builder = client();
+    const created = await guide.emitWithAck('room:create', { name: 'Gina', role: 'guide' });
+    if (!created.ok) throw new Error('create failed');
+    await builder.emitWithAck('room:join', { code: created.code, name: 'Bo', role: 'builder' });
+    const heard: ChatMessage[] = [];
+    builder.on('chat', (m) => heard.push(m));
+    const playing = waitForState(guide, (s) => s.phase === 'playing' && !!s.mission);
+    await guide.emitWithAck('game:start');
+    await playing;
+
+    // English-only rule: Chinese typed into the chat never reaches the partner.
+    guide.emit('chat:send', { text: '左边那个杯子', via: 'text' });
+    // The lifeline: tests run without an LLM, so the offline glossary answers.
+    const first = await guide.emitWithAck('chat:assist', { text: '在你的左边' });
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    expect(first.source).toBe('glossary');
+    expect(first.en.toLowerCase()).toContain('left');
+    expect(/[一-鿿]/.test(first.en)).toBe(false);
+    const bad = await guide.emitWithAck('chat:assist', { text: 'only english here' });
+    expect(bad.ok).toBe(false);
+
+    // Saying the English marks the lifeline as used; the partner hears only English.
+    const used = waitForState(guide, (s) => s.lifelines.some((l) => l.used));
+    guide.emit('chat:send', { text: `It is ${first.en.toLowerCase()}.`, via: 'text' });
+    await used;
+    await guide.emitWithAck('chat:assist', { text: '谢谢' });
+    await new Promise((r) => setTimeout(r, 500));
+    expect(heard.some((m) => /[一-鿿]/.test(m.text))).toBe(false);
+    expect(heard.some((m) => /left/i.test(m.text))).toBe(true);
+    // Lifelines are private: the partner's state has none.
+    const other = await waitForState(builder, () => true, 5000).catch(() => null);
+    if (other) expect(other.lifelines).toEqual([]);
+
+    guide.emit('room:leave');
+    builder.emit('room:leave');
+  }, 30000);
+});

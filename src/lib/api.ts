@@ -84,3 +84,43 @@ export function shareUrl(info: ServerInfo | null, pathname: string): string {
   }
   return `${here.origin}${pathname}`;
 }
+
+/** What the vision model saw in a studio photo (null when no LLM is configured). */
+export interface IdentifiedObject {
+  ok: boolean;
+  name: string;
+  plural: string;
+  zh: string;
+  synonyms: string[];
+  color: string;
+  example: string;
+  tip: string;
+}
+
+export async function identifyStudioPhoto(file: File): Promise<IdentifiedObject | null> {
+  const form = new FormData();
+  form.append('image', file);
+  const res = await fetch('/api/studio/identify', { method: 'POST', body: form });
+  const body = (await res.json().catch(() => ({}))) as { identified?: IdentifiedObject | null; error?: string };
+  if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+  return body.identified ?? null;
+}
+
+const MINE_KEY = 'objecttalk:my-objects';
+
+/** Object Studio objects made in this browser (so "your things" are yours, not everyone's). */
+export function myObjectIds(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(MINE_KEY) ?? '[]') as string[];
+  } catch {
+    return [];
+  }
+}
+
+export function rememberMyObject(id: string) {
+  try {
+    localStorage.setItem(MINE_KEY, JSON.stringify([...new Set([id, ...myObjectIds()])].slice(0, 30)));
+  } catch {
+    /* storage unavailable */
+  }
+}

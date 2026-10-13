@@ -345,7 +345,7 @@ export interface RouteMission {
 }
 
 /** Pick a destination 2-5 intersections away that has not been visited yet. */
-export function generateRouteMission(town: Town, pose: Pose, index: number, rng: Rng, visited: string[] = []): RouteMission | null {
+export function generateRouteMission(town: Town, pose: Pose, index: number, rng: Rng, visited: string[] = [], quest = 'mixed'): RouteMission | null {
   const start = nearestNode(pose);
   const scored = rng
     .shuffle(town.places.filter((p) => !visited.includes(p.id) && distance(pose, p.door) > ARRIVE_RADIUS * 2))
@@ -353,7 +353,7 @@ export function generateRouteMission(town: Town, pose: Pose, index: number, rng:
       const hops = Math.min(shortestPath(start, p.segment[0]).length, shortestPath(start, p.segment[1]).length) - 1;
       return { p, hops };
     });
-  const pick = scored.find((s) => s.hops >= 2 && s.hops <= 4) ?? scored.find((s) => s.hops >= 1) ?? scored[0];
+  const pick = (quest === 'far' ? scored.find((s) => s.hops >= 4) : undefined) ?? scored.find((s) => s.hops >= 2 && s.hops <= 4) ?? scored.find((s) => s.hops >= 1) ?? scored[0];
   if (!pick) return null;
   const plan = planRoute(town, pose, pick.p.id);
   if (!plan) return null;

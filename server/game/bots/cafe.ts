@@ -1,4 +1,5 @@
 import { getKind, kindsFor } from '../../../shared/catalog';
+import { levelOf } from '../../../shared/levels';
 import { joinList, lineKey, lineText, objectKey, parseOrder, sizeWord, trayStatus, type CafeState, type OrderLine, type OrderMission } from '../../../shared/cafe';
 import type { ChatMessage, FxEvent, HoverEvent } from '../../../shared/protocol';
 import type { Toolkit } from '../../agent/harness';
@@ -60,7 +61,8 @@ class AiBarista extends BaseBot {
     this.asking = null;
     this.serving = false;
     this.confirmed = '';
-    this.later(m.index === 0 ? 1000 : 1400, () => this.sayOne(m.index === 0 ? ["Hi, welcome to the Corner Café! What can I get you?", "Hello! What would you like today?"] : ['Next, please! What can I get you?', 'Hi there! What would you like?', "Hello! What can I get for you today?"]));
+    const shop = levelOf(this.ctx.level).title;
+    this.later(m.index === 0 ? 1000 : 1400, () => this.sayOne(m.index === 0 ? [`Hi, welcome to the ${shop}! What can I get you?`, 'Hello! What would you like today?'] : ['Next, please! What can I get you?', 'Hi there! What would you like?', 'Hello! What can I get for you today?']));
   }
 
   onChat(msg: ChatMessage) {
@@ -218,7 +220,7 @@ class AiBarista extends BaseBot {
     };
     const kindIds = kindsFor(this.ctx.level).map((k) => k.id);
     return {
-      persona: `You are the barista. You cannot see the customer's order card: listen to what they ask for. Drinks come in small or large, so ask if they don't say. If a plural has no number ("croissants"), ask how many. Add exactly what they asked for to the tray with add_to_tray, read the order back, ask "Anything else?", and when they say that's all, serve.
+      persona: `You run the counter at the ${levelOf(this.ctx.level).title} (you are the ${levelOf(this.ctx.level).roles.builder.name.toLowerCase()}). You cannot see the customer's order card: listen to what they ask for. Some things come in small or large (${kindsFor(this.ctx.level).filter((k) => k.sized).map((k) => k.name).join(', ') || 'none here'}), so ask if they don't say. If a plural has no number ("croissants"), ask how many. Add exactly what they asked for to the tray with add_to_tray, read the order back, ask "Anything else?", and when they say that's all, serve.
 Menu item ids: ${kindIds.join(', ')}.`,
       observe: () => {
         const st = this.ctx.state();

@@ -16,11 +16,11 @@ find things on a desk, order in a café, **ask for directions while walking thro
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![three.js](https://img.shields.io/badge/three.js-r185-000000?logo=three.js&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8-010101?logo=socket.io&logoColor=white)
-![Hyper3D Rodin](https://img.shields.io/badge/3D-57%20Rodin%20Gen--2.5%20models-9b7bf2)
+![Hyper3D Rodin](https://img.shields.io/badge/3D-130%20Rodin%20Gen--2.5%20models-9b7bf2)
 ![LLM agent](https://img.shields.io/badge/AI-DeepSeek%20%2F%20Qwen%20agent%20(optional)-4D6BFE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-ff8fb8.svg)](CONTRIBUTING.md)
 
-[Quick start](#-quick-start) · [Levels](#-levels) · [Controls](#-controls) · [AI partner](#-the-ai-partner-agent) · [Scene Agent](#-scene-agent-whole-levels-from-a-theme) · [Architecture](docs/ARCHITECTURE.md) · [Rodin ×4](docs/RODIN.md) · [中文文档](README.zh-CN.md)
+[Quick start](#-quick-start) · [Levels](#-levels) · [Learning loop](#-the-learning-loop) · [Controls](#-controls) · [AI partner](#-the-ai-partner-agent) · [Scene Agent](#-scene-agent-whole-levels-from-a-theme) · [Product & market](docs/PRODUCT.md) · [Architecture](docs/ARCHITECTURE.md) · [Rodin ×4](docs/RODIN.md) · [中文文档](README.zh-CN.md)
 
 <img src="docs/images/city-walker.jpg" alt="Toy Town: the walker walks the 3D streets in first person and asks the navigator for directions" width="100%" />
 
@@ -70,7 +70,9 @@ Set `PUBLIC_URL` so QR codes point at your domain.
 | | Level | The one who knows | The one who acts | English you practise |
 |---|---|---|---|---|
 | 📚 | **Cozy Study** | 🧭 Guide sees the gold target | 🛠️ Builder picks & places on the desk | *next to / between / on YOUR left / closer to you* |
-| ☕ | **Corner Café** | 🙋 Customer holds the order card | 🧑‍🍳 Barista fills the tray from the display case | *Could I have two croissants and a large coffee? · Small or large? · Anything else?* |
+| 🐶 | **Pet Shop** | 🧑‍🔧 Shop owner knows which pet | 🧤 Helper picks up & moves the animals | *the small bunny next to the turtle · the puppy closest to you* |
+| ☕ | **Corner Café** | 🙋 Customer holds the order card | 🧑‍🍳 Barista fills the tray from the display case (19-dish menu) | *Could I have two croissants and a large coffee? · Small or large? · Anything else?* |
+| 🏮 | **Night Market** | 🙋 Customer orders for friends | 🧑‍🍳 Stall owner, under lanterns | *two bowls of noodles · a bag of chestnuts · an ear of corn · a large bubble tea* |
 | 🏙️ | **Toy Town** | 🗺️ Navigator has the map | 🚶 Walker **walks the streets** (WASD) | *Excuse me, how do I get to…? · Turn left at the bank · It's on your right* |
 | 🛏️ | **Messy Bedroom** | 🤔 Owner remembers where things are | 🔦 Seeker **walks the room**, opens boxes | *under the bed · on top of the wardrobe · inside the toy box · warmer / colder* |
 | 🎸 | **Music Room** ✨ | 🎼 Band leader | 🧰 Roadie | instrument words + perspective (made by the Scene Agent) |
@@ -80,13 +82,31 @@ Set `PUBLIC_URL` so QR codes point at your domain.
 Every level has *Easy / Normal / Tricky*: on Tricky the AI partner makes the classic learner mistakes
 on purpose ("go north", describing things from its own side, forgetting a size) so you practise catching them.
 
-| Cozy Study (first person) | Corner Café (customer) |
+| Pet Shop (shop owner) | Night Market (customer) |
 |---|---|
+| <img src="docs/images/pet-shop.jpg" alt="Pet Shop" /> | <img src="docs/images/night-market.jpg" alt="Night Market" /> |
+| **Cozy Study (first person)** | **Corner Café (customer)** |
 | <img src="docs/images/study.jpg" alt="Cozy Study" /> | <img src="docs/images/cafe.jpg" alt="Corner Café" /> |
 | **Toy Town: the navigator's map** | **Messy Bedroom + AI partner brain** |
 | <img src="docs/images/city-navigator.jpg" alt="Toy Town map" /> | <img src="docs/images/bedroom-agent.jpg" alt="Bedroom with the agent panel" /> |
 | **Music Room (agent-made)** | **Fruit Market (agent-made)** |
 | <img src="docs/images/music-room.jpg" alt="Music Room" /> | <img src="docs/images/fruit-market.jpg" alt="Fruit Market" /> |
+
+Pick a **quest** for the round (e.g. *Which one?* = only look-alikes, *Party order* = big numbers,
+*Long walk*, *Hide and seek*) or play the **📅 Daily Challenge**: the same world and missions in every room
+today, so classmates can compare scores.
+
+## 🔁 The learning loop
+
+| | What happens |
+|---|---|
+| 🛟 **中文求助 (Chinese lifeline)** | Stuck for a word? Press <kbd>H</kbd> and type or say it in Chinese. You privately get the English line (DeepSeek, or an offline glossary), hear it, and **say it yourself**. Your partner never sees Chinese; the first lifeline is free, later ones cost 4 points, and lifeline lines do not count for the CEFR estimate. |
+| 📝 **Borrowed words** | After the round, every borrowed phrase is listed (*you said it ✓ / not said yet*) and saved to your word book. |
+| 👆 **Word cards** | Point at any prop in a scene (73 new Rodin props: plants, vehicles, pets…): its English and Chinese name pops up; click to hear it and save it. |
+| 📒 **Word book** | `/progress`: flip-card review of borrowed phrases, looked-up words and your own photo objects, weakest first. |
+| 📷 **Your things in the game** | Object Studio: snap a photo → Qwen3.6 vision names it (English, plural, Chinese, an example sentence) → you practise saying it while Rodin builds it → it hides in the bedroom, sits on the desk or becomes the café's special. |
+
+<img src="docs/images/lifeline.jpg" alt="The Chinese lifeline: Chinese in, a private English line out" width="100%" />
 
 ## 🎮 Controls
 
@@ -101,6 +121,7 @@ the crosshair is your pointer, click to interact, <kbd>Esc</kbd> gives the mouse
 | <kbd>E</kbd> | show / hide the mission card | <kbd>C</kbd> | captions on / off (**off by default**) |
 | <kbd>Tab</kbd> | phrasebook (with Chinese glosses) | <kbd>T</kbd> | full transcript |
 | <kbd>G</kbd> | the AI partner's reasoning | <kbd>L</kbd> | object labels |
+| <kbd>H</kbd> | 🛟 中文求助: say it in Chinese, get the English | click a prop | word card: hear it, save it |
 
 **Voice-first by design.** Reading your partner's text is not speaking practice, so captions are
 off: you *hear* the AI (and your friend's transcribed speech), can replay any line with 👂,
@@ -143,7 +164,7 @@ were made this way: 20 Rodin generations, 157 MB → 5.5 MB, every check PASS.
 
 | Level | In ObjectTalk |
 |---|---|
-| **01 USE** | **57** Rodin Gen-2.5 models: desk objects, café menu, town buildings & landmarks, bedroom belongings, decor |
+| **01 USE** | **130** Rodin Gen-2.5 models: desk objects, pets, café and night-market menus, town buildings, cars & landmarks, bedroom belongings, 42 scenery props with word cards |
 | **02 BUILD** | All produced through the **Hyper3D MCP** inside Claude Code; the repo ships `.mcp.json` and enables the official `rodin3d-skill` plugin; workflows packaged as skills (`new-level`, `new-object-pack`) |
 | **03 CORE** | Object Studio calls the Rodin API at runtime: your photo becomes a game object |
 | **04 AGENT** | The **Scene Agent** generates, validates and publishes whole playable levels |
@@ -170,7 +191,7 @@ Graphics: `?fx=off|low|high` overrides the automatic post-processing level (reme
 ## 🧪 Development
 
 ```bash
-npm run check          # typecheck + 67 tests (engines, NLU, agent harness, AI-vs-AI sims, real Socket.IO games) + build
+npm run check          # typecheck + 78 tests (engines, NLU, agent harness, AI-vs-AI sims, real Socket.IO games) + build
 npm test               # vitest
 npm run agent          # Scene Agent help
 ```

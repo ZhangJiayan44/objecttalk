@@ -19,13 +19,13 @@ function fakeSocket(states: ClientRoomState[]): GameSocket {
   return { id: 'sock-1', data: {}, join: () => undefined, emit: (event: string, payload: unknown) => event === 'room:state' && states.push(payload as ClientRoomState) } as unknown as GameSocket;
 }
 
-async function simulate(level: string, difficulty: 'easy' | 'normal' | 'tricky' = 'normal', viewAs: 'guide' | 'builder' = 'guide') {
+async function simulate(level: string, difficulty: 'easy' | 'normal' | 'tricky' = 'normal', viewAs: 'guide' | 'builder' = 'guide', extra: Record<string, unknown> = {}) {
   const log: Emitted[] = [];
   const saved: Replay[] = [];
   const room = new Room('SIMU', fakeIo(log), { saveReplay: async (r) => void saved.push(r) });
   const states: ClientRoomState[] = [];
   const host = room.addPlayer({ name: 'Watcher', viewAs }, fakeSocket(states));
-  room.updateSettings(host.id, { level, mode: 'sim', difficulty, durationSec: 240 });
+  room.updateSettings(host.id, { level, mode: 'sim', difficulty, durationSec: 240, ...extra });
   expect(room.start(host.id)).toBeNull();
   for (let i = 0; i < 260 && room.phase !== 'results'; i++) await vi.advanceTimersByTimeAsync(1000);
   await vi.advanceTimersByTimeAsync(50);
@@ -43,7 +43,7 @@ afterEach(() => {
 });
 
 describe('AI vs AI simulation (rule brains)', () => {
-  for (const level of ['study', 'cafe', 'city', 'bedroom']) {
+  for (const level of ['study', 'pets', 'cafe', 'nightmarket', 'city', 'bedroom']) {
     it(`finishes the ${level} level`, async () => {
       const { saved, chat } = await simulate(level);
       expect(saved).toHaveLength(1);
@@ -55,6 +55,31 @@ describe('AI vs AI simulation (rule brains)', () => {
       expect(replay.traces?.length).toBeGreaterThan(0);
     }, 60_000);
   }
+
+  const QUESTS: [string, string][] = [
+    ['pets', 'find'],
+    ['study', 'place'],
+    ['nightmarket', 'party'],
+    ['cafe', 'drinks'],
+    ['city', 'far'],
+    ['bedroom', 'hidden'],
+  ];
+  for (const [level, quest] of QUESTS) {
+    it(`finishes the ${level} level on the "${quest}" quest`, async () => {
+      const { saved, chat } = await simulate(level, 'normal', 'guide', { quest });
+      const replay = saved[0];
+      expect(replay.settings.quest).toBe(quest);
+      if (replay.report.missionsDone < replay.report.missionsTotal) console.log(level, quest, chat.map((c) => `${c.name}: ${c.text}`).join(' | '));
+      expect(replay.report.missionsDone).toBe(replay.report.missionsTotal);
+    }, 60_000);
+  }
+
+  it('the Daily Challenge gives every room the same world', async () => {
+    const a = await simulate('nightmarket', 'normal', 'guide', { daily: true });
+    const b = await simulate('nightmarket', 'normal', 'guide', { daily: true });
+    expect(a.saved[0].initialScene).toEqual(b.saved[0].initialScene);
+    expect(a.saved[0].missions.map((m) => m.order)).toEqual(b.saved[0].missions.map((m) => m.order));
+  }, 60_000);
 
   it('walking levels record a trail for the replay', async () => {
     const { saved } = await simulate('city');

@@ -1,5 +1,5 @@
 {
-  "description": "Provenance of every Rodin model in ObjectTalk. All were generated image-to-3D with Hyper3D Rodin Gen-2.5-High through the Hyper3D MCP (rodin_create_uploads -> PUT -> rodin_generate -> rodin_wait -> rodin_get_result) from inside Claude Code, then optimized with server/services/optimize.ts.",
+  "description": "Provenance of every Rodin model in ObjectTalk. Waves 1-3 were generated image-to-3D with Hyper3D Rodin Gen-2.5-High through the Hyper3D MCP from inside Claude Code; wave 4 through the Rodin REST API (the same pipeline as the Object Studio). All were optimized with server/services/optimize.ts.",
   "generatedAt": "2026-10-13",
   "settings": {
     "mode": "image-to-3D (plus a short guiding prompt)",
@@ -75,10 +75,10 @@
     }
   ],
   "totals": {
-    "rawBytes": 39820624,
-    "optimizedBytes": 1440500,
-    "reduction": "96.4%",
-    "models": 57
+    "rawBytes": 141364560,
+    "optimizedBytes": 20833156,
+    "reduction": "85.3%",
+    "models": 130
   },
   "waves": [
     {
@@ -95,6 +95,12 @@
       "wave": 3,
       "what": "2 whole levels made by the Scene Agent (Music Room, Fruit Market)",
       "count": 20
+    },
+    {
+      "wave": 4,
+      "what": "73 models through the Rodin REST API: 10 pets (Pet Shop), 12 night-market street foods, 9 café dishes, 42 scenery props (plants, vehicles, toys, gadgets, animals); reviewed from the front and the back",
+      "count": 73,
+      "review": "assets/rodin/review-wave4.jpg"
     }
   ],
   "wave2": [
@@ -533,6 +539,811 @@
           "reference": "Fluent Emoji 3D \"Pineapple\" (MIT)"
         }
       ]
+    }
+  ],
+  "wave4": [
+    {
+      "id": "puppy",
+      "group": "pets",
+      "file": "public/models/pets/puppy.glb",
+      "generationId": "a0e227e8-9281-47ec-9381-b7643808701e",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/a0e227e8-9281-47ec-9381-b7643808701e",
+      "reference": "Fluent Emoji 3D 'Dog' (MIT)",
+      "prompt": "A cute golden puppy standing on four legs, side view, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 143
+    },
+    {
+      "id": "kitten",
+      "group": "pets",
+      "file": "public/models/pets/kitten.glb",
+      "generationId": "60b17b92-15bf-4063-9050-e70344375471",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/60b17b92-15bf-4063-9050-e70344375471",
+      "reference": "Fluent Emoji 3D 'Cat' (MIT)",
+      "prompt": "A cute orange tabby kitten standing on four legs, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 82
+    },
+    {
+      "id": "bunny",
+      "group": "pets",
+      "file": "public/models/pets/bunny.glb",
+      "generationId": "cc6ff20e-cebd-405d-a04d-bd095e9de65b",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/cc6ff20e-cebd-405d-a04d-bd095e9de65b",
+      "reference": "Fluent Emoji 3D 'Rabbit' (MIT)",
+      "prompt": "A cute white bunny rabbit sitting, long ears, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 82
+    },
+    {
+      "id": "pig",
+      "group": "pets",
+      "file": "public/models/pets/pig.glb",
+      "generationId": "ee984885-b2f8-4afa-bfe8-80736ee24f38",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/ee984885-b2f8-4afa-bfe8-80736ee24f38",
+      "reference": "Fluent Emoji 3D 'Pig' (MIT)",
+      "prompt": "A cute pink mini pig standing on four legs, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 112
+    },
+    {
+      "id": "parrot",
+      "group": "pets",
+      "file": "public/models/pets/parrot.glb",
+      "generationId": "53d91258-51fc-4847-983e-4a0e4ca3beee",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/53d91258-51fc-4847-983e-4a0e4ca3beee",
+      "reference": "Fluent Emoji 3D 'Parrot' (MIT)",
+      "prompt": "A cute colorful parrot standing on its feet, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 173
+    },
+    {
+      "id": "turtle",
+      "group": "pets",
+      "file": "public/models/pets/turtle.glb",
+      "generationId": "b3e8ac1a-efe1-4043-a79b-2866257e4b36",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/b3e8ac1a-efe1-4043-a79b-2866257e4b36",
+      "reference": "Fluent Emoji 3D 'Turtle' (MIT)",
+      "prompt": "A cute green turtle with a round shell, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 112
+    },
+    {
+      "id": "hedgehog",
+      "group": "pets",
+      "file": "public/models/pets/hedgehog.glb",
+      "generationId": "fe216fcc-d518-43f6-b349-ccccfe4b9aec",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/fe216fcc-d518-43f6-b349-ccccfe4b9aec",
+      "reference": "Fluent Emoji 3D 'Hedgehog' (MIT)",
+      "prompt": "A cute brown hedgehog with soft spikes, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 110
+    },
+    {
+      "id": "mouse",
+      "group": "pets",
+      "file": "public/models/pets/mouse.glb",
+      "generationId": "da106bf8-67be-493f-8a9f-5a613588e8d2",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/da106bf8-67be-493f-8a9f-5a613588e8d2",
+      "reference": "Fluent Emoji 3D 'Mouse' (MIT)",
+      "prompt": "A cute grey pet mouse with a pink tail, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 80
+    },
+    {
+      "id": "chick",
+      "group": "pets",
+      "file": "public/models/pets/chick.glb",
+      "generationId": "995f2769-bf31-4109-85c3-a3e15c529a0e",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/995f2769-bf31-4109-85c3-a3e15c529a0e",
+      "reference": "Fluent Emoji 3D 'Baby chick' (MIT)",
+      "prompt": "A cute fluffy yellow baby chick, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 81
+    },
+    {
+      "id": "duck",
+      "group": "pets",
+      "file": "public/models/pets/duck.glb",
+      "generationId": "89fd0f2a-e127-4ab0-b8b8-1f96889faa74",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/89fd0f2a-e127-4ab0-b8b8-1f96889faa74",
+      "reference": "Fluent Emoji 3D 'Duck' (MIT)",
+      "prompt": "A cute mallard duck with a green head, stylized 3D toy figure",
+      "use": "mission object (Pet Shop) + scenery",
+      "seconds": 110
+    },
+    {
+      "id": "dumpling",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/dumpling.glb",
+      "generationId": "a99c5b41-6647-46c4-8167-437df93e35b2",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/a99c5b41-6647-46c4-8167-437df93e35b2",
+      "reference": "Fluent Emoji 3D 'Dumpling' (MIT), rotated 45°",
+      "prompt": "A cute steamed Chinese dumpling sitting on its flat bottom, pleated crest on top, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 111
+    },
+    {
+      "id": "noodles",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/noodles.glb",
+      "generationId": "aaa99456-4afd-48d3-82dc-5f196e9b52ce",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/aaa99456-4afd-48d3-82dc-5f196e9b52ce",
+      "reference": "Fluent Emoji 3D 'Steaming bowl' (MIT)",
+      "prompt": "A red bowl of noodle soup with chopsticks, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 81
+    },
+    {
+      "id": "chicken-leg",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/chicken-leg.glb",
+      "generationId": "166b0831-eeff-466d-a371-46ffae5017b1",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/166b0831-eeff-466d-a371-46ffae5017b1",
+      "reference": "Fluent Emoji 3D 'Poultry leg' (MIT), rotated -45°",
+      "prompt": "A golden fried chicken leg lying on its side, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 112
+    },
+    {
+      "id": "skewer",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/skewer.glb",
+      "generationId": "311324ad-92ad-40df-bfe8-6fdf3f5c881a",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/311324ad-92ad-40df-bfe8-6fdf3f5c881a",
+      "reference": "Fluent Emoji 3D 'Oden' (MIT), rotated -45°",
+      "prompt": "A street food skewer with balls and a triangle cake on a wooden stick, lying flat, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 80
+    },
+    {
+      "id": "sweet-potato",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/sweet-potato.glb",
+      "generationId": "c8a76f98-fcb9-4bd7-90e2-f7b706c97c86",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/c8a76f98-fcb9-4bd7-90e2-f7b706c97c86",
+      "reference": "Fluent Emoji 3D 'Roasted sweet potato' (MIT), rotated -45°",
+      "prompt": "A roasted sweet potato lying on its side, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 110
+    },
+    {
+      "id": "corn",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/corn.glb",
+      "generationId": "5ac78ca3-cb6b-42bf-98c5-c0f221b5d22e",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/5ac78ca3-cb6b-42bf-98c5-c0f221b5d22e",
+      "reference": "Fluent Emoji 3D 'Ear of corn' (MIT), rotated 45°",
+      "prompt": "A grilled ear of corn with green husk leaves, lying on its side, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 80
+    },
+    {
+      "id": "mooncake",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/mooncake.glb",
+      "generationId": "e1711396-acb2-416c-9a04-b7db49c5137d",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/e1711396-acb2-416c-9a04-b7db49c5137d",
+      "reference": "Fluent Emoji 3D 'Moon cake' (MIT)",
+      "prompt": "A round golden Chinese mooncake with a pattern on top, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 143
+    },
+    {
+      "id": "chestnut",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/chestnut.glb",
+      "generationId": "c91ed008-3cfa-4207-ad14-0228df624654",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/c91ed008-3cfa-4207-ad14-0228df624654",
+      "reference": "Fluent Emoji 3D 'Chestnut' (MIT)",
+      "prompt": "A shiny roasted chestnut, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 142
+    },
+    {
+      "id": "shaved-ice",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/shaved-ice.glb",
+      "generationId": "8ac8e537-288d-44a5-b16b-6be4d947af47",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/8ac8e537-288d-44a5-b16b-6be4d947af47",
+      "reference": "Fluent Emoji 3D 'Shaved ice' (MIT)",
+      "prompt": "A pink shaved ice dessert in a blue paper cone with a spoon, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 141
+    },
+    {
+      "id": "tea-egg",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/tea-egg.glb",
+      "generationId": "f4a003ae-4e93-41f7-bc96-1f9d0d61079a",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/f4a003ae-4e93-41f7-bc96-1f9d0d61079a",
+      "reference": "Fluent Emoji 3D 'Egg' (MIT)",
+      "prompt": "A brown tea egg standing upright, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 110
+    },
+    {
+      "id": "bubble-tea",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/bubble-tea.glb",
+      "generationId": "ce5b8aab-4f84-4ffe-ba05-ae69f45cd9a1",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/ce5b8aab-4f84-4ffe-ba05-ae69f45cd9a1",
+      "reference": "Fluent Emoji 3D 'Bubble tea' (MIT)",
+      "prompt": "A plastic cup of bubble milk tea with tapioca pearls and a straw, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 140
+    },
+    {
+      "id": "soy-milk",
+      "group": "nightmarket",
+      "file": "public/models/nightmarket/soy-milk.glb",
+      "generationId": "16e4f844-5b05-40e2-9276-fbd4f238cfb4",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/16e4f844-5b05-40e2-9276-fbd4f238cfb4",
+      "reference": "Fluent Emoji 3D 'Glass of milk' (MIT)",
+      "prompt": "A tall glass of white soy milk, stylized 3D toy style",
+      "use": "mission object (Night Market)",
+      "seconds": 110
+    },
+    {
+      "id": "pancakes",
+      "group": "cafe",
+      "file": "public/models/cafe/pancakes.glb",
+      "generationId": "671eda89-e9e7-477e-877a-e8b9c9703183",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/671eda89-e9e7-477e-877a-e8b9c9703183",
+      "reference": "Fluent Emoji 3D 'Pancakes' (MIT)",
+      "prompt": "A stack of pancakes with butter and syrup on a plate, stylized 3D toy style",
+      "use": "mission object (Corner Café menu)",
+      "seconds": 110
+    },
+    {
+      "id": "waffle",
+      "group": "cafe",
+      "file": "public/models/cafe/waffle.glb",
+      "generationId": "82ee7d38-e2ea-4861-9fa2-ce453c8494bd",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/82ee7d38-e2ea-4861-9fa2-ce453c8494bd",
+      "reference": "Fluent Emoji 3D 'Waffle' (MIT)",
+      "prompt": "A golden square waffle with butter, stylized 3D toy style",
+      "use": "mission object (Corner Café menu)",
+      "seconds": 141
+    },
+    {
+      "id": "cookie",
+      "group": "cafe",
+      "file": "public/models/cafe/cookie.glb",
+      "generationId": "072d4af2-35af-4a62-a438-23e9eadf7e65",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/072d4af2-35af-4a62-a438-23e9eadf7e65",
+      "reference": "Fluent Emoji 3D 'Cookie' (MIT)",
+      "prompt": "A round chocolate chip cookie, stylized 3D toy style",
+      "use": "mission object (Corner Café menu)",
+      "seconds": 140
+    },
+    {
+      "id": "pudding",
+      "group": "cafe",
+      "file": "public/models/cafe/pudding.glb",
+      "generationId": "eefae296-33a8-4165-b113-ea5bac4431bc",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/eefae296-33a8-4165-b113-ea5bac4431bc",
+      "reference": "Fluent Emoji 3D 'Custard' (MIT)",
+      "prompt": "A caramel custard pudding on a small plate, stylized 3D toy style",
+      "use": "mission object (Corner Café menu)",
+      "seconds": 140
+    },
+    {
+      "id": "hot-dog",
+      "group": "cafe",
+      "file": "public/models/cafe/hot-dog.glb",
+      "generationId": "fba0aa19-100e-4a12-a919-a519fbad1427",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/fba0aa19-100e-4a12-a919-a519fbad1427",
+      "reference": "Fluent Emoji 3D 'Hot dog' (MIT), rotated 45°",
+      "prompt": "A hot dog in a bun with a mustard zigzag, lying horizontally, stylized 3D toy style",
+      "use": "mission object (Corner Café menu)",
+      "seconds": 80
+    },
+    {
+      "id": "spaghetti",
+      "group": "cafe",
+      "file": "public/models/cafe/spaghetti.glb",
+      "generationId": "e824a5cc-ef4a-4590-9a32-a51ab741f6fa",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/e824a5cc-ef4a-4590-9a32-a51ab741f6fa",
+      "reference": "Fluent Emoji 3D 'Spaghetti' (MIT)",
+      "prompt": "A plate of spaghetti with tomato sauce and a fork, stylized 3D toy style",
+      "use": "mission object (Corner Café menu)",
+      "seconds": 141
+    },
+    {
+      "id": "salad",
+      "group": "cafe",
+      "file": "public/models/cafe/salad.glb",
+      "generationId": "dcbb917c-85e2-40a3-8e27-80f21667903b",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/dcbb917c-85e2-40a3-8e27-80f21667903b",
+      "reference": "Fluent Emoji 3D 'Green salad' (MIT)",
+      "prompt": "A bowl of green salad with tomatoes and egg, stylized 3D toy style",
+      "use": "mission object (Corner Café menu)",
+      "seconds": 111
+    },
+    {
+      "id": "pretzel",
+      "group": "cafe",
+      "file": "public/models/cafe/pretzel.glb",
+      "generationId": "0e43536d-d087-4860-97db-2417333bc794",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/0e43536d-d087-4860-97db-2417333bc794",
+      "reference": "Fluent Emoji 3D 'Pretzel' (MIT)",
+      "prompt": "A golden salted pretzel, stylized 3D toy style",
+      "use": "mission object (Corner Café menu)",
+      "seconds": 109
+    },
+    {
+      "id": "taco",
+      "group": "cafe",
+      "file": "public/models/cafe/taco.glb",
+      "generationId": "ab1db9c4-b8d9-4acb-8f3e-757248d561e1",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/ab1db9c4-b8d9-4acb-8f3e-757248d561e1",
+      "reference": "Fluent Emoji 3D 'Taco' (MIT)",
+      "prompt": "A crunchy taco with lettuce and tomato, stylized 3D toy style",
+      "use": "mission object (Corner Café menu)",
+      "seconds": 111
+    },
+    {
+      "id": "cactus",
+      "group": "decor",
+      "file": "public/models/decor/cactus.glb",
+      "generationId": "5d16458d-cc65-425d-a293-b5f5ddb5a504",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/5d16458d-cc65-425d-a293-b5f5ddb5a504",
+      "reference": "Fluent Emoji 3D 'Cactus' (MIT)",
+      "prompt": "A green cactus with arms, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "tulip",
+      "group": "decor",
+      "file": "public/models/decor/tulip.glb",
+      "generationId": "7bf76722-f1f3-448c-b3e7-647aed613689",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/7bf76722-f1f3-448c-b3e7-647aed613689",
+      "reference": "Fluent Emoji 3D 'Tulip' (MIT)",
+      "prompt": "A pink tulip flower with leaves, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 110
+    },
+    {
+      "id": "sunflower",
+      "group": "decor",
+      "file": "public/models/decor/sunflower.glb",
+      "generationId": "e65b7ff2-aec2-4f67-9c1d-97158b43d685",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/e65b7ff2-aec2-4f67-9c1d-97158b43d685",
+      "reference": "Fluent Emoji 3D 'Sunflower' (MIT)",
+      "prompt": "A yellow sunflower with leaves, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 113
+    },
+    {
+      "id": "rose",
+      "group": "decor",
+      "file": "public/models/decor/rose.glb",
+      "generationId": "53df140d-8d6f-4b07-8592-b31bbb428232",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/53df140d-8d6f-4b07-8592-b31bbb428232",
+      "reference": "Fluent Emoji 3D 'Rose' (MIT)",
+      "prompt": "A red rose flower with a green stem and leaves, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "seedling",
+      "group": "decor",
+      "file": "public/models/decor/seedling.glb",
+      "generationId": "0f6eac08-7e00-408d-a8c1-354cda341233",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/0f6eac08-7e00-408d-a8c1-354cda341233",
+      "reference": "Fluent Emoji 3D 'Seedling' (MIT)",
+      "prompt": "A small green seedling sprouting from a mound of soil, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 141
+    },
+    {
+      "id": "pine-tree",
+      "group": "decor",
+      "file": "public/models/decor/pine-tree.glb",
+      "generationId": "a879e205-0c80-4b55-b4c3-d237957dfece",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/a879e205-0c80-4b55-b4c3-d237957dfece",
+      "reference": "Fluent Emoji 3D 'Evergreen tree' (MIT)",
+      "prompt": "A green evergreen pine tree, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 170
+    },
+    {
+      "id": "bicycle",
+      "group": "decor",
+      "file": "public/models/decor/bicycle.glb",
+      "generationId": "e63b3ba1-c73e-49f3-95ab-c5725a146e06",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/e63b3ba1-c73e-49f3-95ab-c5725a146e06",
+      "reference": "Fluent Emoji 3D 'Bicycle' (MIT)",
+      "prompt": "A red bicycle standing upright, side view, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "car",
+      "group": "decor",
+      "file": "public/models/decor/car.glb",
+      "generationId": "09bfc069-da88-44be-b9a3-cdf33b5c1edf",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/09bfc069-da88-44be-b9a3-cdf33b5c1edf",
+      "reference": "Fluent Emoji 3D 'Automobile' (MIT)",
+      "prompt": "A small red toy car, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 142
+    },
+    {
+      "id": "bus",
+      "group": "decor",
+      "file": "public/models/decor/bus.glb",
+      "generationId": "1b2563a8-cad7-43bd-94e1-5398a5a3b503",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/1b2563a8-cad7-43bd-94e1-5398a5a3b503",
+      "reference": "Fluent Emoji 3D 'Bus' (MIT)",
+      "prompt": "A yellow and orange city bus, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 110
+    },
+    {
+      "id": "taxi",
+      "group": "decor",
+      "file": "public/models/decor/taxi.glb",
+      "generationId": "931f3b69-d614-45b5-b2fa-f2ec1b0fdc20",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/931f3b69-d614-45b5-b2fa-f2ec1b0fdc20",
+      "reference": "Fluent Emoji 3D 'Taxi' (MIT)",
+      "prompt": "A yellow taxi with a checkered stripe, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 141
+    },
+    {
+      "id": "postbox",
+      "group": "decor",
+      "file": "public/models/decor/postbox.glb",
+      "generationId": "a2c97b6e-328d-4892-9402-f5fe765220c4",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/a2c97b6e-328d-4892-9402-f5fe765220c4",
+      "reference": "Fluent Emoji 3D 'Postbox' (MIT)",
+      "prompt": "A red post box on a short post, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 110
+    },
+    {
+      "id": "motor-scooter",
+      "group": "decor",
+      "file": "public/models/decor/motor-scooter.glb",
+      "generationId": "63b9c205-f6d8-459b-94ae-700f8b288791",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/63b9c205-f6d8-459b-94ae-700f8b288791",
+      "reference": "Fluent Emoji 3D 'Motor scooter' (MIT)",
+      "prompt": "A red motor scooter, side view, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 80
+    },
+    {
+      "id": "truck",
+      "group": "decor",
+      "file": "public/models/decor/truck.glb",
+      "generationId": "4dd74d19-2cd2-4075-be50-3814c77665e4",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/4dd74d19-2cd2-4075-be50-3814c77665e4",
+      "reference": "Fluent Emoji 3D 'Delivery truck' (MIT)",
+      "prompt": "A small delivery truck with a yellow box, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 82
+    },
+    {
+      "id": "ambulance",
+      "group": "decor",
+      "file": "public/models/decor/ambulance.glb",
+      "generationId": "d1991818-f4e4-4029-9020-67ec24af2185",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/d1991818-f4e4-4029-9020-67ec24af2185",
+      "reference": "Fluent Emoji 3D 'Ambulance' (MIT)",
+      "prompt": "A white ambulance with a red cross, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 80
+    },
+    {
+      "id": "shopping-cart",
+      "group": "decor",
+      "file": "public/models/decor/shopping-cart.glb",
+      "generationId": "0ac1ee3f-c9e2-445a-9ec7-a0beb9caabaf",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/0ac1ee3f-c9e2-445a-9ec7-a0beb9caabaf",
+      "reference": "Fluent Emoji 3D 'Shopping cart' (MIT)",
+      "prompt": "A metal shopping cart with blue wheels, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "kick-scooter",
+      "group": "decor",
+      "file": "public/models/decor/kick-scooter.glb",
+      "generationId": "156512b9-726b-4218-bffd-2debacbac44e",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/156512b9-726b-4218-bffd-2debacbac44e",
+      "reference": "Fluent Emoji 3D 'Kick scooter' (MIT)",
+      "prompt": "A blue kick scooter standing upright, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 81
+    },
+    {
+      "id": "balloon",
+      "group": "decor",
+      "file": "public/models/decor/balloon.glb",
+      "generationId": "39f02d3a-1ee1-4936-b5ab-0d3e7b893e1f",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/39f02d3a-1ee1-4936-b5ab-0d3e7b893e1f",
+      "reference": "Fluent Emoji 3D 'Balloon' (MIT)",
+      "prompt": "A shiny red balloon with a string, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 80
+    },
+    {
+      "id": "kite",
+      "group": "decor",
+      "file": "public/models/decor/kite.glb",
+      "generationId": "64632276-6328-4f5a-949e-dff243c789bc",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/64632276-6328-4f5a-949e-dff243c789bc",
+      "reference": "Fluent Emoji 3D 'Kite' (MIT)",
+      "prompt": "A colorful diamond kite with a tail of bows, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 79
+    },
+    {
+      "id": "soccer-ball",
+      "group": "decor",
+      "file": "public/models/decor/soccer-ball.glb",
+      "generationId": "50b957c0-3a18-4c6e-af3c-678c4a4a4a77",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/50b957c0-3a18-4c6e-af3c-678c4a4a4a77",
+      "reference": "Fluent Emoji 3D 'Soccer ball' (MIT)",
+      "prompt": "A blue and white soccer ball, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "basketball",
+      "group": "decor",
+      "file": "public/models/decor/basketball.glb",
+      "generationId": "1d0f0b83-6d44-449b-828b-3d6ddd4f0955",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/1d0f0b83-6d44-449b-828b-3d6ddd4f0955",
+      "reference": "Fluent Emoji 3D 'Basketball' (MIT)",
+      "prompt": "An orange basketball, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 110
+    },
+    {
+      "id": "basket",
+      "group": "decor",
+      "file": "public/models/decor/basket.glb",
+      "generationId": "7b9ebe25-ded2-4f4a-818c-472fa4a87375",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/7b9ebe25-ded2-4f4a-818c-472fa4a87375",
+      "reference": "Fluent Emoji 3D 'Basket' (MIT)",
+      "prompt": "A woven wicker basket with a handle, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "bucket",
+      "group": "decor",
+      "file": "public/models/decor/bucket.glb",
+      "generationId": "3a5843d4-cf5c-4606-8b36-b93e3d71787f",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/3a5843d4-cf5c-4606-8b36-b93e3d71787f",
+      "reference": "Fluent Emoji 3D 'Bucket' (MIT)",
+      "prompt": "A blue plastic bucket with a handle, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "umbrella",
+      "group": "decor",
+      "file": "public/models/decor/umbrella.glb",
+      "generationId": "8b5d48b6-8a73-45e9-af0f-b58e68c02539",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/8b5d48b6-8a73-45e9-af0f-b58e68c02539",
+      "reference": "Fluent Emoji 3D 'Umbrella' (MIT)",
+      "prompt": "An open purple umbrella, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 140
+    },
+    {
+      "id": "gift",
+      "group": "decor",
+      "file": "public/models/decor/gift.glb",
+      "generationId": "6178edbe-2fb1-44e6-b5a1-5ebfb766f246",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/6178edbe-2fb1-44e6-b5a1-5ebfb766f246",
+      "reference": "Fluent Emoji 3D 'Wrapped gift' (MIT)",
+      "prompt": "A yellow gift box with a red ribbon and bow, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 171
+    },
+    {
+      "id": "trophy",
+      "group": "decor",
+      "file": "public/models/decor/trophy.glb",
+      "generationId": "e6580193-4ca2-48c0-8af7-385507d0f108",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/e6580193-4ca2-48c0-8af7-385507d0f108",
+      "reference": "Fluent Emoji 3D 'Trophy' (MIT)",
+      "prompt": "A golden trophy cup on a brown base, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "candle",
+      "group": "decor",
+      "file": "public/models/decor/candle.glb",
+      "generationId": "e13d0424-8cea-4ce8-85d2-67652fec106e",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/e13d0424-8cea-4ce8-85d2-67652fec106e",
+      "reference": "Fluent Emoji 3D 'Candle' (MIT)",
+      "prompt": "A white candle with a flame, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 110
+    },
+    {
+      "id": "laptop",
+      "group": "decor",
+      "file": "public/models/decor/laptop.glb",
+      "generationId": "9a69f989-dfed-49c7-b6de-a4376910425a",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/9a69f989-dfed-49c7-b6de-a4376910425a",
+      "reference": "Fluent Emoji 3D 'Laptop' (MIT)",
+      "prompt": "An open silver laptop with a blue screen, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 110
+    },
+    {
+      "id": "television",
+      "group": "decor",
+      "file": "public/models/decor/television.glb",
+      "generationId": "e4dba3f7-17d1-42bb-b892-8c2991b86966",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/e4dba3f7-17d1-42bb-b892-8c2991b86966",
+      "reference": "Fluent Emoji 3D 'Television' (MIT)",
+      "prompt": "A retro grey television with antennas and short legs, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "radio",
+      "group": "decor",
+      "file": "public/models/decor/radio.glb",
+      "generationId": "18f1908f-24b9-4da6-9d4e-6af55d7f6193",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/18f1908f-24b9-4da6-9d4e-6af55d7f6193",
+      "reference": "Fluent Emoji 3D 'Radio' (MIT)",
+      "prompt": "A retro grey radio with an antenna, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 110
+    },
+    {
+      "id": "telephone",
+      "group": "decor",
+      "file": "public/models/decor/telephone.glb",
+      "generationId": "2da4234d-d047-4002-a559-33045c435e45",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/2da4234d-d047-4002-a559-33045c435e45",
+      "reference": "Fluent Emoji 3D 'Telephone' (MIT)",
+      "prompt": "A pink retro desk telephone with a handset, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "mantel-clock",
+      "group": "decor",
+      "file": "public/models/decor/mantel-clock.glb",
+      "generationId": "b72b7e17-bcb9-4cb8-86fe-a0628cd51374",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/b72b7e17-bcb9-4cb8-86fe-a0628cd51374",
+      "reference": "Fluent Emoji 3D 'Mantelpiece clock' (MIT)",
+      "prompt": "A wooden mantel clock with a white face, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 110
+    },
+    {
+      "id": "picture",
+      "group": "decor",
+      "file": "public/models/decor/picture.glb",
+      "generationId": "5d124410-0632-454a-86fa-ad8b7ed3f301",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/5d124410-0632-454a-86fa-ad8b7ed3f301",
+      "reference": "Fluent Emoji 3D 'Framed picture' (MIT)",
+      "prompt": "A wooden picture frame with a sunny landscape painting, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "chair",
+      "group": "decor",
+      "file": "public/models/decor/chair.glb",
+      "generationId": "053d0518-bbef-4f79-8fe8-9ef5d38b64f7",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/053d0518-bbef-4f79-8fe8-9ef5d38b64f7",
+      "reference": "Fluent Emoji 3D 'Chair' (MIT)",
+      "prompt": "A small brown wooden chair, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "suitcase",
+      "group": "decor",
+      "file": "public/models/decor/suitcase.glb",
+      "generationId": "e60aa618-088c-4639-b4f7-3318dcf0dfd3",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/e60aa618-088c-4639-b4f7-3318dcf0dfd3",
+      "reference": "Fluent Emoji 3D 'Luggage' (MIT)",
+      "prompt": "A blue suitcase with a handle and a luggage tag, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 110
+    },
+    {
+      "id": "handbag",
+      "group": "decor",
+      "file": "public/models/decor/handbag.glb",
+      "generationId": "11926b76-8b5b-4c71-bd8c-246d833dd7f5",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/11926b76-8b5b-4c71-bd8c-246d833dd7f5",
+      "reference": "Fluent Emoji 3D 'Handbag' (MIT)",
+      "prompt": "A brown leather handbag, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "dice",
+      "group": "decor",
+      "file": "public/models/decor/dice.glb",
+      "generationId": "429aff66-9ec5-4f09-8eba-da0c7bc1b9fa",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/429aff66-9ec5-4f09-8eba-da0c7bc1b9fa",
+      "reference": "Fluent Emoji 3D 'Game die' (MIT)",
+      "prompt": "A white game die with black and red dots, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 141
+    },
+    {
+      "id": "lantern",
+      "group": "decor",
+      "file": "public/models/decor/lantern.glb",
+      "generationId": "0e19e75c-5a1e-475e-9211-e71e112c0304",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/0e19e75c-5a1e-475e-9211-e71e112c0304",
+      "reference": "Fluent Emoji 3D 'Red paper lantern' (MIT)",
+      "prompt": "A red and orange Chinese paper lantern, stylized 3D toy style",
+      "use": "scenery with a word card",
+      "seconds": 80
+    },
+    {
+      "id": "bird",
+      "group": "decor",
+      "file": "public/models/decor/bird.glb",
+      "generationId": "fe0adf0d-d622-45d7-8770-65e177729290",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/fe0adf0d-d622-45d7-8770-65e177729290",
+      "reference": "Fluent Emoji 3D 'Bird' (MIT)",
+      "prompt": "A cute red bird standing, stylized 3D toy figure",
+      "use": "scenery with a word card",
+      "seconds": 79
+    },
+    {
+      "id": "swan",
+      "group": "decor",
+      "file": "public/models/decor/swan.glb",
+      "generationId": "cfb1502e-ee99-4c56-bcf4-f4c8fce3b011",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/cfb1502e-ee99-4c56-bcf4-f4c8fce3b011",
+      "reference": "Fluent Emoji 3D 'Swan' (MIT)",
+      "prompt": "A cute white swan swimming, stylized 3D toy figure",
+      "use": "scenery with a word card",
+      "seconds": 109
+    },
+    {
+      "id": "tropical-fish",
+      "group": "decor",
+      "file": "public/models/decor/tropical-fish.glb",
+      "generationId": "a423b2c7-52a6-4641-a10a-91016e95fb8d",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/a423b2c7-52a6-4641-a10a-91016e95fb8d",
+      "reference": "Fluent Emoji 3D 'Tropical fish' (MIT)",
+      "prompt": "A cute blue and yellow tropical fish, stylized 3D toy figure",
+      "use": "scenery with a word card",
+      "seconds": 80
+    },
+    {
+      "id": "fish",
+      "group": "decor",
+      "file": "public/models/decor/fish.glb",
+      "generationId": "409018a7-7538-4bfa-a612-90dc7411f7a0",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/409018a7-7538-4bfa-a612-90dc7411f7a0",
+      "reference": "Fluent Emoji 3D 'Fish' (MIT)",
+      "prompt": "A cute blue fish, stylized 3D toy figure",
+      "use": "scenery with a word card",
+      "seconds": 111
+    },
+    {
+      "id": "snail",
+      "group": "decor",
+      "file": "public/models/decor/snail.glb",
+      "generationId": "e7370da0-8fc0-48a1-aee6-3542f2127944",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/e7370da0-8fc0-48a1-aee6-3542f2127944",
+      "reference": "Fluent Emoji 3D 'Snail' (MIT)",
+      "prompt": "A cute snail with a brown spiral shell, stylized 3D toy figure",
+      "use": "scenery with a word card",
+      "seconds": 111
     }
   ]
 }

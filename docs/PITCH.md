@@ -8,8 +8,9 @@
 | 0:30–1:10 | **核心机制**：一个人掌握信息（目标 / 点单卡 / 地图 / 钥匙在哪），另一个人在 3D 世界里行动。说不清，队友就走错路、端错咖啡。六个日常场景关卡。 | 大厅关卡选择 |
 | 1:10–2:20 | **现场演示 · Toy Town 问路**：队员第一人称 WASD 走在小镇里，“Excuse me, how do I get to the hospital?”；导航员看地图，必须按问路者朝向说 “turn left at the bank”。Tricky 难度下 AI 故意说 “go north”，问路者追问 “Is that left or right?”。 | 第一人称 + 地图双视角 |
 | 2:20–2:55 | **AI 搭档会思考**：按 G 打开 AI brain：它听到了什么、调用了哪些接地工具、护栏如何拦下一句会误导对方的话。默认不显示字幕，只听不看，是真正的口语练习。 | Agent 面板 |
-| 2:55–3:30 | **赛后教练 + CEFR**：逐句诊断（“north 对问路者没有意义”“饮料要说大小杯”），给出改写；估计本局口语水平 A1–C1；回放带移动轨迹。 | Results / Replay |
-| 3:30–4:20 | **Rodin 四级**：L1 57 个 Rodin 模型撑起所有场景；L2 全部在 Claude Code 中经 Hyper3D MCP 生成，仓库内置 MCP 配置与官方 Rodin Skill；L3 Object Studio 运行时调用 Rodin API；L4 Scene Agent：一句 “fruit market” → 规划、参考图审核、20 次 Rodin 生成、优化、200 局模拟校验 → 新关卡上线。 | RODIN.md / 大厅里的 AI-made 关卡 |
+| 2:55–3:15 | **卡住了？中文求助**：按 H 说中文，私下拿到英文、自己说出来；队友永远看不到中文；赛后“借来的词”进单词本复习。 | 夜市点单 + 求助卡片 |
+| 3:15–3:30 | **赛后教练 + CEFR**：逐句诊断（“north 对问路者没有意义”“饮料要说大小杯”），给出改写；估计本局口语水平 A1–C1；回放带移动轨迹。 | Results / Replay |
+| 3:30–4:20 | **Rodin 四级**：L1 130 个 Rodin 模型撑起 8 个场景（宠物、夜市小吃、会动的街景，每个道具都是可点读的词卡）；L2 全部在 Claude Code 中经 Hyper3D MCP 生成，仓库内置 MCP 配置与官方 Rodin Skill；L3 Object Studio 运行时调用 Rodin API；L4 Scene Agent：一句 “fruit market” → 规划、参考图审核、20 次 Rodin 生成、优化、200 局模拟校验 → 新关卡上线。 | RODIN.md / 大厅里的 AI-made 关卡 |
 | 4:20–5:00 | **愿景**：从展位 90 秒到课堂结对练习；老师说一个主题，Agent 就生成一个新的口语场景。扫码来玩！ | CTA + 二维码 |
 
 ## 演示 Checklist

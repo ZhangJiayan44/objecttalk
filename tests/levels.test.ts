@@ -166,3 +166,19 @@ describe('agent-made levels (content/levels)', () => {
     }
   }, 60_000);
 });
+
+describe('Chinese lifeline helpers', () => {
+  it('detects Chinese, translates with the offline glossary and prices lifelines', async () => {
+    const { glossaryTranslate, hasChinese, lifelinePenalty, saidLifeline } = await import('../shared/lifeline');
+    expect(hasChinese('我想要两个苹果')).toBe(true);
+    expect(hasChinese('two apples, please')).toBe(false);
+    expect(glossaryTranslate('我要一个甜甜圈')?.toLowerCase()).toContain('doughnut');
+    expect(glossaryTranslate('在台灯的左边')?.toLowerCase()).toContain('left');
+    expect(glossaryTranslate('嗯嗯嗯')).toBeNull();
+    expect(lifelinePenalty(0)).toBe(0);
+    expect(lifelinePenalty(1)).toBe(0);
+    expect(lifelinePenalty(3)).toBe(8);
+    expect(saidLifeline('Could I have a large coffee', 'could i have a large coffee please')).toBe(true);
+    expect(saidLifeline('Could I have a large coffee', 'two doughnuts')).toBe(false);
+  });
+});

@@ -3,11 +3,12 @@ import { Pause, Play } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { START_POSE } from '@shared/bedroom';
-import { levelOf } from '@shared/levels';
+import { levelOf, sceneOf } from '@shared/levels';
 import { moveObject } from '@shared/missions';
 import type { Pose, Replay } from '@shared/protocol';
 import type { Role, SceneState } from '@shared/types';
-import { CefrCard, ReviewList, SkillBars, Stars, VERDICT_STYLE } from '@/components/game/Results';
+import { orderLook } from '@/components/game/GameView';
+import { BorrowedWords, CefrCard, ReviewList, SkillBars, Stars, VERDICT_STYLE } from '@/components/game/Results';
 import { BedroomScene } from '@/components/three/BedroomScene';
 import { CafeScene } from '@/components/three/CafeScene';
 import { CityScene } from '@/components/three/CityScene';
@@ -158,9 +159,9 @@ export default function ReplayPage() {
   let sceneEl: React.ReactNode = null;
   if (level.engine === 'tabletop' && frame.scene) {
     const target = mission ? { findId: mission.targetId, itemId: mission.itemId, cell: mission.targetCell } : null;
-    sceneEl = <RoomScene className="!absolute inset-0" scene={frame.scene} view={view} heldId={frame.heldId} target={target} pointer={frame.pointer} names={names} />;
+    sceneEl = <RoomScene className="!absolute inset-0" scene={frame.scene} view={view} heldId={frame.heldId} target={target} pointer={frame.pointer} names={names} palette={level.generated?.palette} sign={level.generated?.sign} set={sceneOf(level) === 'petshop' ? 'petshop' : 'study'} />;
   } else if (level.engine === 'order' && frame.scene)
-    sceneEl = <CafeScene className="!absolute inset-0" scene={frame.scene} tray={frame.tray} view={view} interactive={false} pointer={frame.pointer} names={names} level={replay.level} />;
+    sceneEl = <CafeScene className="!absolute inset-0" scene={frame.scene} tray={frame.tray} view={view} interactive={false} pointer={frame.pointer} names={names} level={replay.level} palette={level.generated?.palette} sign={level.generated?.sign} look={orderLook(level)} />;
   else if (level.engine === 'walknav' && world?.kind === 'city')
     sceneEl = <CityScene className="!absolute inset-0" town={world.town} pose={frame.pose ?? world.town.start} view={view} interactive={false} destination={mission?.destination ?? null} walkerName={names.builder} />;
   else if (level.engine === 'walksearch' && world?.kind === 'bedroom')
@@ -297,6 +298,7 @@ export default function ReplayPage() {
               </ul>
             </div>
             <CefrCard report={replay.report} coaching={replay.coaching} />
+            <BorrowedWords report={replay.report} />
             <div className="clay-card p-5">
               <h2 className="mb-3 font-display text-xl font-semibold">Coach review</h2>
               <div className="max-h-[60vh] overflow-y-auto pr-1">

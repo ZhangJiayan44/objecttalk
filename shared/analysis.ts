@@ -1,4 +1,5 @@
 import { estimateCefr, type CefrEstimate } from './cefr';
+import type { Lifeline } from './lifeline';
 import { describeObject, describeCell, cap } from './reg';
 import { GUIDE_VOICE } from './missions';
 import { parseUtterance, type ParsedUtterance } from './nlu';
@@ -69,6 +70,8 @@ export interface ChatRecord {
   t: number;
   role: Role;
   text: string;
+  /** Said with the help of a Chinese lifeline: still reviewed, but not counted for the CEFR estimate. */
+  assisted?: boolean;
 }
 
 export interface SkillScores {
@@ -96,6 +99,10 @@ export interface SessionReport {
   reviews: UtteranceReview[];
   tips: string[];
   goodPhrases: string[];
+  /** Chinese lifelines the human players used: the phrases to learn (see shared/lifeline.ts). */
+  lifelines?: (Lifeline & { role: Role | null })[];
+  /** Points taken off the score for lifelines. */
+  lifelinePenalty?: number;
 }
 
 export const ISSUE_TEXT: Record<IssueType, string> = {
@@ -233,7 +240,7 @@ function suggestionFor(rec: MissionRecord): string {
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
 /** Analyse a finished run. `humanRoles` limits coaching to the human players. */
-export function analyzeSession(input: { missions: MissionRecord[]; messages: ChatRecord[]; durationMs: number; missionsTotal: number; humanRoles?: Role[] }): SessionReport {
+export function analyzeSession(input: { missions: MissionRecord[]; messages: ChatRecord[]; durationMs: number; missionsTotal: number; humanRoles?: Role[]; level?: string }): SessionReport {
   const humans = new Set<Role>(input.humanRoles ?? ['guide', 'builder']);
   const reviews: UtteranceReview[] = [];
   const issueCounts = new Map<IssueType, number>();
@@ -329,8 +336,8 @@ export function analyzeSession(input: { missions: MissionRecord[]; messages: Cha
   const stars: 1 | 2 | 3 = missionsDone === input.missionsTotal && clarity >= 75 ? 3 : missionsDone >= Math.ceil(input.missionsTotal / 2) ? 2 : 1;
 
   return {
-    level: 'study',
-    cefr: estimateCefr(input.messages.filter((m) => humans.has(m.role)).map((m) => m.text)),
+    level: input.level ?? 'study',
+    cefr: estimateCefr(input.messages.filter((m) => humans.has(m.role) && !m.assisted).map((m) => m.text)),
     clarity,
     stars,
     missionsDone,

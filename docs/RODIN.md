@@ -5,7 +5,7 @@ uses it at every level, and each level is something you can run or inspect.
 
 | Level | What it means | Where it is in ObjectTalk |
 |---|---|---|
-| **01 USE**: 3D assets in the project | Rodin-generated assets are used in the product | **57 Rodin Gen-2.5 models** across 6 levels: desk objects, the café menu (with small/large drinks), Toy Town's buildings and landmarks (bank, hospital, school, post office, hotel, museum, 24-hour shop, house, fountain, trees, traffic lights, bus stop), bedroom belongings, decor, plus the 20 objects of the two agent-made levels. `public/models/`. |
+| **01 USE**: 3D assets in the project | Rodin-generated assets are used in the product | **130 Rodin Gen-2.5 models** across 8 levels (wave 4 added 73: 10 pets for the Pet Shop, 12 street foods for the Night Market, 9 café dishes and 42 scenery props that teach their names as word cards). Earlier waves: desk objects, the café menu (with small/large drinks), Toy Town's buildings and landmarks (bank, hospital, school, post office, hotel, museum, 24-hour shop, house, fountain, trees, traffic lights, bus stop), bedroom belongings, decor, plus the 20 objects of the two agent-made levels. `public/models/`. |
 | **02 BUILD**: MCP builds the product | The Hyper3D MCP is used inside the AI coding workflow | Every model was produced from Claude Code through the **Hyper3D MCP** (`rodin_create_uploads` → PUT → `rodin_generate` → `rodin_wait` → `rodin_get_result`). The repo ships the MCP config (`.mcp.json`), enables the official **`rodin3d-skill`** plugin from `DeemosTech/rodin3d-skills` (`.claude/settings.json`), and packages our workflows as project skills: `.claude/skills/new-level` and `.claude/skills/new-object-pack`. |
 | **03 CORE**: the API is a core capability | The product calls the Rodin API at runtime | **Object Studio** (`/studio`): players upload a photo of their own object; the server calls `POST /api/v2/rodin` → `/status` → `/download`, optimizes the GLB and adds it to the catalog; it appears on the desk in their next round. Code: `server/services/rodin.ts`, `server/services/studio.ts`. |
 | **04 AGENT**: a 3D agent builds the project | An agent orchestrates 3D generation | The **Scene Agent v2** (`agent/level.ts`) turns a theme into a **whole playable level**: plan (DeepSeek-V4-Pro JSON plan or offline library) → Fluent references → contact sheet + Qwen3.6 vision review → Rodin (REST, **Hyper3D CLI**, or hand-off to an MCP coding agent) → optimize → **playability simulation** → publish to `content/levels/`, live in the lobby without a restart. **Music Room** and **Fruit Market** were made this way. |
@@ -17,8 +17,9 @@ uses it at every level, and each level is something you can run or inspect.
 | 1 | Hero objects for the first table | 5 | `assets/rodin/candidates.jpg`, `assets/rodin/review.jpg` |
 | 2 | Everything the new levels need: desk & bedroom belongings, café menu, town buildings & landmarks, decor | 32 | `assets/rodin/review-wave2.jpg` |
 | 3 | Two whole levels from the Scene Agent | 20 | `assets/rodin/review-music-room.jpg`, `assets/rodin/review-fruit-market.jpg` |
+| 4 | Pet Shop + Night Market levels, a bigger café menu, 42 scenery props (REST API, 6 in parallel, 23 min, 0 failures, each model rendered and checked from the front and the back) | 73 | `assets/rodin/review-wave4.jpg` |
 
-All 57 generation ids, prompts and references are in [`assets/rodin/manifest.json`](../assets/rodin/manifest.json);
+All 130 generation ids, prompts and references are in [`assets/rodin/manifest.json`](../assets/rodin/manifest.json);
 every one opens at `https://hyper3d.ai/workspace/rodin/<id>`.
 
 ## How a level is generated (wave 3, end to end)

@@ -12,7 +12,7 @@ import type { Cell, ColorName, InterestId, Role } from '../shared/types';
 import { config } from './config';
 import { RoomManager } from './game/manager';
 import { LevelStore } from './services/levels';
-import { coachWithLlm, llmEnabled, llmLabel } from './services/llm';
+import { assistWithLlm, coachWithLlm, identifyObject, llmEnabled, llmLabel } from './services/llm';
 import { Store } from './services/store';
 import { Studio } from './services/studio';
 
@@ -120,8 +120,18 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
       interest,
       color,
       prompt: str(req.body?.prompt, 300) || undefined,
+      zh: str(req.body?.zh, 24) || undefined,
+      plural: str(req.body?.plural, 40) || undefined,
     });
     res.status(202).json({ jobId: job.id });
+  });
+
+  // Object Studio step 1: name the object in the photo (vision model) and check it is a good reference.
+  app.post('/api/studio/identify', upload.single('image'), async (req, res) => {
+    const file = req.file;
+    if (!file || !/^image\/(png|jpe?g|webp)$/.test(file.mimetype)) return void res.status(400).json({ error: 'Please upload a PNG, JPG or WebP photo.' });
+    if (!llmEnabled()) return void res.json({ identified: null });
+    res.json({ identified: await identifyObject(new Uint8Array(file.buffer), file.mimetype) });
   });
 
   app.get('/api/studio/jobs/:id', (req, res) => {
@@ -220,6 +230,17 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
       if (++chatBudget.count > 6) return;
       const via = p?.via === 'voice' || p?.via === 'quick' ? p.via : 'text';
       room()?.say(pid(), str(p?.text), via);
+    });
+    let assistBudget = { count: 0, since: Date.now() };
+    socket.on('chat:assist', async (p, ack) => {
+      if (typeof ack !== 'function') return;
+      const now = Date.now();
+      if (now - assistBudget.since > 10_000) assistBudget = { count: 0, since: now };
+      if (++assistBudget.count > 4) return ack({ ok: false, error: 'One moment…' });
+      const r = room();
+      if (!r) return ack({ ok: false, error: 'Not in a room.' });
+      const res = await r.assist(pid(), str(p?.text), assistWithLlm);
+      ack('error' in res ? { ok: false, error: res.error } : { ok: true, ...res });
     });
     socket.on('rtc:signal', (p) => {
       const r = room();

@@ -9,6 +9,7 @@ import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
 import { detectQuality, Dust, LightShaft, PostFx, SoftIBL } from './env';
 import { Box, INK, OpenShelf, Plant, Poster, RoomShellBox, usePatternTexture, usePlankTexture, WallClock, WindowPane } from './furniture';
 import { Avatar, ItemModel } from './models';
+import { Prop } from './props';
 
 /**
  * Messy Bedroom: real furniture with real hiding places (under the bed, on
@@ -384,6 +385,11 @@ function BedroomContents(p: BedroomViewProps) {
       <Beanbag />
       <WestWindow />
       <Plant position={[3.9, 0, -3.1]} scale={1.1} />
+      <Prop name="kitten" position={[-2.9, 0.66, -1.55]} size={0.42} rotation={0.9} />
+      <Prop name="basketball" position={[3.15, 0, 0.45]} size={0.3} />
+      <Prop name="soccerBall" position={[2.75, 0, 0.1]} size={0.28} />
+      <Prop name="suitcase" position={[4.15, 0, -0.85]} size={0.75} rotation={-Math.PI / 2} />
+      <Prop name="tulip" position={[-4.15, 0.76, 0.42]} size={0.26} />
       <Poster lines={['★ GAME ON ★']} position={[1.2, 1.9, -ROOM_D / 2 + 0.03]} size={[1.0, 0.7]} bg="#ffd166" />
       <Poster lines={['SPACE', '🚀']} position={[ROOM_W / 2 - 0.03, 1.8, 1.2]} rotation={-Math.PI / 2} size={[0.8, 1.0]} bg="#add8e6" />
       <WallClock position={[-1.2, 2.3, -ROOM_D / 2 + 0.05]} />

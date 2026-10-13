@@ -37,7 +37,7 @@ const ERRORS: Record<string, string> = {
   'audio-capture': 'No microphone found.',
 };
 
-export function useSpeechInput(onFinal: (text: string) => void) {
+export function useSpeechInput(onFinal: (text: string) => void, lang = 'en-US') {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     const C = recognitionCtor();
     if (!C || rec.current) return;
     const r = new C();
-    r.lang = 'en-US';
+    r.lang = lang;
     r.continuous = true;
     r.interimResults = true;
     r.maxAlternatives = 1;
@@ -86,7 +86,7 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     } catch {
       rec.current = null;
     }
-  }, []);
+  }, [lang]);
 
   const interimRef = useRef('');
   interimRef.current = interim;

@@ -32,7 +32,9 @@ export interface RunConfig {
 export const GUIDE_VOICE: Voice = { speaker: 'guide', listener: 'builder' };
 
 /** Mission order for one 90-second run: find -> place -> (find|place). */
-export function missionPlan(rng: Rng): TableMissionType[] {
+export function missionPlan(rng: Rng, quest = 'mixed'): TableMissionType[] {
+  if (quest === 'find') return ['find', 'find', 'find'];
+  if (quest === 'place') return ['place', 'place', 'place'];
   return ['find', 'place', rng.chance(0.5) ? 'find' : 'place'];
 }
 

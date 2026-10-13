@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
 import { START_POSE } from '@shared/bedroom';
-import { levelOf } from '@shared/levels';
+import { levelOf, sceneOf, type LevelMeta } from '@shared/levels';
 import type { HoverEvent, Pose, ServerInfo } from '@shared/protocol';
 import type { Role } from '@shared/types';
 import { BedroomScene } from '@/components/three/BedroomScene';
@@ -19,7 +19,14 @@ import { sfx } from '@/lib/sfx';
 import { useVoiceLink } from '@/lib/voice';
 import { AgentPanel } from './AgentPanel';
 import { MissionCard, missionChip } from './MissionCard';
+import { Lifeline } from './Lifeline';
 import { Transcript, useCommsPrefs, VoiceBar } from './VoiceBar';
+
+/** Which place surrounds the shop counter. */
+export const orderLook = (level: LevelMeta): 'cafe' | 'market' | 'night' => {
+  const s = sceneOf(level);
+  return s === 'night' ? 'night' : s === 'market' ? 'market' : 'cafe';
+};
 
 function Countdown({ endsAt, offset }: { endsAt: number; offset: number }) {
   const [n, setN] = useState(3);
@@ -263,6 +270,7 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
         onLockChange={setLocked}
         palette={level.generated?.palette}
         sign={level.generated?.sign}
+        set={sceneOf(level) === 'petshop' ? 'petshop' : 'study'}
       />
     );
   } else if (level.engine === 'order' && st.scene && world?.kind === 'cafe') {
@@ -284,7 +292,8 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
         onLockChange={setLocked}
         level={st.settings.level}
         palette={level.generated?.palette}
-        sign={level.generated?.sign}
+        sign={level.generated?.sign ?? (level.id === 'nightmarket' ? 'Lantern Street Night Market' : undefined)}
+        look={orderLook(level)}
       />
     );
   } else if (level.engine === 'walknav' && world?.kind === 'city' && pose) {
@@ -458,10 +467,11 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
             🔔 Serve the tray <Kbd>F</Kbd>
           </button>
         )}
+        {!embedded && <Lifeline hotkey={pttKey} />}
         <VoiceBar prefs={prefs} compact={embedded} pttKey={pttKey && !embedded} tts={tts} liveVoice={voice.status === 'live'} />
         {!embedded && (
           <div className="hidden text-xs font-bold text-ink/70 lg:block">
-            <Kbd>Space</Kbd> talk · <Kbd>Enter</Kbd> type · <Kbd>C</Kbd> captions · <Kbd>T</Kbd> transcript · <Kbd>1</Kbd>-<Kbd>6</Kbd> phrases · <Kbd>E</Kbd> mission · <Kbd>Tab</Kbd> phrasebook · <Kbd>G</Kbd> AI brain
+            <Kbd>Space</Kbd> talk · <Kbd>H</Kbd> 中文求助 · <Kbd>Enter</Kbd> type · <Kbd>C</Kbd> captions · <Kbd>T</Kbd> transcript · <Kbd>1</Kbd>-<Kbd>6</Kbd> phrases · <Kbd>E</Kbd> mission · <Kbd>Tab</Kbd> phrasebook · <Kbd>G</Kbd> AI brain
           </div>
         )}
       </div>

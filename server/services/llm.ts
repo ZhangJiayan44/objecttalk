@@ -90,3 +90,85 @@ ${lines}`;
     return null;
   }
 }
+
+const ASSIST_SYSTEM = `You help a Chinese learner of English who is stuck in a two-player speaking game. They wrote what they want to say in Chinese.
+Reply with ONLY the English sentence they should say to their partner: short (max 14 words), natural, A2-B1 level, polite, and true to their meaning.
+Keep game vocabulary exact (object names, left/right, numbers, sizes). No quotes, no explanation, no Chinese.`;
+
+/**
+ * Chinese lifeline: turn a stuck player's Chinese into the English line they should say.
+ * `context` names the level and the things in it, so object words match the game.
+ * Returns null when no LLM is configured or the call fails (the caller falls back to the glossary).
+ */
+export async function assistWithLlm(zh: string, context: string): Promise<string | null> {
+  if (!config.llm.enabled) return null;
+  const user = `Game context: ${context}\nChinese: ${zh}`;
+  try {
+    let text = '';
+    if (config.llm.provider === 'openai') {
+      const res = await chatWithFallback(config.llm.models.partner, {
+        messages: [
+          { role: 'system', content: ASSIST_SYSTEM },
+          { role: 'user', content: user },
+        ],
+        maxTokens: 80,
+        timeoutMs: 8000,
+      });
+      text = textOf(res.message);
+    } else if (anthropic) {
+      const res = await anthropic.messages.create({ model: config.llm.models.partner[0], max_tokens: 120, system: ASSIST_SYSTEM, messages: [{ role: 'user', content: user }] });
+      text = res.content.map((b) => (b.type === 'text' ? b.text : '')).join('');
+    }
+    const line = text
+      .replace(/^["'“”‘’\s]+|["'“”‘’\s]+$/g, '')
+      .split('\n')[0]
+      .trim();
+    // Guard: an English line without Chinese characters, of a sensible length.
+    if (!line || /[㐀-䶿一-鿿]/.test(line) || line.length > 160) return null;
+    return line;
+  } catch (err) {
+    console.warn('[llm] lifeline failed:', (err as Error).message);
+    return null;
+  }
+}
+
+const IdentifySchema = z.object({
+  ok: z.boolean().describe('true if the photo shows ONE clear, physical object that fits on a table'),
+  name: z.string().describe('the simple English noun phrase a learner should use, lowercase, e.g. "panda mug"'),
+  plural: z.string().describe('its correct plural, e.g. "panda mugs"'),
+  zh: z.string().describe('the Simplified Chinese name, e.g. "熊猫杯"'),
+  synonyms: z.array(z.string()).describe('2-4 other lowercase words people use for it, e.g. ["mug", "cup"]'),
+  color: z.enum(['red', 'blue', 'yellow', 'green', 'pink', 'purple', 'orange', 'white', 'brown']).describe('its main colour'),
+  example: z.string().describe('one short A2 sentence that describes where it could be, e.g. "The panda mug is next to the lamp."'),
+  tip: z.string().describe('if ok is false: a short tip to take a better photo; else an empty string'),
+});
+export type Identified = z.infer<typeof IdentifySchema>;
+
+/**
+ * Object Studio, step 1: the open-weight vision model looks at the player's photo and teaches
+ * the word before Rodin builds the model (name, plural, Chinese, an example sentence), and
+ * rejects photos Rodin would turn into a bad model. Null when no LLM is configured.
+ */
+export async function identifyObject(image: Uint8Array, mime: string): Promise<Identified | null> {
+  if (!config.llm.enabled || config.llm.provider !== 'openai') return null;
+  const system = `You help Chinese teenagers learn English with a 3D game. A player photographed an object to turn it into a 3D model (image-to-3D).
+Name the object in simple everyday English (the word a learner needs), and judge the photo: ok=false if it shows several separate objects, a person or animal you would not keep on a table, a screen/screenshot, text only, or is too dark/blurry/cropped.
+Reply with ONLY one JSON object with the keys: ok, name, plural, zh, synonyms, color, example, tip.`;
+  try {
+    const res = await chatWithFallback(config.llm.models.vision, {
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: [{ type: 'image_url', image_url: { url: `data:${mime};base64,${Buffer.from(image).toString('base64')}` } }, { type: 'text', text: 'What is this object?' }] },
+      ],
+      maxTokens: 400,
+      timeoutMs: 30_000,
+    });
+    const parsed = IdentifySchema.safeParse(parseJsonReply(textOf(res.message)));
+    if (!parsed.success) return null;
+    const d = parsed.data;
+    return { ...d, name: d.name.toLowerCase().slice(0, 32), plural: d.plural.toLowerCase().slice(0, 40), synonyms: d.synonyms.map((s) => s.toLowerCase()).slice(0, 4) };
+  } catch (err) {
+    console.warn('[llm] identify failed:', (err as Error).message);
+    return null;
+  }
+}

@@ -14,7 +14,7 @@
 ![Node](https://img.shields.io/badge/node-%E2%89%A520.11-339933?logo=node.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![three.js](https://img.shields.io/badge/three.js-r185-000000?logo=three.js&logoColor=white)
-![Hyper3D Rodin](https://img.shields.io/badge/3D-57%20个%20Rodin%20模型-9b7bf2)
+![Hyper3D Rodin](https://img.shields.io/badge/3D-130%20个%20Rodin%20模型-9b7bf2)
 
 [快速开始](#-快速开始) · [关卡](#-关卡) · [操作](#-操作) · [AI 搭档](#-ai-搭档agent) · [Scene Agent](#-scene-agent一句话生成整个关卡) · [技术架构](docs/ARCHITECTURE.md) · [Rodin 四级](docs/RODIN.md) · [English](README.md)
 
@@ -74,6 +74,18 @@ Tricky 下 AI 搭档会故意犯典型错误（说 “go north”、从自己的
 **语音优先**：读对方的文字不是口语练习，所以默认不显示字幕，只**听**对方说（AI 语音 / 朋友的语音转写），
 可以点 👂 再听一遍、点 👁 只看这一句，或按 `C` 打开字幕。手机上支持拖动转视角和虚拟摇杆。
 
+## 🔁 学习闭环（本轮新增）
+
+- **新关卡**：🐶 **宠物店**（描述和摆放小动物）、🏮 **夜市**（a bowl of noodles、a bag of chestnuts、a large bubble tea）；咖啡馆菜单扩到 19 道；水果集市有了自己的露天集市场景；小镇街上有车流、公园有小狗和风筝。
+- **🛟 中文求助**：卡住时按 <kbd>H</kbd>，用中文打字或说话，系统私下给出英文并朗读，你再**自己说出来**。队友永远看不到中文；每局第一次免费，之后每次 −4 分；求助句不计入 CEFR 估计。
+- **📝 借来的词**：赛后列出每句借来的英文，并标出你有没有说出来，同时存进单词本。
+- **👆 词卡**：准星对准场景里任何道具（新增 73 个 Rodin 模型），显示中英文名，点一下朗读并收藏。
+- **📒 单词本**：在 `/progress` 页面翻卡复习，借得越多的越靠前。
+- **📷 把自己的东西放进游戏**：拍照 → Qwen3.6 识别并教你这个词 → Rodin 生成期间跟读例句 → 生成后可以藏进卧室、放上书桌，或成为咖啡馆今日特供。
+- **🎯 任务与每日挑战**：每关 2–3 种任务主题，可在大厅选择；📅 每日挑战让同一天所有房间的世界和任务相同，同学之间可以比分。
+
+产品定位、与 Noun Town 的对比和增长策略见 [docs/PRODUCT.md](docs/PRODUCT.md)。
+
 ## 🤖 AI 搭档（Agent）
 
 任何关卡都可以和 AI 搭档玩，或在 `/demo` 观看 **AI 对 AI**。AI 只知道自己角色该知道的信息，只通过对话交流。
@@ -99,7 +111,7 @@ Music Room 和 Fruit Market 就是这样生成的：20 次 Rodin 生成，157 MB
 
 | 等级 | ObjectTalk 中的实现 |
 |---|---|
-| **01 USE** | **57** 个 Rodin Gen-2.5 模型：书桌物品、咖啡馆菜单、小镇建筑与地标、卧室物品、装饰 |
+| **01 USE** | **130** 个 Rodin Gen-2.5 模型：书桌物品、宠物、咖啡馆与夜市菜单、小镇建筑与车辆、卧室物品、42 个可点读的场景道具 |
 | **02 BUILD** | 全部在 Claude Code 中通过 **Hyper3D MCP** 生成；仓库自带 `.mcp.json` 并启用官方 `rodin3d-skill` 插件；流程沉淀为 Skill（`new-level`、`new-object-pack`） |
 | **03 CORE** | Object Studio 运行时调用 Rodin API：拍照生成你自己的游戏物品 |
 | **04 AGENT** | **Scene Agent** 自动生成、校验并发布可玩的完整关卡 |
@@ -121,7 +133,7 @@ Music Room 和 Fruit Market 就是这样生成的：20 次 Rodin 生成，157 MB
 ## 🧪 开发
 
 ```bash
-npm run check          # 类型检查 + 67 个测试（引擎、NLU、Agent harness、AI 对 AI 模拟、真实 Socket.IO 对局）+ 构建
+npm run check          # 类型检查 + 78 个测试（引擎、NLU、Agent harness、AI 对 AI 模拟、真实 Socket.IO 对局）+ 构建
 npm run agent          # Scene Agent 帮助
 ```
 
