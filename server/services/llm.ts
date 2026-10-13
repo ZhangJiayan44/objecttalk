@@ -163,7 +163,11 @@ Reply with ONLY one JSON object with the keys: ok, name, plural, zh, synonyms, c
       maxTokens: 400,
       timeoutMs: 30_000,
     });
-    const parsed = IdentifySchema.safeParse(parseJsonReply(textOf(res.message)));
+    const raw = parseJsonReply(textOf(res.message)) as Partial<Record<keyof Identified, unknown>> | null;
+    // A rejected photo often comes back as {"ok": false, everything else null}: still useful.
+    if (raw && raw.ok === false)
+      return { ok: false, name: '', plural: '', zh: '', synonyms: [], color: 'white', example: '', tip: typeof raw.tip === 'string' && raw.tip ? raw.tip : 'Show ONE object on a plain background, fully in the frame, in good light.' };
+    const parsed = IdentifySchema.safeParse(raw);
     if (!parsed.success) return null;
     const d = parsed.data;
     return { ...d, name: d.name.toLowerCase().slice(0, 32), plural: d.plural.toLowerCase().slice(0, 40), synonyms: d.synonyms.map((s) => s.toLowerCase()).slice(0, 4) };
