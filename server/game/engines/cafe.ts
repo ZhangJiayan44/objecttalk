@@ -137,6 +137,7 @@ export class CafeEngine implements LevelEngine {
   createBot(io: BotIO) {
     return createCafeBot(io, {
       level: this.pool,
+      specials: this.host.settings.customKinds,
       state: () => this.state,
       mission: () => this.current,
       hover: (e) => {
@@ -148,7 +149,7 @@ export class CafeEngine implements LevelEngine {
   }
 
   report(input: ReportInput) {
-    const report = analyzeCafe({ records: this.records, messages: input.messages, durationMs: input.durationMs, missionsTotal: MISSIONS, humanRoles: input.humanRoles, level: this.pool });
+    const report = analyzeCafe({ records: this.records, messages: input.messages, durationMs: input.durationMs, missionsTotal: MISSIONS, humanRoles: input.humanRoles, level: this.pool, specials: this.host.settings.customKinds });
     const missions: ReplayMission[] = this.records.map((r) => ({
       index: r.mission.index,
       type: 'order',

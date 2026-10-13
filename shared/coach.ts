@@ -126,8 +126,9 @@ function pluralSlip(text: string, level: string): boolean {
   return false;
 }
 
-export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: string }): SessionReport {
+export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: string; specials?: string[] }): SessionReport {
   const level = input.level ?? 'cafe';
+  const specials = input.specials ?? [];
   const humans = new Set(input.humanRoles);
   const reviews: UtteranceReview[] = [];
   const good = new Set<string>();
@@ -150,7 +151,7 @@ export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: 
       if (!humans.has('builder')) continue;
       const lower = msg.text.toLowerCase();
       const isQ = QUESTION.test(msg.text.trim());
-      const readBack = parseOrder(msg.text, level).lines.length > 0;
+      const readBack = parseOrder(msg.text, level, specials).lines.length > 0;
       if (isQ || readBack) {
         questions++;
         if (/small or large|large or small|what size/.test(lower)) good.add('Small or large?');
@@ -171,7 +172,7 @@ export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: 
       continue;
     }
     if (!humans.has('guide')) continue;
-    const p = parseOrder(msg.text, level);
+    const p = parseOrder(msg.text, level, specials);
     const isOrder = p.lines.length > 0;
     if (!isOrder) {
       if (p.done) good.add("That's all, thanks.");

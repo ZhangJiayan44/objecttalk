@@ -191,7 +191,7 @@ Graphics: `?fx=off|low|high` overrides the automatic post-processing level (reme
 ## 🧪 Development
 
 ```bash
-npm run check          # typecheck + 78 tests (engines, NLU, agent harness, AI-vs-AI sims, real Socket.IO games) + build
+npm run check          # typecheck + 80 tests (engines, NLU, agent harness, AI-vs-AI sims, real Socket.IO games) + build
 npm test               # vitest
 npm run agent          # Scene Agent help
 ```

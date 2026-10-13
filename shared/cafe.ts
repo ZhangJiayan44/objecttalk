@@ -1,4 +1,4 @@
-import { allKinds, getKind, kindsFor } from './catalog';
+import { getKind, kindsFor } from './catalog';
 import type { Rng } from './rng';
 import type { Cell, Difficulty, SceneObject, SceneState, SizeName } from './types';
 
@@ -196,14 +196,14 @@ export interface ParsedOrder {
 }
 
 const lexicons = new Map<string, { words: string[]; kind: string; plural: boolean }[]>();
-function lexicon(level = 'cafe') {
-  // Player-made objects (Object Studio, ids "my-…") can be sold anywhere as today's special.
-  const mine = allKinds().filter((k) => k.id.startsWith('my-'));
-  const key = `${level}|${mine.length}`;
+/** `extra`: item kinds this room also sells (a player's own objects as today's special). */
+function lexicon(level = 'cafe', extra: string[] = []) {
+  const key = `${level}|${extra.join(',')}`;
   const hit = lexicons.get(key);
   if (hit) return hit;
   const list: { words: string[]; kind: string; plural: boolean }[] = [];
-  for (const k of [...kindsFor(level), ...mine])
+  const specials = extra.map((id) => getKind(id)).filter((k): k is NonNullable<typeof k> => !!k);
+  for (const k of [...kindsFor(level), ...specials])
     for (const s of new Set([...k.synonyms, k.name, k.plural])) {
       const low = s.toLowerCase();
       const plural = low === k.plural.toLowerCase() || (low.endsWith('s') && low !== k.name.toLowerCase() && !/ss$/.test(low));
@@ -220,7 +220,7 @@ export function resetOrderLexicon() {
 }
 
 /** Parse "two croissants and a large coffee, please" (also corrections like "no pizza", "make that three"). */
-export function parseOrder(raw: string, level = 'cafe'): ParsedOrder {
+export function parseOrder(raw: string, level = 'cafe', extra: string[] = []): ParsedOrder {
   // Keep clause breaks as "|" so a "not" in one sentence never negates the next one.
   const text = raw
     .toLowerCase()
@@ -257,7 +257,7 @@ export function parseOrder(raw: string, level = 'cafe'): ParsedOrder {
       size = SIZES[w];
       continue;
     }
-    const lex = lexicon(level).find((l) => l.words.every((x, k) => words[i + k] === x));
+    const lex = lexicon(level, extra).find((l) => l.words.every((x, k) => words[i + k] === x));
     if (lex) {
       const kind = getKind(lex.kind);
       lines.push({ kind: lex.kind, size: kind?.sized ? size : null, qty, negated, plural: lex.plural && qty === null });

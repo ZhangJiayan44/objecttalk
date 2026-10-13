@@ -133,7 +133,7 @@ Music Room 和 Fruit Market 就是这样生成的：20 次 Rodin 生成，157 MB
 ## 🧪 开发
 
 ```bash
-npm run check          # 类型检查 + 78 个测试（引擎、NLU、Agent harness、AI 对 AI 模拟、真实 Socket.IO 对局）+ 构建
+npm run check          # 类型检查 + 80 个测试（引擎、NLU、Agent harness、AI 对 AI 模拟、真实 Socket.IO 对局）+ 构建
 npm run agent          # Scene Agent 帮助
 ```
 

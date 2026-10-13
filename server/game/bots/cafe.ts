@@ -19,6 +19,8 @@ import { BaseBot, dialogAct, isBackchannel, NUMBER_WORDS } from './common';
 
 export interface CafeCtx {
   level: string;
+  /** Extra kinds sold in this room (the players' own objects). */
+  specials: string[];
   state(): CafeState | null;
   mission(): OrderMission | null;
   hover(e: HoverEvent): void;
@@ -79,7 +81,7 @@ class AiBarista extends BaseBot {
     const started = Date.now();
     const st = this.ctx.state();
     if (!st) return;
-    const p = parseOrder(text, this.ctx.level);
+    const p = parseOrder(text, this.ctx.level, this.ctx.specials);
     const steps = [{ tool: 'parse_order', args: text, result: JSON.stringify({ lines: p.lines, done: p.done, correction: p.correction }) }];
     const replies: string[] = [];
     const lower = text.toLowerCase();
@@ -358,7 +360,7 @@ class AiCustomer extends BaseBot {
       this.traceRules(text, steps, line, started);
     };
     const sized = m.order.find((l) => l.size);
-    const mentionedKinds = parseOrder(text, this.ctx.level).lines.map((l) => l.kind);
+    const mentionedKinds = parseOrder(text, this.ctx.level, this.ctx.specials).lines.map((l) => l.kind);
     // The barista's greeting is our cue to order.
     if (this.opening && (dialogAct(text) === 'greet' || /\b(what (?:can i get|would you like|can i do)|can i help|next,? please|ready to order)\b/.test(lower))) {
       const line = this.opening;
@@ -395,7 +397,7 @@ class AiCustomer extends BaseBot {
       return reply(this.describeProblems(status));
     }
     // The barista reads the order back: compare with the card.
-    const readBack = parseOrder(text, this.ctx.level);
+    const readBack = parseOrder(text, this.ctx.level, this.ctx.specials);
     if (readBack.lines.length) {
       const wrong = readBack.lines.filter((l) => {
         const want = m.order.find((o) => o.kind === l.kind);
@@ -489,7 +491,7 @@ class AiCustomer extends BaseBot {
       vetSay: (text) => {
         const m = this.ctx.mission();
         if (!m) return null;
-        const p = parseOrder(text, this.ctx.level);
+        const p = parseOrder(text, this.ctx.level, this.ctx.specials);
         const bad = p.lines.filter((l) => !l.negated && !m.order.some((o) => o.kind === l.kind));
         if (bad.length && !/\b(didn'?t|not|no)\b/i.test(text)) return `${menuName(bad[0].kind, 1)} is not on your order card.`;
         return null;
