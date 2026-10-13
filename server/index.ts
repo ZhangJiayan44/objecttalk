@@ -22,12 +22,21 @@ const isCell = (c: unknown): c is Cell =>
   !!c && typeof c === 'object' && Number.isInteger((c as Cell).c) && Number.isInteger((c as Cell).r);
 const str = (v: unknown, max = 300) => (typeof v === 'string' ? v.slice(0, max) : '');
 
+const PRIVATE_IP = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
+const VIRTUAL_NIC = /vmware|virtual|vethernet|hyper-v|wsl|docker|vbox|bluetooth|蓝牙|本地连接\*|local area connection\*|loopback|tailscale|zerotier/i;
+const REAL_NIC = /^(wlan|wi-?fi|wlp|wlan0|en0|en1|eth0|ethernet|以太网$)/i;
+
+/** LAN addresses for QR codes, best first: real Wi-Fi/Ethernet with a private IP beats virtual adapters. */
 function lanAddresses(): string[] {
-  const out: string[] = [];
-  for (const list of Object.values(os.networkInterfaces()))
-    for (const net of list ?? []) if (net.family === 'IPv4' && !net.internal) out.push(net.address);
-  // Prefer typical home/venue Wi-Fi ranges first.
-  return out.sort((a, b) => Number(b.startsWith('192.168.')) - Number(a.startsWith('192.168.')));
+  if (process.env.LAN_HOST) return [process.env.LAN_HOST];
+  const scored: { ip: string; score: number }[] = [];
+  for (const [name, list] of Object.entries(os.networkInterfaces()))
+    for (const net of list ?? []) {
+      if (net.family !== 'IPv4' || net.internal || net.address.startsWith('169.254.')) continue;
+      const score = (PRIVATE_IP.test(net.address) ? 2 : 0) + (REAL_NIC.test(name) ? 3 : 0) - (VIRTUAL_NIC.test(name) ? 4 : 0);
+      scored.push({ ip: net.address, score });
+    }
+  return scored.sort((a, b) => b.score - a.score).map((s) => s.ip);
 }
 
 export async function startServer(opts: { port?: number; quiet?: boolean; dataDir?: string } = {}) {
