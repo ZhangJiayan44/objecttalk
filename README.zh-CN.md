@@ -78,7 +78,7 @@ Tricky 下 AI 搭档会故意犯典型错误（说 “go north”、从自己的
 
 任何关卡都可以和 AI 搭档玩，或在 `/demo` 观看 **AI 对 AI**。AI 只知道自己角色该知道的信息，只通过对话交流。
 
-- **Claude 工具调用 Agent**（可选，`ENABLE_LLM=1`）：每一轮都是一个有界的 Agent 循环（`server/agent/harness.ts`）：
+- **LLM 工具调用 Agent**（填 `LLM_API_KEY` 即开启，默认 **DeepSeek-V4-Flash**，也支持 Claude）：每一轮都是一个有界的 Agent 循环（`server/agent/harness.ts`）：
   观察 → 调用**接地工具**（`describe_target`、`find_objects`、`route`、`add_to_tray`、`follow`、`go_to`…，直接读写权威游戏状态）→ `say`。
   **护栏**会从听者视角重新理解每一句话（问路时按问路者朝向检查左右），误导性的话会被退回让模型重说。有步数上限和超时，工具参数做 schema 校验，完整轨迹写入回放。
 - **规则大脑**（始终可用、离线）：每个关卡都有对话状态（咖啡馆的点单票据与“小杯还是大杯？”、小镇里按路口计数执行指令、卧室里“上层还是下层？”），回答你真正问的问题、不重复同一句话，Claude 未开启或太慢时立刻接管。
@@ -106,8 +106,17 @@ Music Room 和 Fruit Market 就是这样生成的：20 次 Rodin 生成，157 MB
 
 ## ⚙️ 配置（全部可选）
 
-复制 [`.env.example`](.env.example) 为 `.env`：`RODIN_API_KEY` 开启实时生成；`ENABLE_LLM=1` + `ANTHROPIC_API_KEY` 开启 Claude Agent 搭档、教练与 CEFR 评估；
-`LLM_BASE_URL` 可接入兼容 Anthropic 的网关；`PUBLIC_URL` 用于部署后的二维码。画质可用 `?fx=off|low|high` 手动指定。
+复制 [`.env.example`](.env.example) 为 `.env`，然后运行 `npm run agent -- doctor` 检查（不消耗积分）：
+
+| 变量 | 用途 |
+|---|---|
+| `LLM_API_KEY` + `LLM_BASE_URL` | 任意 OpenAI 兼容接口（DeepSeek、通义千问、GLM、Kimi 或聚合网关）：AI 搭档 Agent、教练与 CEFR、Scene Agent 规划与视觉审核 |
+| `LLM_MODEL` / `LLM_COACH_MODEL` / `LLM_PLANNER_MODEL` / `LLM_VISION_MODEL` | 各任务模型，默认 `deepseek-v4-flash` / `deepseek-v4-pro` / `deepseek-v4-pro` / `qwen3.6-35b-a3b`（逗号分隔即备选） |
+| `RODIN_API_KEY` | Rodin REST：Object Studio 实时生成 + Scene Agent 的 `rest` 后端 |
+| `npm run agent -- login` | 登录官方 Hyper3D CLI（Scene Agent 的 `cli` 后端） |
+| `PUBLIC_URL` | 部署后的二维码地址 |
+
+画质可用 `?fx=off|low|high` 手动指定。
 
 ## 🧪 开发
 

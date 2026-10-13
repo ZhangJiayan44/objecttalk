@@ -90,7 +90,7 @@ function io(role: 'guide' | 'builder', log: string[], traces: Omit<AgentTrace, '
 }
 
 describe('partner brain', () => {
-  it('falls back to the rule brain when Claude fails', async () => {
+  it('falls back to the rule brain when the LLM fails', async () => {
     const { transport } = scripted([]);
     const fallback = vi.fn();
     const brain = new PartnerBrain(io('guide', [], []), 'study', () => ({ persona: '', observe: () => '', tools: [] }), transport);
@@ -98,7 +98,7 @@ describe('partner brain', () => {
     await vi.waitFor(() => expect(fallback).toHaveBeenCalledTimes(1));
   });
 
-  it('lets Claude answer the builder, but never with a description that points at the wrong object', async () => {
+  it('lets the LLM answer the builder, but never with a description that points at the wrong object', async () => {
     const scene: SceneState = {
       layoutId: 't',
       landmarks: [{ id: 'L0', kind: 'lamp', name: 'lamp', color: 'yellow', cell: { c: 3, r: 1 } }],
@@ -120,11 +120,46 @@ describe('partner brain', () => {
     const traces: Omit<AgentTrace, 'id' | 't' | 'role'>[] = [];
     const bot = createTabletopBot(io('guide', said, traces), { scene: () => scene, mission: () => mission, held: () => null, hover: () => undefined, pick: () => undefined, place: () => undefined });
     bot.onChat({ id: 'x', t: 1, at: Date.now(), playerId: 'h', name: 'Human', role: 'builder', text: 'Which rocket do you mean?', via: 'text' });
-    await vi.waitFor(() => expect(traces.some((t) => t.brain === 'claude')).toBe(true));
+    await vi.waitFor(() => expect(traces.some((t) => t.brain === 'llm')).toBe(true));
     bot.dispose();
     expect(said).toEqual(['The rocket on your left, next to nothing else.']);
-    const trace = traces.find((t) => t.brain === 'claude')!;
+    const trace = traces.find((t) => t.brain === 'llm')!;
     expect(trace.steps[0].result).toMatch(/^NOT SAID/);
     expect(trace.steps[1].tool).toBe('describe_target');
+  });
+});
+
+describe('OpenAI-compatible transport (DeepSeek / Qwen / GLM)', () => {
+  it('translates the tool-use transcript into OpenAI chat messages and back', async () => {
+    const { toOpenAiMessages } = await import('../server/agent/harness');
+    const msgs = toOpenAiMessages('sys', [
+      { role: 'user', content: 'Guide says: "the small rocket"' },
+      { role: 'assistant', content: [{ type: 'reasoning', text: 'think' }, { type: 'text', text: 'Looking.' }, { type: 'tool_use', id: 'c1', name: 'find_objects', input: { description: 'small rocket' } }] },
+      { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'c1', content: 'o3 (small rocket)' }] },
+    ]);
+    expect(msgs).toEqual([
+      { role: 'system', content: 'sys' },
+      { role: 'user', content: 'Guide says: "the small rocket"' },
+      { role: 'assistant', content: 'Looking.', tool_calls: [{ id: 'c1', type: 'function', function: { name: 'find_objects', arguments: '{"description":"small rocket"}' } }], reasoning_content: 'think' },
+      { role: 'tool', tool_call_id: 'c1', content: 'o3 (small rocket)' },
+    ]);
+  });
+
+  it('switches reasoning per model family and parses fenced JSON replies', async () => {
+    const { thinkingParams, parseJsonReply } = await import('../server/services/openai-compat');
+    expect(thinkingParams('deepseek-v4-flash', false)).toEqual({ thinking: { type: 'disabled' } });
+    expect(thinkingParams('qwen3.6-35b-a3b', false)).toEqual({ enable_thinking: false });
+    expect(thinkingParams('glm-5.3', true)).toEqual({ thinking: { type: 'enabled' } });
+    expect(thinkingParams('gpt-5', false)).toEqual({});
+    expect(parseJsonReply('```json\n{"a":1}\n```')).toEqual({ a: 1 });
+    expect(parseJsonReply('Sure! {"items":[1,2]} hope that helps')).toEqual({ items: [1, 2] });
+    expect(parseJsonReply('no json here')).toBeNull();
+  });
+
+  it('adds /v1 to bare gateway URLs only', async () => {
+    const { openaiBase } = await import('../server/config');
+    expect(openaiBase('http://35.0.0.1:3888')).toBe('http://35.0.0.1:3888/v1');
+    expect(openaiBase('https://api.deepseek.com/')).toBe('https://api.deepseek.com/v1');
+    expect(openaiBase('https://dashscope.aliyuncs.com/compatible-mode/v1')).toBe('https://dashscope.aliyuncs.com/compatible-mode/v1');
   });
 });

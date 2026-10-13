@@ -12,7 +12,7 @@ import type { Cell, ColorName, InterestId, Role } from '../shared/types';
 import { config } from './config';
 import { RoomManager } from './game/manager';
 import { LevelStore } from './services/levels';
-import { coachWithClaude, llmEnabled } from './services/llm';
+import { coachWithLlm, llmEnabled, llmLabel } from './services/llm';
 import { Store } from './services/store';
 import { Studio } from './services/studio';
 
@@ -60,7 +60,7 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
   const rooms = new RoomManager(io, {
     saveReplay: (replay) => store.saveReplay(replay),
     enrichReplay: async (replay) => {
-      const coaching = await coachWithClaude(replay.report);
+      const coaching = await coachWithLlm(replay.report);
       if (coaching) {
         replay.coaching = coaching;
         await store.saveReplay(replay);
@@ -79,7 +79,7 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
       version: VERSION,
       lanUrls: lanAddresses().map((ip) => `http://${ip}:${port}`),
       publicUrl: config.publicUrl,
-      features: { rodin: studio.enabled, llm: llmEnabled(), llmModel: llmEnabled() ? config.llm.model : undefined },
+      features: { rodin: studio.enabled, llm: llmEnabled(), llmModel: llmEnabled() ? config.llm.models.partner[0] : undefined },
       iceServers: config.iceServers,
     };
     res.json(info);
@@ -237,7 +237,7 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
   log(`  ➜ API + realtime:  http://localhost:${actualPort}`);
   if (serveClient) log(`  ➜ Play:            http://localhost:${actualPort}${lan ? `   (LAN: http://${lan}:${actualPort})` : ''}`);
   else log(`  ➜ Dev client:      http://localhost:${config.devClientPort} (start with npm run dev)`);
-  log(`  ➜ Rodin live generation: ${studio.enabled ? 'ON' : 'off (set RODIN_API_KEY)'} · Claude: ${llmEnabled() ? `ON (${config.llm.model})` : 'off (rule engine only)'}\n`);
+  log(`  ➜ Rodin live generation: ${studio.enabled ? 'ON' : 'off (set RODIN_API_KEY)'} · LLM: ${llmEnabled() ? `ON (${llmLabel()})` : 'off (rule brains only)'}\n`);
 
   const close = () =>
     new Promise<void>((resolve) => {

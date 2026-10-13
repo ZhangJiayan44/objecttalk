@@ -112,7 +112,7 @@ on-screen joystick.
 Play any level with an AI partner (or watch **AI vs AI** at `/demo`). Each partner only knows
 what its role knows and only talks through the chat, like a human.
 
-- **Claude tool-use agent** (opt-in, `ENABLE_LLM=1`): every turn runs a bounded agent loop
+- **LLM tool-use agent** (set `LLM_API_KEY`; defaults to **DeepSeek-V4-Flash**, Claude also supported): every turn runs a bounded agent loop
   (`server/agent/harness.ts`): observe the world → call **grounded tools** (`describe_target`,
   `find_objects`, `route`, `add_to_tray`, `follow`, `go_to`, …) that read and act on the
   authoritative game state → `say`. A **guardrail** re-reads every line from the listener's side
@@ -159,10 +159,10 @@ Everything is optional. Copy [`.env.example`](.env.example) to `.env`:
 | `PORT` | `8787` | Server port (production) |
 | `PUBLIC_URL` | (none) | Base URL used in QR codes when deployed |
 | `RODIN_API_KEY` | (none) | Live generation in Object Studio and the Scene Agent |
-| `ENABLE_LLM` + `ANTHROPIC_API_KEY` | off | Claude agent for the AI partner, coaching + CEFR, agent planning & vision review |
-| `ANTHROPIC_MODEL` | `claude-opus-5-5` | Model for all Claude calls |
-| `LLM_BASE_URL` | (none) | Anthropic-compatible gateway (plain Messages API, no betas) |
-| `LLM_PARTNER` | on | Set `0` to keep Claude for coaching only |
+| `LLM_API_KEY` + `LLM_BASE_URL` | off | Any OpenAI-compatible API (DeepSeek, Qwen, GLM, Kimi or a gateway): AI partner agent, coach + CEFR, Scene Agent planning & vision review |
+| `LLM_MODEL` · `LLM_COACH_MODEL` · `LLM_PLANNER_MODEL` · `LLM_VISION_MODEL` | `deepseek-v4-flash` · `deepseek-v4-pro` · `deepseek-v4-pro` · `qwen3.6-35b-a3b` | Model per job; comma-separated lists are fallbacks |
+| `LLM_PROVIDER=anthropic` + `ENABLE_LLM=1` + `ANTHROPIC_API_KEY` | off | Use Claude instead (`ANTHROPIC_MODEL`, default `claude-opus-5-5`) |
+| `LLM_PARTNER` | on | Set `0` to keep the LLM for coaching only |
 | `ICE_SERVERS` | public STUN | WebRTC voice link (add TURN for strict networks) |
 
 Graphics: `?fx=off|low|high` overrides the automatic post-processing level (remembered per browser).
@@ -178,7 +178,7 @@ npm run agent          # Scene Agent help
 ```
 shared/   language engines (no dependencies): room/spatial/reg/nlu/missions (study),
           cafe, city, bedroom, levels, coach, cefr, analysis
-server/   Express + Socket.IO: Room + level engines, AI partners (rule brains + Claude agent harness),
+server/   Express + Socket.IO: Room + level engines, AI partners (rule brains + LLM agent harness),
           Rodin, Object Studio, agent-made level store
 src/      React 19 + React Three Fiber: first-person controls, 4 scenes + env kit, voice-first HUD, replay
 agent/    Scene Agent CLI: whole levels (v2) and object packs (v1), Hyper3D REST / CLI / MCP hand-off

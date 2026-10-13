@@ -47,7 +47,10 @@ Dev tooling: Vite, TypeScript, Vitest, tsx, esbuild, concurrently (all MIT).
 | Service | Use | Required? |
 |---|---|---|
 | Hyper3D Rodin Gen-2.5 API / MCP / CLI | Image-to-3D generation (assets, Object Studio, Scene Agent). The Hyper3D MCP server is referenced in `.mcp.json`; the official [`rodin3d-skills`](https://github.com/DeemosTech/rodin3d-skills) plugin is referenced (not copied) in `.claude/settings.json`; the Scene Agent can drive the official `@hyper3d/cli` through `npx` | Only for generating new objects |
-| Anthropic Claude (`claude-opus-5-5` by default) | AI partner tool-use agent, coaching rewrites + CEFR check, Scene Agent planning and vision review | Optional, opt-in with `ENABLE_LLM=1` |
+| DeepSeek-V4 (Flash / Pro) via an OpenAI-compatible API | Default LLM: AI partner tool-use agent, coaching rewrites + CEFR check, Scene Agent level planning | Optional (`LLM_API_KEY`) |
+| Qwen3.6-35B-A3B (open-weight, multimodal) | Default vision model: Scene Agent reference review | Optional (`LLM_API_KEY`) |
+| Anthropic Claude (`claude-opus-5-5` by default) | Alternative LLM for all of the above | Optional (`LLM_PROVIDER=anthropic` + `ENABLE_LLM=1`) |
+| [@hyper3d/cli](https://www.npmjs.com/package/@hyper3d/cli) | Official Hyper3D CLI, Scene Agent `cli` backend (devDependency) | Optional |
 | Browser Web Speech API | Speech-to-text and text-to-speech | Optional (typing works everywhere) |
 
 ## Design references

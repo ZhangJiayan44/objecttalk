@@ -116,11 +116,13 @@ export interface ClientRoomState {
   results: { replayId: string; report: SessionReport; coaching?: Coaching } | null;
 }
 
-/** Optional Claude-written coaching layered on top of the rule-based report. */
+/** Optional LLM-written coaching layered on top of the rule-based report. */
 export interface Coaching {
   summary: string;
   rewrites: { original: string; better: string; why: string }[];
   /** CEFR estimate refined by the LLM coach (the rule estimate is in the report). */
+  /** Which model wrote it. */
+  model?: string;
   cefr?: string;
 }
 
@@ -184,7 +186,10 @@ export interface AgentTrace {
   id: string;
   t: number;
   role: Role;
-  brain: 'rules' | 'claude';
+  /** `llm`: the tool-use agent (DeepSeek, Qwen, Claude...); `rules`: the offline rule brain. */
+  brain: 'rules' | 'llm';
+  /** The model that answered (LLM turns only). */
+  model?: string;
   input: string;
   steps: { tool: string; args: string; result: string }[];
   output: string;

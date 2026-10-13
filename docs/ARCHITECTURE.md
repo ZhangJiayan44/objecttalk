@@ -14,7 +14,7 @@ flowchart LR
   subgraph Server["Node server (Express 5 + Socket.IO)"]
     Room["Room<br/>players · timer · replay"]
     Engines["Level engines<br/>tabletop · order · walknav · walksearch"]
-    Bots["AI partners<br/>rule brains + Claude agent harness"]
+    Bots["AI partners<br/>rule brains + LLM agent harness"]
     Studio["Object Studio<br/>Rodin API + optimizer"]
     Levels["Level store<br/>content/levels + data/levels"]
   end
@@ -34,8 +34,8 @@ flowchart LR
   Room --> Engines --> Bots
   Engines --> Spatial & Cafe & City & Bedroom
   Engines --> Coach
-  Bots -.->|tool use, opt-in| Claude[(Claude)]
-  Coach -.->|rewrites + CEFR, opt-in| Claude
+  Bots -.->|tool use, opt-in| LLM[(DeepSeek / Qwen / Claude)]
+  Coach -.->|rewrites + CEFR, opt-in| LLM
   Studio -->|image-to-3D| Rodin[(Hyper3D Rodin Gen-2.5)]
   SceneAgent -->|REST · CLI · MCP hand-off| Rodin
   SceneAgent -->|publishes| Levels --> Room
@@ -73,12 +73,12 @@ coach and the Scene Agent's validator share them.
 - **AI partners** (`game/bots/*.ts`): one rule brain per role per level, sharing
   `bots/common.ts` (timers that die with the round, a no-verbatim-repeat speech queue, dialogue
   acts). Partners hear lines after a speech-length delay, so two AIs never talk over each other.
-- **Agent harness** (`agent/harness.ts`, `agent/partner.ts`): when Claude is enabled, a partner
+- **Agent harness** (`agent/harness.ts`, `agent/partner.ts`): when an LLM is configured (any OpenAI-compatible API such as DeepSeek or Qwen, translated by `services/openai-compat.ts`; or Claude), a partner
   hands its turn to a bounded tool-use loop. Tools are grounded in the engine state (look-ups
   and actions), inputs are schema-checked, unknown tools are refused, and `say` goes through a
   level-specific **guardrail** (`vetSay`) that re-reads the line from the listener's side and
   returns `NOT SAID: <reason>` so the model can repair it. A deadline and step limit bound every
-  turn; the rule brain answers whenever Claude is off, slow or silent. Each turn is emitted as an
+  turn; the rule brain answers whenever the LLM is off, slow or silent. Each turn is emitted as an
   `ai:trace` (brain, tool calls, results, output, latency) and stored with the replay.
 - **Level store** (`services/levels.ts`): loads `content/levels/*.json` (shipped) and
   `data/levels/*.json` (made on this server), re-reading changed files on each request.
@@ -127,7 +127,7 @@ Validation reuses the game's own engines, so a published level is playable by co
 
 | Decision | Why |
 |---|---|
-| Deterministic engines + an optional LLM agent on top | Rules are instant, free, testable and work offline at a venue; the Claude agent makes the partner feel natural, and the engines both ground its tools and guard what it says. |
+| Deterministic engines + an optional LLM agent on top | Rules are instant, free, testable and work offline at a venue; the LLM agent (DeepSeek by default) makes the partner feel natural, and the engines both ground its tools and guard what it says. |
 | One engine per everyday situation behind a common interface | New situations (and agent-made levels) plug in without touching rooms, replays or the HUD. |
 | Client-predicted walking, server-validated | Smooth first-person movement over Wi-Fi without trusting the client. |
 | Captions off by default | The game is for speaking and listening; text is one key away when needed. |

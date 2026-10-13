@@ -8,6 +8,8 @@
  *   npm run agent -- level-finish <level>                          (optimize + validate + publish)
  *   npm run agent -- level-validate <content/levels/x.json>
  *   npm run agent -- setup                                         (.mcp.json + Hyper3D skill marketplace)
+ *   npm run agent -- doctor                                        (check LLM + Rodin REST + Hyper3D CLI, spends nothing)
+ *   npm run agent -- login [--no-browser]                          (sign the Hyper3D CLI in once)
  *
  * Object packs (v1):
  *   npm run agent -- plan "breakfast table" [--count 4]
@@ -15,8 +17,6 @@
  *   npm run agent -- register <file.glb> --id panda-mug --name "panda mug" [--synonyms cup,panda] [--interest food] [--color white] [--ref ref.png] [--generation <uuid>]
  *   npm run agent -- validate [--kinds rocket,teddy] [--runs 300]
  */
-import Anthropic from '@anthropic-ai/sdk';
-import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -31,8 +31,10 @@ import { optimizeGlb } from '../server/services/optimize';
 import { generateModel } from '../server/services/rodin';
 import { Store } from '../server/services/store';
 import type { LevelBundle } from '../shared/levels';
-import { chooseBackend, cliLoggedIn } from './hyper3d';
+import { checkCli, checkRest, chooseBackend, cliLogin, cliLoggedIn, type Check } from './hyper3d';
 import { addGeneration, finish, generate, loadState, newRun, sourceAndReview, validateLevel, writeHandoff } from './level';
+import { llmAvailable, llmDescribe, structured } from './llm';
+import { chat } from '../server/services/openai-compat';
 import { writeAgentSetup } from './setup';
 import { libraryPlan, type PackPlan, type PlannedItem } from './themes';
 
@@ -83,32 +85,24 @@ const PlanSchema = z.object({
     .describe('distinct table-top objects with different shapes'),
 });
 
-async function planWithClaude(theme: string, count: number): Promise<PackPlan | null> {
-  if (!config.llm.enabled) return null;
-  const client = new Anthropic({ apiKey: config.llm.apiKey });
-  try {
-    const res = await client.beta.messages.parse({
-      model: config.llm.model,
-      max_tokens: 4096,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      output_config: { effort: 'low', format: betaZodOutputFormat(PlanSchema) },
-      system:
-        'You design object packs for ObjectTalk, a 3D game where English learners describe table-top objects to each other. Choose objects that are small, iconic, easy to name, and visually distinct. Each must exist as a Microsoft Fluent Emoji (3D style).',
-      messages: [{ role: 'user', content: `Theme: "${theme}". Plan ${count} objects.` }],
-    });
-    if (res.stop_reason === 'refusal' || !res.parsed_output) return null;
-    const out = res.parsed_output;
-    return { pack: out.pack, theme, planner: 'claude', items: out.items.slice(0, count).map((i) => ({ ...i, interest: i.interest as InterestId | 'everyday', baseColor: i.baseColor as ColorName })) };
-  } catch (err) {
-    say('⚠️', `Claude planner unavailable (${(err as Error).message}); using the built-in theme library.`);
+async function planWithLlm(theme: string, count: number): Promise<PackPlan | null> {
+  if (!llmAvailable()) return null;
+  const out = await structured(
+    PlanSchema,
+    'You design object packs for ObjectTalk, a 3D game where English learners describe table-top objects to each other. Choose objects that are small, iconic, easy to name, and visually distinct. Each must exist as a Microsoft Fluent Emoji (3D style).',
+    `Theme: "${theme}". Plan ${count} objects.`,
+    { job: 'planner', maxTokens: 4096 },
+  );
+  if (!out) {
+    say('⚠️', 'LLM planner unavailable; using the built-in theme library.');
     return null;
   }
+  return { pack: out.pack, theme, planner: 'llm', items: out.items.slice(0, count).map((i) => ({ ...i, interest: i.interest as InterestId | 'everyday', baseColor: i.baseColor as ColorName })) };
 }
 
 async function plan(theme: string, count: number) {
   say('🧠', `Planning an object pack for "${theme}"…`);
-  const p = (await planWithClaude(theme, count)) ?? libraryPlan(theme, count);
+  const p = (await planWithLlm(theme, count)) ?? libraryPlan(theme, count);
   await mkdir(PACKS, { recursive: true });
   const file = path.join(PACKS, `${p.pack}.plan.json`);
   await writeFile(file, JSON.stringify(p, null, 2));
@@ -317,6 +311,37 @@ async function level(theme: string, flags: Record<string, string | boolean>) {
   process.exitCode = res.ok ? 0 : 1;
 }
 
+/** LLM: one tiny request per configured job model. */
+async function checkLlm(): Promise<Check[]> {
+  if (!config.llm.enabled) return [{ name: 'LLM', ok: false, detail: 'not configured', fix: 'Put LLM_API_KEY (+ LLM_BASE_URL for a gateway) in .env' }];
+  if (config.llm.provider !== 'openai') return [{ name: 'LLM', ok: true, detail: `Claude (${config.llm.models.partner[0]}); not probed` }];
+  const out: Check[] = [];
+  for (const job of ['partner', 'coach', 'planner', 'vision'] as const) {
+    const model = config.llm.models[job][0];
+    const t0 = Date.now();
+    try {
+      const res = await chat({ model, maxTokens: 20, timeoutMs: 60_000, messages: [{ role: 'user', content: 'Reply with: ok' }] });
+      out.push({ name: `LLM ${job}`, ok: true, detail: `${model} answered in ${Date.now() - t0} ms (${res.model})` });
+    } catch (err) {
+      out.push({ name: `LLM ${job}`, ok: false, detail: `${model}: ${(err as Error).message}`, fix: `Pick another model with LLM_${job === 'partner' ? '' : `${job.toUpperCase()}_`}MODEL in .env` });
+    }
+  }
+  return out;
+}
+
+/** Preflight for the Scene Agent and the runtime AI: nothing here spends Rodin credits. */
+async function doctor() {
+  say('🩺', 'Checking LLM, Rodin REST and Hyper3D CLI (no credits are spent)…');
+  const checks = [...(await checkLlm()), await checkRest(), await checkCli()];
+  for (const c of checks) {
+    console.log(`  ${c.ok ? '✅' : '❌'} ${c.name.padEnd(30)} ${c.detail}`);
+    if (!c.ok && c.fix) console.log(`     ↳ ${c.fix}`);
+  }
+  const backend = chooseBackend();
+  say('🔌', `Scene Agent will use: ${backend}${backend === 'handoff' ? ' (no Rodin credentials: writes HANDOFF.md for an MCP coding agent)' : ''}; planner ${llmAvailable() ? llmDescribe('planner') : 'offline library'}, review ${llmAvailable() ? llmDescribe('vision') : 'human gate'}`);
+  return checks.every((c) => c.ok);
+}
+
 async function main() {
   const { cmd, flags, positional } = args();
   if (cmd === 'level') await level(positional.join(' ') || 'music', flags);
@@ -331,6 +356,12 @@ async function main() {
     const v = validateLevel(bundle.level, bundle.kinds, Number(flags.runs ?? 200));
     v.lines.forEach((l) => console.log(`   ${l}`));
     process.exitCode = v.ok ? 0 : 1;
+  } else if (cmd === 'doctor') {
+    process.exitCode = (await doctor()) ? 0 : 1;
+  } else if (cmd === 'login') {
+    await cliLogin(!!flags['no-browser']);
+    const c = await checkCli();
+    say(c.ok ? '✅' : '⚠️', `${c.name}: ${c.detail}`);
   } else if (cmd === 'setup') {
     const files = await writeAgentSetup();
     say('🔧', `Wrote ${files.join(', ')}. Claude Code now sees the Hyper3D MCP and the official Rodin skill.`);
@@ -352,8 +383,10 @@ async function main() {
   npm run agent -- level-finish <level>             optimize, validate and publish a level run
   npm run agent -- level-validate <file.json>       simulate a published level
   npm run agent -- setup                            write .mcp.json + the Hyper3D Rodin skill marketplace
+  npm run agent -- doctor                           check the LLM, the Rodin key and the Hyper3D CLI (spends no credits)
+  npm run agent -- login [--no-browser]             sign the Hyper3D CLI in (one time)
 
-  npm run agent -- plan "<theme>" [--count 4]       plan an object pack (Claude if ENABLE_LLM=1, else built-in library)
+  npm run agent -- plan "<theme>" [--count 4]       plan an object pack (LLM if configured, else built-in library)
   npm run agent -- build <pack> [--images dir] [--yes] [--dry-run]
                                                     source + review + Rodin + optimize + register + validate
   npm run agent -- register <file.glb> --id <id> --name "<name>" [--synonyms a,b] [--interest food] [--color red] [--ref ref.png]

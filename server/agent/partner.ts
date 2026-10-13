@@ -6,10 +6,10 @@ import type { BotIO } from '../game/engines/types';
 import { defaultTransport, runAgent, type LlmTransport, type Toolkit } from './harness';
 
 /**
- * Glue between an AI partner (bot) and the agent harness: builds the prompt
+ * Glue between an AI partner (bot) and the agent harness (DeepSeek, Qwen, Claude...): builds the prompt
  * from the level, the role and the live dialogue, serialises turns (one
  * model run at a time per partner, newest message wins), records a trace,
- * and hands the turn back to the rule brain whenever Claude is off, slow or
+ * and hands the turn back to the rule brain whenever the LLM is off, slow or
  * says nothing useful.
  */
 
@@ -56,13 +56,13 @@ export class PartnerBrain {
   }
 
   /**
-   * Let Claude handle the turn. `fallback` runs the rule brain instead when
-   * Claude is disabled, fails, times out or decides nothing.
+   * Let the LLM handle the turn. `fallback` runs the rule brain instead when
+   * the LLM is disabled, fails, times out or decides nothing.
    */
   handle(input: string, fallback: () => void) {
     if (!this.transport) return fallback();
     if (this.busy) {
-      // Newest message wins; the older one's fallback is dropped (Claude will see it in the transcript).
+      // Newest message wins; the older one's fallback is dropped (the model will see it in the transcript).
       this.pending = { input, fallback };
       return;
     }
@@ -80,7 +80,7 @@ export class PartnerBrain {
       timeoutMs: config.llm.partnerTimeoutMs,
       onSay: (text) => this.io.say(text),
     });
-    this.io.trace({ brain: 'claude', input, steps: outcome.steps, output: outcome.said.join(' ') || (outcome.error ? `(fallback: ${outcome.error})` : '(no reply)'), ms: outcome.ms });
+    this.io.trace({ brain: 'llm', model: this.transport!.model, input, steps: outcome.steps, output: outcome.said.join(' ') || (outcome.error ? `(fallback: ${outcome.error})` : '(no reply)'), ms: outcome.ms });
     this.busy = false;
     const silentButFine = outcome.ok && !outcome.said.length && !outcome.acted && /^(ok|okay|cool|thanks|thank you|alright|got it)[.!]*$/i.test(input.trim());
     if (!outcome.ok || (!outcome.said.length && !outcome.acted && !silentButFine)) fallback();

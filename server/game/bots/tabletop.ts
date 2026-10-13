@@ -18,7 +18,7 @@ import { BaseBot, dialogAct, isBackchannel, type Timer } from './common';
  *  - Pixel (AI builder) follows instructions literally, asks "which one?" when
  *    a description fits several objects and "my left or your left?" when a
  *    direction has no owner.
- * With Claude enabled both hand their turns to the agent harness first, with
+ * With an LLM configured both hand their turns to the agent harness first, with
  * grounded tools; the rule brain below is the always-available fallback.
  */
 
@@ -337,7 +337,7 @@ class AiGuide extends BaseBot {
     }
   }
 
-  // ---------------------------------------------------------------- Claude tools
+  // ---------------------------------------------------------------- LLM tools
   private toolkit(): Toolkit {
     const io = this.io;
     return {
@@ -477,7 +477,7 @@ class AiBuilder extends BaseBot {
 
   onChat(msg: ChatMessage) {
     if (msg.role !== 'guide' || !this.ctx.mission() || !this.ctx.scene()) return;
-    // Quick, unambiguous moves stay on the instant rule path; everything else goes to Claude first.
+    // Quick, unambiguous moves stay on the instant rule path; everything else goes to the LLM first.
     const p = parseUtterance(msg.text, G2B);
     if ((p.intent === 'confirm' && this.pending) || (p.intent === 'deny' && this.pending)) return this.rules(msg.text);
     this.brain.handle(msg.text, () => this.rules(msg.text));
@@ -677,7 +677,7 @@ class AiBuilder extends BaseBot {
     if (e.type === 'success') this.sayOne(['Yay!', 'We did it!', 'Teamwork!']);
   }
 
-  // ---------------------------------------------------------------- Claude tools
+  // ---------------------------------------------------------------- LLM tools
   private toolkit(): Toolkit {
     const objectList = () => {
       const scene = this.ctx.scene();

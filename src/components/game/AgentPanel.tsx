@@ -5,7 +5,7 @@ import { useGame } from '@/lib/game-client';
 
 /**
  * "How the AI partner thinks": every turn of the AI partner as a trace,
- * which brain answered (Claude tool-use agent or the offline rule brain),
+ * which brain answered (the LLM tool-use agent, e.g. DeepSeek, or the offline rule brain),
  * the grounded tools it called, what they returned, and what it said.
  */
 export function AgentPanel({ onClose }: { onClose(): void }) {
@@ -29,7 +29,7 @@ export function AgentPanel({ onClose }: { onClose(): void }) {
         {traces.map((t) => (
           <div key={t.id} className="rounded-xl border-2 border-ink bg-cream p-2">
             <div className="flex items-center justify-between gap-2">
-              <span className={`rounded-full border-2 border-ink px-2 py-0.5 font-bold ${t.brain === 'claude' ? 'bg-lavender' : 'bg-mint'}`}>{t.brain === 'claude' ? '🧠 Claude agent' : '⚙️ rule brain'}</span>
+              <span className={`rounded-full border-2 border-ink px-2 py-0.5 font-bold ${t.brain === 'llm' ? 'bg-lavender' : 'bg-mint'}`}>{t.brain === 'llm' ? `🧠 ${t.model ?? 'LLM'} agent` : '⚙️ rule brain'}</span>
               <span className="font-bold text-muted">
                 {t.role} · {(t.t / 1000).toFixed(1)}s · {t.ms} ms
               </span>
