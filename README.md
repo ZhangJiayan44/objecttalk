@@ -17,7 +17,7 @@ find things on a desk, order in a café, **ask for directions while walking thro
 ![three.js](https://img.shields.io/badge/three.js-r185-000000?logo=three.js&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8-010101?logo=socket.io&logoColor=white)
 ![Hyper3D Rodin](https://img.shields.io/badge/3D-57%20Rodin%20Gen--2.5%20models-9b7bf2)
-![Claude](https://img.shields.io/badge/AI-Claude%20agent%20(optional)-D97757?logo=anthropic&logoColor=white)
+![LLM agent](https://img.shields.io/badge/AI-DeepSeek%20%2F%20Qwen%20agent%20(optional)-4D6BFE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-ff8fb8.svg)](CONTRIBUTING.md)
 
 [Quick start](#-quick-start) · [Levels](#-levels) · [Controls](#-controls) · [AI partner](#-the-ai-partner-agent) · [Scene Agent](#-scene-agent-whole-levels-from-a-theme) · [Architecture](docs/ARCHITECTURE.md) · [Rodin ×4](docs/RODIN.md) · [中文文档](README.zh-CN.md)
@@ -121,7 +121,7 @@ what its role knows and only talks through the chat, like a human.
 - **Rule brain** (always on, offline): dialogue state per level (ticket and "small or large?" in
   the café, step execution with corner counting in the town, "the top shelf or the bottom shelf?"
   in the bedroom), answers the question you actually asked, never repeats itself verbatim, and
-  takes over instantly whenever Claude is off or slow.
+  takes over instantly whenever the LLM is off or slow.
 - Open the **AI brain** panel (<kbd>G</kbd>) to see which brain answered, every tool call and result.
 - Simulation tests run AI vs AI on every level and difficulty: all missions complete.
 
@@ -131,8 +131,8 @@ what its role knows and only talks through the chat, like a human.
 npm run agent -- level "music class"          # or "fruit market", "science lab", anything
 ```
 
-`plan` (Claude or the offline library: engine, roles, phrasebook, 8–12 objects) → `source`
-(Fluent Emoji 3D references, rotated upright, 1024²) → `review` (contact sheet; Claude vision
+`plan` (DeepSeek-V4-Pro or the offline library: engine, roles, phrasebook, 8–12 objects) → `source`
+(Fluent Emoji 3D references, rotated upright, 1024²) → `review` (contact sheet; Qwen3.6 vision
 rejects bad references) → `generate` (**Hyper3D Rodin Gen-2.5** via `RODIN_API_KEY`, the official
 **Hyper3D CLI**, or a hand-off to a coding agent with the **Hyper3D MCP**) → `optimize` (~8 MB →
 ~300 KB) → `validate` (200 simulated rounds per difficulty must all be solvable) → `publish`
@@ -170,7 +170,7 @@ Graphics: `?fx=off|low|high` overrides the automatic post-processing level (reme
 ## 🧪 Development
 
 ```bash
-npm run check          # typecheck + 62 tests (engines, NLU, agent harness, AI-vs-AI sims, real Socket.IO games) + build
+npm run check          # typecheck + 67 tests (engines, NLU, agent harness, AI-vs-AI sims, real Socket.IO games) + build
 npm test               # vitest
 npm run agent          # Scene Agent help
 ```

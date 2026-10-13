@@ -3,7 +3,7 @@
  * It is NOT a placement test: it looks at length, variety and the structures a
  * learner reaches for (linking words, polite modals, place words, questions)
  * and says which band the sentences in this round sound like, with reasons
- * and one concrete next step. The optional Claude coach can refine it.
+ * and one concrete next step. The optional LLM coach can refine it.
  */
 
 export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1';

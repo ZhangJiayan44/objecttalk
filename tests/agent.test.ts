@@ -163,3 +163,29 @@ describe('OpenAI-compatible transport (DeepSeek / Qwen / GLM)', () => {
     expect(openaiBase('https://dashscope.aliyuncs.com/compatible-mode/v1')).toBe('https://dashscope.aliyuncs.com/compatible-mode/v1');
   });
 });
+
+describe('Hyper3D CLI backend', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('counts as signed in only when a credentials file was saved', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const { cliLoggedIn } = await import('../agent/hyper3d');
+    const dir = mkdtempSync(join(tmpdir(), 'hyper3d-'));
+    vi.stubEnv('HYPER3D_CONFIG_DIR', join(dir, 'missing'));
+    expect(cliLoggedIn()).toBe(false);
+    // An expired login leaves the directory; the update check writes its own cache there.
+    vi.stubEnv('HYPER3D_CONFIG_DIR', dir);
+    writeFileSync(join(dir, 'update-check.json'), '{}');
+    expect(cliLoggedIn()).toBe(false);
+    writeFileSync(join(dir, `${'ab'.repeat(32)}.json`), '{}');
+    expect(cliLoggedIn()).toBe(true);
+  });
+
+  it('reads JSON after any notices the CLI prints first', async () => {
+    const { parseCliJson } = await import('../agent/hyper3d');
+    expect(parseCliJson('Update available: 0.2.1\n{"generation_id":"g1","status":"completed"}')).toEqual({ generation_id: 'g1', status: 'completed' });
+    expect(() => parseCliJson('Not authenticated. Run hyper3d auth login.')).toThrow(/no JSON/);
+  });
+});

@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import os from 'node:os';
@@ -42,8 +42,16 @@ const CLI_VERSION = '0.2.0';
 /** Where the CLI keeps its OAuth tokens (override with HYPER3D_CONFIG_DIR). */
 export const cliConfigDir = () => process.env.HYPER3D_CONFIG_DIR || path.join(os.homedir(), '.hyper3d');
 
+/**
+ * A saved credentials file (`<sha256 of the endpoint>.json`), not just the directory: an expired
+ * login leaves the directory behind, and the CLI's update check keeps `update-check.json` there.
+ */
 export function cliLoggedIn() {
-  return existsSync(cliConfigDir());
+  try {
+    return readdirSync(cliConfigDir()).some((f) => /^[0-9a-f]{64}\.json$/.test(f));
+  } catch {
+    return false;
+  }
 }
 
 /** Pick the best available backend (or the one asked for). */
@@ -214,7 +222,11 @@ export async function checkCli(): Promise<Check> {
   }
 }
 
-/** Interactive sign-in: prints a code, opens the browser, saves tokens to ~/.hyper3d. */
+/**
+ * Interactive sign-in: prints a code, opens the browser, saves tokens to ~/.hyper3d.
+ * The CLI enforces the code's own expiry; our timeout is only a backstop, so it must be longer.
+ * Open the printed link once: a second tab with the same code shows "already used or being processed".
+ */
 export function cliLogin(noBrowser: boolean) {
-  return runCli(['auth', 'login', ...(noBrowser ? ['--no-browser'] : [])], { json: false, inherit: true, timeoutMs: 10 * 60_000 });
+  return runCli(['auth', 'login', ...(noBrowser ? ['--no-browser'] : [])], { json: false, inherit: true, timeoutMs: 30 * 60_000 });
 }

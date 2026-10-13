@@ -8,7 +8,7 @@ uses it at every level, and each level is something you can run or inspect.
 | **01 USE**: 3D assets in the project | Rodin-generated assets are used in the product | **57 Rodin Gen-2.5 models** across 6 levels: desk objects, the café menu (with small/large drinks), Toy Town's buildings and landmarks (bank, hospital, school, post office, hotel, museum, 24-hour shop, house, fountain, trees, traffic lights, bus stop), bedroom belongings, decor, plus the 20 objects of the two agent-made levels. `public/models/`. |
 | **02 BUILD**: MCP builds the product | The Hyper3D MCP is used inside the AI coding workflow | Every model was produced from Claude Code through the **Hyper3D MCP** (`rodin_create_uploads` → PUT → `rodin_generate` → `rodin_wait` → `rodin_get_result`). The repo ships the MCP config (`.mcp.json`), enables the official **`rodin3d-skill`** plugin from `DeemosTech/rodin3d-skills` (`.claude/settings.json`), and packages our workflows as project skills: `.claude/skills/new-level` and `.claude/skills/new-object-pack`. |
 | **03 CORE**: the API is a core capability | The product calls the Rodin API at runtime | **Object Studio** (`/studio`): players upload a photo of their own object; the server calls `POST /api/v2/rodin` → `/status` → `/download`, optimizes the GLB and adds it to the catalog; it appears on the desk in their next round. Code: `server/services/rodin.ts`, `server/services/studio.ts`. |
-| **04 AGENT**: a 3D agent builds the project | An agent orchestrates 3D generation | The **Scene Agent v2** (`agent/level.ts`) turns a theme into a **whole playable level**: plan (Claude structured output or offline library) → Fluent references → contact sheet + Claude vision review → Rodin (REST, **Hyper3D CLI**, or hand-off to an MCP coding agent) → optimize → **playability simulation** → publish to `content/levels/`, live in the lobby without a restart. **Music Room** and **Fruit Market** were made this way. |
+| **04 AGENT**: a 3D agent builds the project | An agent orchestrates 3D generation | The **Scene Agent v2** (`agent/level.ts`) turns a theme into a **whole playable level**: plan (DeepSeek-V4-Pro JSON plan or offline library) → Fluent references → contact sheet + Qwen3.6 vision review → Rodin (REST, **Hyper3D CLI**, or hand-off to an MCP coding agent) → optimize → **playability simulation** → publish to `content/levels/`, live in the lobby without a restart. **Music Room** and **Fruit Market** were made this way. |
 
 ## Three waves of generation
 
@@ -27,12 +27,12 @@ every one opens at `https://hyper3d.ai/workspace/rodin/<id>`.
 npm run agent -- level "fruit market" --backend handoff
 ```
 
-1. **Plan.** Without Claude the offline library picked *Fruit Market* (order engine): roles,
+1. **Plan.** With no LLM configured yet, the offline library picked *Fruit Market* (order engine): roles,
    quick phrases, a phrasebook with Chinese glosses, and 12 items, each naming a Microsoft
    Fluent Emoji 3D folder as its reference and a one-line prompt for the unseen back side.
 2. **Source + review.** References were downloaded, trimmed, rotated upright where needed
    (carrot +45°, pineapple +25°, trumpet +35°, microphone −45°) and upscaled to 1024² with
-   alpha. The contact sheet was reviewed by eye (Claude vision does this when enabled), two
+   alpha. The contact sheet was reviewed by eye (the vision model does this when an LLM is set), two
    references were re-oriented and re-sourced, then all 20 were approved.
 3. **Generate.** No API key on this machine, so the agent wrote `HANDOFF.md`; Claude Code ran
    it with the Hyper3D MCP: 4 batched `rodin_create_uploads`, 20 parallel PUTs, 20
@@ -44,8 +44,11 @@ npm run agent -- level "fruit market" --backend handoff
    understood by the order parser) and published the level. The Music Room (tabletop engine)
    went 62.8 MB → 2.40 MB with every mission solvable on all difficulties.
 
-The same pipeline runs unattended with `RODIN_API_KEY` (REST) or after `npx @hyper3d/cli auth login`
+The same pipeline runs unattended with `RODIN_API_KEY` (REST) or after `npm run agent -- login`
 (the official Hyper3D CLI, same account and credits as the MCP): `npm run agent -- level "<theme>" --yes`.
+`npm run agent -- doctor` checks both without spending credits. Both backends were run end to end
+on 2026-10-13 with a Fruit Market reference: REST (lemon, 82 s) and CLI (peach,
+`055e048c-d515-4194-88f2-d8be1f522ccb`, 146 s, 7.5 MB → 195 KB after optimizing), 0.5 credit each.
 
 ## Why Rodin is the core of the game, not decoration
 

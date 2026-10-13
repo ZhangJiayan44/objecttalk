@@ -81,7 +81,7 @@ Tricky 下 AI 搭档会故意犯典型错误（说 “go north”、从自己的
 - **LLM 工具调用 Agent**（填 `LLM_API_KEY` 即开启，默认 **DeepSeek-V4-Flash**，也支持 Claude）：每一轮都是一个有界的 Agent 循环（`server/agent/harness.ts`）：
   观察 → 调用**接地工具**（`describe_target`、`find_objects`、`route`、`add_to_tray`、`follow`、`go_to`…，直接读写权威游戏状态）→ `say`。
   **护栏**会从听者视角重新理解每一句话（问路时按问路者朝向检查左右），误导性的话会被退回让模型重说。有步数上限和超时，工具参数做 schema 校验，完整轨迹写入回放。
-- **规则大脑**（始终可用、离线）：每个关卡都有对话状态（咖啡馆的点单票据与“小杯还是大杯？”、小镇里按路口计数执行指令、卧室里“上层还是下层？”），回答你真正问的问题、不重复同一句话，Claude 未开启或太慢时立刻接管。
+- **规则大脑**（始终可用、离线）：每个关卡都有对话状态（咖啡馆的点单票据与“小杯还是大杯？”、小镇里按路口计数执行指令、卧室里“上层还是下层？”），回答你真正问的问题、不重复同一句话，LLM 未开启或太慢时立刻接管。
 - 按 `G` 打开 **AI brain** 面板，查看每轮由哪个大脑回答、调用了哪些工具及结果。
 
 ## 🏭 Scene Agent：一句话生成整个关卡
@@ -90,8 +90,8 @@ Tricky 下 AI 搭档会故意犯典型错误（说 “go north”、从自己的
 npm run agent -- level "music class"          # 或 "fruit market"、"science lab"…
 ```
 
-规划（Claude 或离线关卡库：引擎、角色、短语手册、8–12 个物品）→ 参考图（Fluent Emoji 3D，自动摆正、1024²）→
-审核（拼图；Claude 视觉审核）→ 生成（**Hyper3D Rodin Gen-2.5**：`RODIN_API_KEY`、官方 **Hyper3D CLI**，或交给装有 **Hyper3D MCP** 的编码 Agent）→
+规划（DeepSeek-V4-Pro 或离线关卡库：引擎、角色、短语手册、8–12 个物品）→ 参考图（Fluent Emoji 3D，自动摆正、1024²）→
+审核（拼图；Qwen3.6 视觉审核）→ 生成（**Hyper3D Rodin Gen-2.5**：`RODIN_API_KEY`、官方 **Hyper3D CLI**，或交给装有 **Hyper3D MCP** 的编码 Agent）→
 优化（~8 MB → ~300 KB）→ 校验（每个难度模拟 200 局，必须全部可解）→ 发布（`content/levels/<id>.json`，无需重启即出现在大厅）。
 Music Room 和 Fruit Market 就是这样生成的：20 次 Rodin 生成，157 MB → 5.5 MB，全部校验 PASS。
 
@@ -121,7 +121,7 @@ Music Room 和 Fruit Market 就是这样生成的：20 次 Rodin 生成，157 MB
 ## 🧪 开发
 
 ```bash
-npm run check          # 类型检查 + 62 个测试（引擎、NLU、Agent harness、AI 对 AI 模拟、真实 Socket.IO 对局）+ 构建
+npm run check          # 类型检查 + 67 个测试（引擎、NLU、Agent harness、AI 对 AI 模拟、真实 Socket.IO 对局）+ 构建
 npm run agent          # Scene Agent 帮助
 ```
 

@@ -22,13 +22,13 @@ projects and services and thank their authors. Versions are pinned in `package.j
 | [sonner](https://sonner.emilkowal.ski) | Toasts | MIT |
 | [qrcode.react](https://github.com/zpao/qrcode.react) | QR codes | ISC |
 | [canvas-confetti](https://github.com/catdad/canvas-confetti) | Success confetti | ISC |
-| [zod](https://zod.dev) | Schemas (Claude structured outputs) | MIT |
+| [zod](https://zod.dev) | Schemas (LLM structured outputs, tool inputs) | MIT |
 | [nanoid](https://github.com/ai/nanoid) | IDs | MIT |
 | [multer](https://github.com/expressjs/multer) | Photo upload | MIT |
 | [glTF-Transform](https://gltf-transform.dev) | GLB optimization | MIT |
 | [meshoptimizer](https://github.com/zeux/meshoptimizer) | Geometry compression | MIT |
 | [sharp](https://sharp.pixelplumbing.com) | Texture/image processing | Apache-2.0 |
-| [@anthropic-ai/sdk](https://github.com/anthropics/anthropic-sdk-typescript) | Optional Claude calls | MIT |
+| [@anthropic-ai/sdk](https://github.com/anthropics/anthropic-sdk-typescript) | Optional Claude provider (`LLM_PROVIDER=anthropic`) | MIT |
 | [Fontsource](https://fontsource.org): Fredoka, Nunito | Self-hosted fonts | OFL-1.1 |
 
 Dev tooling: Vite, TypeScript, Vitest, tsx, esbuild, concurrently (all MIT).

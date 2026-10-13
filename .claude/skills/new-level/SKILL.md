@@ -14,8 +14,9 @@ and `order` (a shop counter: quantities, sizes, plurals). Rodin works best
 ```bash
 npm run agent -- level "<theme>" [--engine tabletop|order] [--id my-level]
 ```
-- With `ENABLE_LLM=1` Claude plans the level (structured output) and reviews the
-  reference contact sheet with vision; otherwise the offline level library is used.
+- With an LLM configured (`LLM_API_KEY`: DeepSeek-V4-Pro plans, Qwen3.6 reviews; or Claude) the
+  agent plans the level and reviews the reference contact sheet with vision; otherwise the offline
+  level library is used. `npm run agent -- doctor` shows what is set up.
 - Output: `agent/runs/<id>/plan.json`, `refs/*.png` (1024², transparent), `review.jpg`.
 - **Look at `review.jpg` yourself.** Reject or fix references that show several
   objects, are cropped, or lie at an odd angle (set `rotate` in the plan, delete
@@ -27,7 +28,7 @@ The agent picks a backend automatically:
 | backend | needs | what happens |
 |---|---|---|
 | `rest` | `RODIN_API_KEY` | the agent calls the Rodin API itself (`--yes` to spend credits) |
-| `cli` | `npx @hyper3d/cli auth login` once | the agent drives the official Hyper3D CLI (same account as the MCP) |
+| `cli` | `npm run agent -- login` once (approve the code in the browser) | the agent drives the official Hyper3D CLI (same account as the MCP) |
 | `handoff` | nothing | writes `agent/runs/<id>/HANDOFF.md` for a coding agent with the Hyper3D MCP |
 
 With the **Hyper3D MCP** (this repo ships `.mcp.json`), for each approved reference:
