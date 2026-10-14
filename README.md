@@ -42,6 +42,10 @@ speaking level (CEFR A1 to C1).
 
 ## 🚀 Quick start
 
+**Play in the browser now:** https://wangzh12023.github.io/objecttalk/ (GitHub Pages: solo with the AI
+partner and the AI-vs-AI demo run entirely in your browser; for two devices, the LLM agent and live
+Rodin generation run the full server below. See [docs/DEPLOY.md](docs/DEPLOY.md).)
+
 ```bash
 git clone https://github.com/wangzh12023/objecttalk.git
 cd objecttalk && npm install

@@ -8,6 +8,7 @@ import { centerRayEvents, FirstPersonRig } from './controls';
 import { Cloud, detectQuality, PostFx, Sign, SkyDome, SoftIBL } from './env';
 import { Box, INK } from './furniture';
 import { Avatar } from './models';
+import { asset } from '@/lib/asset';
 import { TownLife } from './townlife';
 
 /**
@@ -20,7 +21,7 @@ const BUILDING_SIZE = 9.6;
 const TREE = '/models/tree.glb';
 
 function Model({ url, size, position, rotation = 0 }: { url: string; size: number; position: [number, number, number]; rotation?: number }) {
-  const gltf = useGLTF(url, false, true);
+  const gltf = useGLTF(asset(url), false, true);
   const obj = useMemo(() => {
     const c = gltf.scene.clone(true);
     c.traverse((o) => {

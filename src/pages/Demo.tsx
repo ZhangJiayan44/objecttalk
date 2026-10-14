@@ -168,7 +168,7 @@ export default function Demo() {
             <BrainCircuit size={16} strokeWidth={3} /> AI brain
           </button>
           {code && (
-            <a href={`/watch/${code}`} target="_blank" rel="noreferrer" className={btn('white', 'sm')}>
+            <a href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/watch/${code}`} target="_blank" rel="noreferrer" className={btn('white', 'sm')}>
               <Tv size={16} strokeWidth={3} /> Spectator screen
             </a>
           )}

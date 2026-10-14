@@ -35,6 +35,8 @@ AI 陪聊什么都能听懂，所以你**没有理由说清楚**。ObjectTalk �
 
 ## 🚀 快速开始
 
+**浏览器直接玩：** https://wangzh12023.github.io/objecttalk/ （GitHub Pages 静态版：和 AI 搭档单人练习、AI 对 AI 演示都在浏览器里运行；双设备对战、LLM Agent 和实时 Rodin 生成需要按下文启动完整服务器，详见 [docs/DEPLOY.md](docs/DEPLOY.md)。）
+
 ```bash
 git clone https://github.com/wangzh12023/objecttalk.git
 cd objecttalk && npm install

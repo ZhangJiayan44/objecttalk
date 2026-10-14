@@ -1,6 +1,7 @@
 import { Check, RotateCcw, Trash2, Volume2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { btn } from '@/components/ui';
+import { asset } from '@/lib/asset';
 import { speak } from '@/lib/speech';
 import { getWords, removeWord, setKnown, type WordEntry } from '@/lib/words';
 
@@ -68,7 +69,7 @@ export function WordBook() {
           <div className="text-xs font-bold text-muted">
             {i + 1} / {review!.length} · say it in English, then check
           </div>
-          {card.img && <img src={card.img} alt="" className="mx-auto mt-2 h-20 w-20 object-contain" />}
+          {card.img && <img src={asset(card.img)} alt="" className="mx-auto mt-2 h-20 w-20 object-contain" />}
           <div className="mt-2 font-display text-2xl font-semibold">{card.zh || '…'}</div>
           {shown ? (
             <div className="mt-2 flex items-center justify-center gap-2">

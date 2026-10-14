@@ -186,3 +186,30 @@ describe('Chinese lifeline (中文求助)', () => {
     builder.emit('room:leave');
   }, 30000);
 });
+
+describe('static build (GitHub Pages)', () => {
+  it('runs a whole AI round in the in-page server through the in-page socket hub', async () => {
+    const { Hub } = await import('../src/static/hub');
+    const { RoomManager } = await import('../server/game/manager');
+    const { attachRealtime } = await import('../server/realtime');
+    const saved: unknown[] = [];
+    const hub = new Hub();
+    const rooms = new RoomManager(hub as never, { saveReplay: async (r) => void saved.push(r) });
+    attachRealtime(hub as never, rooms, { assist: async () => null });
+    const sock = hub.connect() as unknown as Client;
+    const states: ClientRoomState[] = [];
+    sock.on('room:state', (s) => states.push(s));
+    const created = (await sock.emitWithAck('room:create', { name: 'Solo', role: 'guide', settings: { mode: 'ai', aiRole: 'builder', level: 'nightmarket' } })) as { ok: boolean; code: string };
+    expect(created.ok).toBe(true);
+    expect(await sock.emitWithAck('game:start')).toEqual({ ok: true });
+    await new Promise((r) => setTimeout(r, 4000));
+    const playing = states.filter((s) => s.phase === 'playing' && s.mission?.order);
+    expect(playing.length).toBeGreaterThan(0);
+    // The lifeline works offline in the browser (glossary).
+    const help = (await sock.emitWithAck('chat:assist', { text: '谢谢' })) as { ok: boolean; en?: string };
+    expect(help.ok).toBe(true);
+    expect(help.en?.toLowerCase()).toContain('thank');
+    sock.emit('room:leave');
+    rooms.dispose();
+  }, 20000);
+});

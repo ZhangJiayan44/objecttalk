@@ -8,6 +8,7 @@ import type { ItemKind } from '@shared/types';
 import { btn, Footer, Modal, Navbar } from '@/components/ui';
 import { fetchInfo, fetchStudioJob, identifyStudioPhoto, loadItems, myObjectIds, rememberMyObject, submitStudioJob, type IdentifiedObject } from '@/lib/api';
 import { getName } from '@/lib/profile';
+import { asset } from '@/lib/asset';
 import { getPrimaryClient } from '@/lib/primary';
 import { speak, useSpeechInput } from '@/lib/speech';
 import { addWord } from '@/lib/words';
@@ -79,7 +80,7 @@ function SayIt({ word, example }: { word: string; example: string }) {
 function KindCard({ kind, onOpen }: { kind: ItemKind; onOpen: () => void }) {
   return (
     <button onClick={onOpen} className="clay-card clay-card-hover flex flex-col items-center p-4 text-center">
-      {kind.ref ? <img src={kind.ref} alt="" className="h-20 w-20 object-contain" /> : <span className="text-5xl">{kind.emoji}</span>}
+      {kind.ref ? <img src={asset(kind.ref)} alt="" className="h-20 w-20 object-contain" /> : <span className="text-5xl">{kind.emoji}</span>}
       <span className="mt-2 font-display text-lg font-semibold capitalize">{kind.name}</span>
       <span className={`mt-1 rounded-full border-2 border-ink px-2 text-xs font-bold ${kind.source === 'rodin' ? 'bg-lavender' : 'bg-line'}`}>{kind.source === 'rodin' ? 'Rodin 3D' : 'Procedural'}</span>
       {kind.rodin && <span className="mt-1 font-mono text-[10px] text-muted">{kind.rodin.generationId.slice(0, 8)} · {kind.rodin.tier}</span>}
@@ -211,7 +212,13 @@ export default function Studio() {
             <h2 className="text-2xl font-bold">1 · Your photo</h2>
             {!live && info && (
               <p className="mt-3 rounded-2xl border-2 border-dashed border-ink bg-sun/40 p-3 text-sm font-semibold">
-                Live generation is off on this server. Set <code className="rounded bg-white px-1">RODIN_API_KEY</code> to enable it. The five starter objects below were generated with Rodin already.
+                {import.meta.env.VITE_STATIC ? (
+                  <>Photo-to-3D needs the ObjectTalk server with a Rodin key (this GitHub Pages demo has no backend). Every object in the library below was generated with Hyper3D Rodin.</>
+                ) : (
+                  <>
+                    Live generation is off on this server. Set <code className="rounded bg-white px-1">RODIN_API_KEY</code> to enable it. Every object in the library below was generated with Rodin already.
+                  </>
+                )}
               </p>
             )}
             <label className="mt-4 flex aspect-[4/3] cursor-pointer flex-col items-center justify-center rounded-3xl border-[3px] border-dashed border-ink bg-cream text-center hover:bg-sun/20">
@@ -321,7 +328,7 @@ export default function Studio() {
                   .filter((k) => mine.includes(k.id))
                   .map((k) => (
                     <div key={k.id} className="clay-card flex items-center gap-3 p-3">
-                      {k.ref ? <img src={k.ref} alt="" className="h-16 w-16 rounded-xl border-2 border-ink object-cover" /> : <span className="text-4xl">✨</span>}
+                      {k.ref ? <img src={asset(k.ref)} alt="" className="h-16 w-16 rounded-xl border-2 border-ink object-cover" /> : <span className="text-4xl">✨</span>}
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-display text-lg font-semibold">{k.name}</div>
                         <div className="text-xs font-bold text-muted">{k.zh?.split('/')[0]}</div>

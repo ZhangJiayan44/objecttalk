@@ -152,7 +152,7 @@ export default function Landing() {
         <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
           <div className="text-center lg:text-left">
             <div className="clay-chip mb-6 bg-mint">
-              <span className="h-2 w-2 rounded-full bg-cta" /> New: café, town & bedroom levels · walk around in 3D
+              <span className="h-2 w-2 rounded-full bg-cta" /> New: Pet Shop &amp; Night Market · 中文求助 lifeline · daily challenge
             </div>
             <h1 className="mb-6 text-4xl leading-tight font-bold sm:text-5xl lg:text-6xl">
               Say it <span className="text-cta">clearly</span>,
@@ -172,9 +172,9 @@ export default function Landing() {
             </div>
             <div className="flex justify-center gap-8 lg:justify-start">
               {[
-                ['6', 'everyday levels'],
+                ['8', 'everyday levels'],
                 ['2', 'views, 1 goal'],
-                ['57', 'Rodin 3D models'],
+                ['130', 'Rodin 3D models'],
               ].map(([n, l]) => (
                 <div key={l} className="text-center">
                   <div className="font-display text-3xl font-bold">{n}</div>

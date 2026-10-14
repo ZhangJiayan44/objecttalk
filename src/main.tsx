@@ -42,7 +42,7 @@ const router = createBrowserRouter([
   { path: '/progress', element: page(<Progress />) },
   ...(import.meta.env.DEV ? [{ path: '/dev/models', element: page(<DevModels />) }] : []),
   { path: '*', element: page(<NotFound />) },
-]);
+], { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

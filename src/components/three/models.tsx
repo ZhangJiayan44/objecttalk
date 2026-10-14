@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { DECOR_MODELS, getKind, kindsFor } from '@shared/catalog';
 import { TABLE_D, TABLE_W, TABLE_Y } from '@shared/room';
 import { COLOR_HEX, type ColorName, type LandmarkKind, type Role, type SizeName } from '@shared/types';
+import { asset } from '@/lib/asset';
 
 /** Visual building blocks shared by the game, replay and landing showcase. */
 
@@ -41,7 +42,7 @@ function useLook(root: THREE.Object3D | null, look: Look) {
 }
 
 function GlbModel({ url, rotation, look }: { url: string; rotation?: [number, number, number]; look: Look }) {
-  const gltf = useGLTF(url, false, true);
+  const gltf = useGLTF(asset(url), false, true);
   const root = useMemo(() => {
     const c = gltf.scene.clone(true);
     c.traverse((o) => {
@@ -108,7 +109,7 @@ export function preloadModels(level?: string) {
   const urls = new Set(['/models/rocket.glb', '/models/teddy_bear.glb', '/models/cupcake.glb', '/models/sneaker.glb', '/models/game_controller.glb', DECOR_MODELS.plant, DECOR_MODELS.books]);
   if (level) for (const k of kindsFor(level)) if (k.model) urls.add(k.model);
   if (level === 'city') for (const u of ['/models/bank.glb', '/models/convenience_store.glb', '/models/hospital.glb', '/models/school.glb', '/models/post_office.glb', '/models/hotel.glb', '/models/museum.glb', '/models/house.glb', '/models/fountain.glb', '/models/tree.glb', '/models/traffic_light.glb', '/models/bus_stop.glb']) urls.add(u);
-  for (const url of urls) useGLTF.preload(url, false, true);
+  for (const url of urls) useGLTF.preload(asset(url), false, true);
 }
 
 // ---------------------------------------------------------------------------
