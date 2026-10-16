@@ -90,7 +90,7 @@ function io(role: 'guide' | 'builder', log: string[], traces: Omit<AgentTrace, '
 }
 
 describe('partner brain', () => {
-  it('falls back to the rule brain when Claude fails', async () => {
+  it('falls back to the rule brain when the LLM fails', async () => {
     const { transport } = scripted([]);
     const fallback = vi.fn();
     const brain = new PartnerBrain(io('guide', [], []), 'study', () => ({ persona: '', observe: () => '', tools: [] }), transport);
@@ -98,7 +98,7 @@ describe('partner brain', () => {
     await vi.waitFor(() => expect(fallback).toHaveBeenCalledTimes(1));
   });
 
-  it('lets Claude answer the builder, but never with a description that points at the wrong object', async () => {
+  it('lets the LLM answer the builder, but never with a description that points at the wrong object', async () => {
     const scene: SceneState = {
       layoutId: 't',
       landmarks: [{ id: 'L0', kind: 'lamp', name: 'lamp', color: 'yellow', cell: { c: 3, r: 1 } }],
@@ -120,11 +120,72 @@ describe('partner brain', () => {
     const traces: Omit<AgentTrace, 'id' | 't' | 'role'>[] = [];
     const bot = createTabletopBot(io('guide', said, traces), { scene: () => scene, mission: () => mission, held: () => null, hover: () => undefined, pick: () => undefined, place: () => undefined });
     bot.onChat({ id: 'x', t: 1, at: Date.now(), playerId: 'h', name: 'Human', role: 'builder', text: 'Which rocket do you mean?', via: 'text' });
-    await vi.waitFor(() => expect(traces.some((t) => t.brain === 'claude')).toBe(true));
+    await vi.waitFor(() => expect(traces.some((t) => t.brain === 'llm')).toBe(true));
     bot.dispose();
     expect(said).toEqual(['The rocket on your left, next to nothing else.']);
-    const trace = traces.find((t) => t.brain === 'claude')!;
+    const trace = traces.find((t) => t.brain === 'llm')!;
     expect(trace.steps[0].result).toMatch(/^NOT SAID/);
     expect(trace.steps[1].tool).toBe('describe_target');
+  });
+});
+
+describe('OpenAI-compatible transport (DeepSeek / Qwen / GLM)', () => {
+  it('translates the tool-use transcript into OpenAI chat messages and back', async () => {
+    const { toOpenAiMessages } = await import('../server/agent/harness');
+    const msgs = toOpenAiMessages('sys', [
+      { role: 'user', content: 'Guide says: "the small rocket"' },
+      { role: 'assistant', content: [{ type: 'reasoning', text: 'think' }, { type: 'text', text: 'Looking.' }, { type: 'tool_use', id: 'c1', name: 'find_objects', input: { description: 'small rocket' } }] },
+      { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'c1', content: 'o3 (small rocket)' }] },
+    ]);
+    expect(msgs).toEqual([
+      { role: 'system', content: 'sys' },
+      { role: 'user', content: 'Guide says: "the small rocket"' },
+      { role: 'assistant', content: 'Looking.', tool_calls: [{ id: 'c1', type: 'function', function: { name: 'find_objects', arguments: '{"description":"small rocket"}' } }], reasoning_content: 'think' },
+      { role: 'tool', tool_call_id: 'c1', content: 'o3 (small rocket)' },
+    ]);
+  });
+
+  it('switches reasoning per model family and parses fenced JSON replies', async () => {
+    const { thinkingParams, parseJsonReply } = await import('../server/services/openai-compat');
+    expect(thinkingParams('deepseek-v4-flash', false)).toEqual({ thinking: { type: 'disabled' } });
+    expect(thinkingParams('qwen3.6-35b-a3b', false)).toEqual({ enable_thinking: false });
+    expect(thinkingParams('glm-5.3', true)).toEqual({ thinking: { type: 'enabled' } });
+    expect(thinkingParams('gpt-5', false)).toEqual({});
+    expect(parseJsonReply('```json\n{"a":1}\n```')).toEqual({ a: 1 });
+    expect(parseJsonReply('Sure! {"items":[1,2]} hope that helps')).toEqual({ items: [1, 2] });
+    expect(parseJsonReply('no json here')).toBeNull();
+  });
+
+  it('adds /v1 to bare gateway URLs only', async () => {
+    const { openaiBase } = await import('../server/config');
+    expect(openaiBase('http://35.0.0.1:3888')).toBe('http://35.0.0.1:3888/v1');
+    expect(openaiBase('https://api.deepseek.com/')).toBe('https://api.deepseek.com/v1');
+    expect(openaiBase('https://dashscope.aliyuncs.com/compatible-mode/v1')).toBe('https://dashscope.aliyuncs.com/compatible-mode/v1');
+  });
+});
+
+describe('Hyper3D CLI backend', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('counts as signed in only when a credentials file was saved', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const { cliLoggedIn } = await import('../agent/hyper3d');
+    const dir = mkdtempSync(join(tmpdir(), 'hyper3d-'));
+    vi.stubEnv('HYPER3D_CONFIG_DIR', join(dir, 'missing'));
+    expect(cliLoggedIn()).toBe(false);
+    // An expired login leaves the directory; the update check writes its own cache there.
+    vi.stubEnv('HYPER3D_CONFIG_DIR', dir);
+    writeFileSync(join(dir, 'update-check.json'), '{}');
+    expect(cliLoggedIn()).toBe(false);
+    writeFileSync(join(dir, `${'ab'.repeat(32)}.json`), '{}');
+    expect(cliLoggedIn()).toBe(true);
+  });
+
+  it('reads JSON after any notices the CLI prints first', async () => {
+    const { parseCliJson } = await import('../agent/hyper3d');
+    expect(parseCliJson('Update available: 0.2.1\n{"generation_id":"g1","status":"completed"}')).toEqual({ generation_id: 'g1', status: 'completed' });
+    expect(() => parseCliJson('Not authenticated. Run hyper3d auth login.')).toThrow(/no JSON/);
   });
 });

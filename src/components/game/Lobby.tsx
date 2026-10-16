@@ -267,7 +267,7 @@ export function Lobby() {
             </h2>
             <p className="mt-2 text-sm font-semibold text-muted">
               The AI partner only knows what its role knows and talks with you in natural English. It answers what you actually ask, asks when you are vague, and on Tricky it makes the classic mistakes on purpose so you practise catching them.
-              {info?.features.llm ? ' Its replies come from a Claude agent with grounded game tools (open the AI brain with G).' : ' (Offline rule brain: set ENABLE_LLM=1 for the Claude agent.)'}
+              {info?.features.llm ? ` Its replies come from an LLM agent (${info.features.llmModel ?? 'LLM'}) with grounded game tools: open the AI brain with G.` : ' (Offline rule brain: set LLM_API_KEY for the LLM agent.)'}
             </p>
             {host && (
               <button className={btn('white', 'sm', 'mt-4')} onClick={() => client.actions.updateSettings({ aiRole: s.aiRole === 'guide' ? 'builder' : 'guide' })}>

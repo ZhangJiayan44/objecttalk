@@ -25,7 +25,7 @@ export interface PackPlan {
   pack: string;
   theme: string;
   items: PlannedItem[];
-  planner: 'claude' | 'library';
+  planner: 'llm' | 'library';
 }
 
 const item = (p: Omit<PlannedItem, 'plural' | 'footprint'> & { plural?: string; footprint?: number }): PlannedItem => ({

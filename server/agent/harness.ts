@@ -1,8 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config';
+import { chatWithFallback, type OaiMessage, type OaiToolCall } from '../services/openai-compat';
 
 /**
- * The partner agent harness: a small, bounded tool-use loop around Claude.
+ * The partner agent harness: a small, bounded tool-use loop around an LLM
+ * (DeepSeek / Qwen / GLM via an OpenAI-compatible API, or Claude).
  *
  *   observe -> think -> call grounded tools (look / act) -> say -> stop
  *
@@ -41,10 +43,8 @@ export interface Toolkit {
   vetSay?(text: string): string | null;
 }
 
-type Block = { type: string; id?: string; name?: string; input?: unknown; text?: string };
-
 export interface LlmResponse {
-  content: Block[];
+  content: { type: string; id?: string; name?: string; input?: unknown; text?: string }[];
   stop_reason: string | null;
 }
 
@@ -64,14 +64,77 @@ export interface LlmTransport {
 
 let shared: LlmTransport | null | undefined;
 
-/** The configured transport, or null when Claude is not enabled. */
-export function defaultTransport(): LlmTransport | null {
-  if (shared !== undefined) return shared;
-  if (!config.llm.enabled) return (shared = null);
+type Msg = LlmRequest['messages'][number];
+type Block = { type: string; id?: string; name?: string; input?: unknown; text?: string; content?: unknown; tool_use_id?: string; is_error?: boolean };
+
+/**
+ * Translate the loop's Anthropic-style transcript (text / tool_use / tool_result blocks)
+ * into OpenAI chat messages. The loop itself stays provider-neutral.
+ */
+export function toOpenAiMessages(system: string, messages: Msg[]): OaiMessage[] {
+  const out: OaiMessage[] = [{ role: 'system', content: system }];
+  for (const m of messages) {
+    if (typeof m.content === 'string') {
+      out.push({ role: m.role, content: m.content });
+      continue;
+    }
+    const blocks = (m.content as Block[]) ?? [];
+    if (m.role === 'assistant') {
+      const text = blocks
+        .filter((b) => b.type === 'text')
+        .map((b) => b.text ?? '')
+        .join('');
+      const calls: OaiToolCall[] = blocks
+        .filter((b) => b.type === 'tool_use')
+        .map((b) => ({ id: b.id ?? '', type: 'function', function: { name: b.name ?? '', arguments: JSON.stringify(b.input ?? {}) } }));
+      const reasoning = blocks.find((b) => b.type === 'reasoning')?.text;
+      out.push({ role: 'assistant', content: text || null, ...(calls.length ? { tool_calls: calls } : {}), ...(reasoning ? { reasoning_content: reasoning } : {}) });
+    } else {
+      for (const b of blocks) {
+        if (b.type === 'tool_result') out.push({ role: 'tool', tool_call_id: b.tool_use_id ?? '', content: String(b.content ?? '') });
+        else if (b.type === 'text') out.push({ role: 'user', content: b.text ?? '' });
+      }
+    }
+  }
+  return out;
+}
+
+/** Parse tool-call arguments; malformed JSON becomes an input the schema check will reject. */
+function parseArgs(raw: string): unknown {
+  try {
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return { __invalid_json__: raw.slice(0, 80) };
+  }
+}
+
+/** An OpenAI-compatible endpoint (DeepSeek, Qwen, GLM, Kimi...). */
+function openAiTransport(models: string[]): LlmTransport {
+  return {
+    model: models[0],
+    async create({ system, messages, tools, maxTokens, signal }) {
+      const res = await chatWithFallback(models, {
+        messages: toOpenAiMessages(system, messages),
+        tools: tools.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.input_schema } })),
+        maxTokens,
+        signal,
+      });
+      const msg = res.message;
+      const content: LlmResponse['content'] = [];
+      if (msg.reasoning_content) content.push({ type: 'reasoning', text: msg.reasoning_content });
+      const text = typeof msg.content === 'string' ? msg.content : '';
+      if (text) content.push({ type: 'text', text });
+      for (const call of msg.tool_calls ?? []) content.push({ type: 'tool_use', id: call.id, name: call.function.name, input: parseArgs(call.function.arguments) });
+      return { content, stop_reason: msg.tool_calls?.length ? 'tool_use' : res.finishReason === 'length' ? 'max_tokens' : 'end_turn' };
+    },
+  };
+}
+
+/** Claude through the Anthropic SDK (or an Anthropic-compatible gateway). */
+function anthropicTransport(model: string): LlmTransport {
   // authToken: null + explicit baseURL: never inherit a developer's shell credentials or proxy.
   const client = new Anthropic({ apiKey: config.llm.apiKey, authToken: null, baseURL: config.llm.baseURL, timeout: 20_000, maxRetries: 1 });
-  const model = config.llm.model;
-  shared = {
+  return {
     model,
     async create({ system, messages, tools, maxTokens, signal }) {
       if (config.llm.compat) {
@@ -98,6 +161,13 @@ export function defaultTransport(): LlmTransport | null {
       return res as unknown as LlmResponse;
     },
   };
+}
+
+/** The configured transport, or null when no LLM is enabled. */
+export function defaultTransport(): LlmTransport | null {
+  if (shared !== undefined) return shared;
+  if (!config.llm.enabled) return (shared = null);
+  shared = config.llm.provider === 'openai' ? openAiTransport(config.llm.models.partner) : anthropicTransport(config.llm.models.partner[0]);
   return shared;
 }
 
@@ -196,7 +266,7 @@ export async function runAgent(transport: LlmTransport, run: AgentRun): Promise<
   try {
     for (let step = 0; step < (run.maxSteps ?? 4); step++) {
       const res = await transport.create({ system: run.system, messages, tools: defs, maxTokens: 1024, signal: controller.signal });
-      // Echo the assistant turn back unchanged (thinking blocks included).
+      // Echo the assistant turn back unchanged (thinking / reasoning blocks included).
       messages.push({ role: 'assistant', content: res.content });
       if (res.stop_reason === 'refusal') break;
       const uses = res.content.filter((b) => b.type === 'tool_use');
@@ -207,7 +277,7 @@ export async function runAgent(transport: LlmTransport, run: AgentRun): Promise<
             .map((b) => b.text ?? '')
             .join(' '),
         );
-        // Some gateways answer in plain text instead of calling say: still vet it.
+        // Some models answer in plain text instead of calling say: still vet it.
         if (text && !said.length && !acted) {
           const problem = run.kit.vetSay?.(text);
           if (!problem) {

@@ -7,8 +7,8 @@ import type { ColorName, PlaceDesc, RefDesc, RelType, Role, SuperlativeType, Vie
  * structured RefDesc / PlaceDesc and records *how* the speaker talked
  * (unmarked "left", vague "over there", ...) for the post-game coach.
  * No network, no model: deterministic and instant, so the game works offline.
- * The optional Claude interpreter (server/services/llm.ts) only kicks in when
- * this parser finds nothing usable.
+ * The study rule brain, the LLM agent's guardrail (vetSay) and the coach all
+ * read sentences through it.
  */
 
 export type Intent = 'pick' | 'place' | 'question' | 'confirm' | 'deny' | 'other';

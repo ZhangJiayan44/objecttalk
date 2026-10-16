@@ -53,7 +53,7 @@ export function SkillBars({ skills, names }: { skills: SessionReport['skills']; 
 
 const CEFR_STEPS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const;
 
-/** Rough speaking-level estimate (rule-based, optionally refined by the Claude coach). */
+/** Rough speaking-level estimate (rule-based, optionally refined by the LLM coach). */
 export function CefrCard({ report, coaching }: { report: SessionReport; coaching?: Coaching }) {
   const est = report.cefr;
   const level = coaching?.cefr ?? est?.level;
@@ -61,7 +61,7 @@ export function CefrCard({ report, coaching }: { report: SessionReport; coaching
     <div className="clay-card bg-lavender/60 p-5">
       <div className="flex items-center justify-between gap-3">
         <h3 className="font-display text-lg font-semibold">🎯 Your English this round</h3>
-        {coaching?.cefr && <span className="clay-chip bg-white !py-0.5 !text-xs">🤖 checked by Claude</span>}
+        {coaching?.cefr && <span className="clay-chip bg-white !py-0.5 !text-xs">🤖 checked by {coaching.model ?? 'the AI coach'}</span>}
       </div>
       {level ? (
         <>
@@ -94,7 +94,7 @@ export function ReviewList({ report, coaching }: { report: SessionReport; coachi
     <div className="space-y-3">
       {coaching && (
         <div className="rounded-2xl border-[3px] border-ink bg-lavender p-4">
-          <div className="mb-1 font-display text-lg font-semibold">🤖 Coach Claude says</div>
+          <div className="mb-1 font-display text-lg font-semibold">🤖 AI coach{coaching.model ? ` (${coaching.model})` : ''} says</div>
           <p className="font-semibold">{coaching.summary}</p>
           {coaching.rewrites.map((r, i) => (
             <div key={i} className="mt-2 rounded-xl bg-white/80 p-2 text-sm">

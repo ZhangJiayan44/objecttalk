@@ -2,7 +2,7 @@ import type { Palette } from '../shared/levels';
 import type { ColorName, InterestId } from '../shared/types';
 
 /**
- * Offline level library for the Scene Agent. With ENABLE_LLM=1 Claude plans
+ * Offline level library for the Scene Agent. With an LLM configured, it plans
  * levels for any theme in this same shape; without it the agent picks the
  * closest theme here. Every `fluent` value is a Microsoft Fluent Emoji 3D
  * asset folder (MIT) that was checked to exist.
@@ -45,7 +45,9 @@ export interface LevelPlan {
   quick: { guide: string[]; builder: string[] };
   phrases: { title: string; items: [string, string][] }[];
   items: LevelItem[];
-  planner: 'claude' | 'library';
+  planner: 'llm' | 'library';
+  /** Which model planned it (LLM plans only). */
+  plannerModel?: string;
 }
 
 const it = (p: Omit<LevelItem, 'plural' | 'footprint' | 'interest'> & { plural?: string; footprint?: number; interest?: LevelItem['interest'] }): LevelItem => ({
