@@ -108,8 +108,22 @@ function englishVoice() {
   return voice;
 }
 
-export function speak(text: string, opts: { rate?: number; pitch?: number } = {}) {
-  if (typeof speechSynthesis === 'undefined') return;
+let cancelCurrent: (() => void) | null = null;
+
+export function speak(text: string, opts: { rate?: number; pitch?: number; onStart?(): void; onEnd?(): void; onError?(): void } = {}): () => void {
+  let settled = false;
+  const finish = (success: boolean) => {
+    if (settled) return;
+    settled = true;
+    if (cancelCurrent === cancel) cancelCurrent = null;
+    if (success) opts.onEnd?.();
+    else opts.onError?.();
+  };
+  const cancel = () => finish(false);
+  if (typeof speechSynthesis === 'undefined') {
+    cancel();
+    return () => {};
+  }
   try {
     const u = new SpeechSynthesisUtterance(text.replace(/[()]/g, ''));
     u.lang = 'en-US';
@@ -117,13 +131,21 @@ export function speak(text: string, opts: { rate?: number; pitch?: number } = {}
     u.pitch = opts.pitch ?? 1;
     const v = englishVoice();
     if (v) u.voice = v;
-    speechSynthesis.cancel();
+    stopSpeaking();
+    cancelCurrent = cancel;
+    u.onend = () => finish(true);
+    u.onerror = cancel;
+    opts.onStart?.();
     speechSynthesis.speak(u);
   } catch {
-    /* TTS is a nice-to-have */
+    cancel();
   }
+  return () => {
+    if (cancelCurrent === cancel) stopSpeaking();
+  };
 }
 
 export function stopSpeaking() {
+  cancelCurrent?.();
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
 }

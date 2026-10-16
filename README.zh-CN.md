@@ -62,6 +62,17 @@ Tricky 下 AI 搭档会故意犯典型错误（说 “go north”、从自己的
 
 ## 🎮 操作
 
+### 灯火夜市：结伴采购
+
+夜市沿用现有的食物模型、灯笼和卡通材质，扩展成一条主街、桃花巷和栗香巷相连的街区。六家店包括月来面馆、玉露茶铺、桃花点心、灯下杂货，以及临时桌架的如意烤串和栗香小摊；每家都有可交互的老板。汉服老板由 Hyper3D Rodin 生成，模型与来源见 [生成记录](assets/rodin/nightmarket-owner.json)。
+
+- **Shopping partner / guide** 看俯视街区与私有购物清单，通过英语告知店名、物品、数量和杯型，例如 “Go to Moon Noodle House and buy two bowls of noodles.”
+- **Shopper / builder** 看第一人称街景，WASD 行走、Shift 跑；走到老板柜台点击，或按 **B** 打开店铺菜单，选购小杯/大杯或食物。右侧购物袋可退回误买的物品。
+- 清单始终不会发送给 shopper；每份清单至少跨两家店并包含支巷店铺。买齐后回入口牌坊的集合圈，按 **F** 或点击交货按钮提交。库存、距离、碰撞与交货条件由服务器校验。
+- 支持双人、AI 指挥、玩家指挥 AI、AI 对 AI、移动端摇杆及采购路线回放。每局三份清单，默认 300 秒；无 API key 时规则 partner 仍可使用，配置 LLM 后 guide 可调用接地路线工具。
+
+布局与采购规则：`shared/nightmarket.ts`；3D 场景及商店菜单：`src/components/three/NightMarketScene.tsx`；对话 partner：`server/game/bots/nightmarket.ts`。老板复用同一个模型和轻微待机摆动，没有骨骼动画。
+
 点击一次 3D 画面即可锁定鼠标，**像 CS 一样**：移动鼠标就是转头，准星就是指针，点击即交互，`Esc` 释放鼠标。
 
 | 按键 | | 按键 | |

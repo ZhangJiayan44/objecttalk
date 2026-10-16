@@ -4,6 +4,7 @@ import { lineText, trayStatus } from '@shared/cafe';
 import { getKind } from '@shared/catalog';
 import { PLACE_DEFS, planRoute, type PlaceKind } from '@shared/city';
 import { levelOf } from '@shared/levels';
+import { shopForKind } from '@shared/nightmarket';
 import type { ClientRoomState, Pose } from '@shared/protocol';
 import { asset } from '@/lib/asset';
 import { Kbd } from '@/components/ui';
@@ -79,11 +80,12 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
   }
 
   if (m.type === 'order') {
+    const market = level.id === 'nightmarket';
     const world = st.world?.kind === 'cafe' ? st.world : null;
     const tray = world && st.scene ? world.tray.map((id) => st.scene!.objects.find((o) => o.id === id)).filter((o) => !!o) : [];
     const status = isGuide && m.order && world && st.scene ? trayStatus({ scene: st.scene, tray: world.tray }, m.order) : null;
     return (
-      <Shell title={`${isGuide ? '🧾 Your order' : '☕ New customer'} · ${m.index + 1}`} chip="bg-sun" onClose={onClose}>
+      <Shell title={`${market ? isGuide ? 'Shopping list' : 'Shopping run' : isGuide ? '🧾 Your order' : '☕ New customer'} · ${m.index + 1}`} chip="bg-sun" onClose={onClose}>
         <p className="text-sm font-semibold">{m.brief}</p>
         {isGuide && m.order && (
           <ul className="mt-3 space-y-1 rounded-2xl border-2 border-dashed border-ink bg-cream p-3">
@@ -93,7 +95,7 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
               return (
                 <li key={`${l.kind}${l.size}`} className="flex items-center gap-2 font-display text-base font-semibold">
                   <span className="text-xl">{k?.emoji ?? '🍽️'}</span>
-                  <span className={missing ? '' : 'text-cta-deep line-through decoration-2'}>{lineText(l)}</span>
+                  <span className={missing ? '' : 'text-cta-deep line-through decoration-2'}>{lineText(l)}{market && <small className="block font-sans text-xs text-muted">{shopForKind(l.kind).name}{missing && ` · ${missing.qty} left`}</small>}</span>
                 </li>
               );
             })}
@@ -101,7 +103,7 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
         )}
         {!isGuide && (
           <div className="mt-3 rounded-2xl border-2 border-dashed border-ink bg-cream p-3 text-sm">
-            <div className="font-display font-semibold">On your tray</div>
+            <div className="font-display font-semibold">{market ? 'In your shopping bag' : 'On your tray'}</div>
             {tray.length ? (
               <div className="mt-1 flex flex-wrap gap-1">
                 {tray.map((o) => (
@@ -112,10 +114,10 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
                 ))}
               </div>
             ) : (
-              <div className="text-muted">Nothing yet. Click food in the case to add it.</div>
+              <div className="text-muted">{market ? 'Your bag is empty.' : 'Nothing yet. Click food in the case to add it.'}</div>
             )}
             <div className="mt-2 text-muted">
-              Ring the bell <Kbd>F</Kbd> to serve. Ask: “Small or large?”, “How many?”, “Anything else?”
+              {market ? 'Meeting point: entrance gate' : <>Ring the bell <Kbd>F</Kbd> to serve. Ask: “Small or large?”, “How many?”, “Anything else?”</>}
             </div>
           </div>
         )}

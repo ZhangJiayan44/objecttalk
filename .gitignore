@@ -32,3 +32,6 @@ Thumbs.db
 
 # test output
 coverage/
+
+# ppts and temps
+output/

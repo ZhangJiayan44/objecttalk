@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import { BookOpen, BrainCircuit, Eye, EyeOff, Headphones, LogOut, Volume2, VolumeX } from 'lucide-react';
+import { BookOpen, BrainCircuit, Eye, EyeOff, Headphones, LogOut, ShoppingBag, Volume2, VolumeX, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
@@ -10,6 +10,10 @@ import type { Role } from '@shared/types';
 import { BedroomScene } from '@/components/three/BedroomScene';
 import { CafeScene } from '@/components/three/CafeScene';
 import { CityScene } from '@/components/three/CityScene';
+import { MarketMenu, NightMarketScene } from '@/components/three/NightMarketScene';
+import { atMeeting, closestShop, MARKET_SHOPS, MARKET_START } from '@shared/nightmarket';
+import { getKind } from '@shared/catalog';
+import { lineText } from '@shared/cafe';
 import { input } from '@/components/three/controls';
 import { RoomScene, type Pointer } from '@/components/three/RoomScene';
 import { btn, Kbd, Modal, Tip } from '@/components/ui';
@@ -176,6 +180,8 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
   const [locked, setLocked] = useState(false);
   const [ice, setIce] = useState<ServerInfo['iceServers']>([]);
   const [localPose, setLocalPose] = useState<Pose | null>(null);
+  const [marketShop, setMarketShop] = useState<string | null>(null);
+  const [bagOpen, setBagOpen] = useState(false);
   const lastPoseAt = useRef(0);
   const partner = st?.players.find((p) => p.role && p.role !== st.yourRole && !p.isAI && p.connected) ?? null;
   const voice = useVoiceLink(client, voiceOn && !!partner && !embedded, partner?.id ?? null, ice);
@@ -216,6 +222,12 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
   }, [client, st?.held, embedded, isBuilder, level.engine]);
 
   useEffect(() => setHover(null), [st?.mission?.id, st?.held?.objectId]);
+  useEffect(() => { setMarketShop(null); setLocalPose(null); }, [st?.code, st?.startedAt]);
+  useEffect(() => { if (!playing) setMarketShop(null); }, [playing]);
+  const openMarket = useCallback((id: string) => {
+    if (document.pointerLockElement) document.exitPointerLock();
+    setMarketShop(id);
+  }, []);
 
   const onMove = useCallback(
     (p: Pose) => {
@@ -239,7 +251,7 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
   if (!st) return null;
   const names = Object.fromEntries(st.players.filter((p) => p.role).map((p) => [p.role, p.name])) as Partial<Record<Role, string>>;
   const world = st.world;
-  const sharedPose = remotePose ?? (world && 'pose' in world ? world.pose : null);
+  const sharedPose = remotePose ?? (world?.kind === 'cafe' ? world.market?.pose ?? null : world && 'pose' in world ? world.pose : null);
   // The walker predicts their own pose; everyone else follows the stream.
   const pose: Pose | null = view === 'builder' && interactive ? (localPose ?? sharedPose) : sharedPose;
   const missionKey = st.mission?.id;
@@ -274,7 +286,7 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
       />
     );
   } else if (level.engine === 'order' && st.scene && world?.kind === 'cafe') {
-    sceneEl = (
+    sceneEl = level.id === 'nightmarket' ? <NightMarketScene className="!absolute inset-0" scene={st.scene} tray={world.tray} pose={pose ?? MARKET_START} view={view} interactive={isBuilder && !embedded} capture={interactive} paused={!!marketShop || bagOpen} onMove={onMove} onShop={openMarket} onServe={() => client.actions.serve()} onLockChange={setLocked} shopperName={names.builder} /> : (
       <CafeScene
         className="!absolute inset-0"
         scene={st.scene}
@@ -333,7 +345,9 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
 
   const copy = role && !viewOverride ? level.roles[role] : null;
   const capturing = interactive && (view === 'builder' || level.guideView === 'stand');
-  const keyHint = level.engine === 'order' ? 'F = serve' : level.engine === 'tabletop' ? 'click = pick / place' : level.engine === 'walksearch' ? 'click = pick up / open' : 'find the door';
+  const keyHint = level.id === 'nightmarket' ? 'B = shop · F = deliver at gate' : level.engine === 'order' ? 'F = serve' : level.engine === 'tabletop' ? 'click = pick / place' : level.engine === 'walksearch' ? 'click = pick up / open' : 'find the door';
+  const nearbyShop = level.id === 'nightmarket' && pose ? closestShop(pose) : undefined;
+  const marketWorld = world?.kind === 'cafe' && !!world.market;
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-cream">
@@ -347,6 +361,12 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
       )}
       {capturing && sceneEl && <AimOverlay locked={locked} walk={walkLevel} hint={keyHint} />}
       {interactive && walkLevel && <Joystick />}
+      {marketWorld && isBuilder && !embedded && (
+        <div className="absolute right-3 bottom-52 z-30 flex flex-col items-end gap-2 sm:top-16 sm:bottom-auto">
+          <Tip label="Shopping bag"><button className={btn('white', 'sm')} aria-label="Shopping bag" onClick={() => { if (document.pointerLockElement) document.exitPointerLock(); setBagOpen(true); }}><ShoppingBag size={18} /> {world.tray.length}/6</button></Tip>
+          {nearbyShop && <button className={btn('sun', 'sm', 'max-w-56 !whitespace-normal text-right')} onClick={() => openMarket(nearbyShop.id)}><ShoppingBag size={16} className="shrink-0" />{nearbyShop.zh}<Kbd>B</Kbd></button>}
+        </div>
+      )}
 
       {/* Top bar */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-nowrap items-start justify-between gap-1.5 p-2 sm:gap-2 sm:p-3">
@@ -463,8 +483,8 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
           </button>
         )}
         {isBuilder && level.engine === 'order' && world?.kind === 'cafe' && world.tray.length > 0 && (
-          <button className={btn('sun', 'sm', 'pointer-events-auto')} onClick={() => client.actions.serve()}>
-            🔔 Serve the tray <Kbd>F</Kbd>
+          <button className={btn('sun', 'sm', 'pointer-events-auto')} disabled={marketWorld && !atMeeting(pose ?? MARKET_START)} onClick={() => client.actions.serve()}>
+            {marketWorld ? 'Deliver shopping bag' : '🔔 Serve the tray'} <Kbd>F</Kbd>
           </button>
         )}
         {!embedded && <Lifeline hotkey={pttKey} />}
@@ -476,6 +496,18 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
         )}
       </div>
 
+      {marketWorld && st.scene && world?.kind === 'cafe' && <>
+        <Modal open={!!marketShop} onOpenChange={(open) => { if (!open) setMarketShop(null); }} title={MARKET_SHOPS.find((s) => s.id === marketShop)?.name ?? 'Shop'} description={MARKET_SHOPS.find((s) => s.id === marketShop)?.zh ?? ''}>
+          {marketShop && <MarketMenu shopId={marketShop} scene={st.scene} tray={world.tray} onBuy={(id) => client.actions.tray(id, true)} />}
+        </Modal>
+        <Modal open={bagOpen} onOpenChange={setBagOpen} title="Shopping bag" description={`${world.tray.length}/6`}>
+          {world.tray.length ? <ul className="divide-y-2 divide-line">{world.tray.map((id) => {
+            const o = st.scene!.objects.find((x) => x.id === id);
+            if (!o) return null;
+            return <li key={id} className="flex items-center justify-between gap-3 py-3"><span className="font-semibold">{getKind(o.kind)?.emoji} {lineText({ kind: o.kind, qty: 1, size: o.size === 'regular' ? null : o.size })}</span><Tip label="Return item"><button className={btn('white', 'sm', '!px-2')} aria-label={`Return ${getKind(o.kind)?.name}`} onClick={() => client.actions.tray(id, false)}><X size={16} /></button></Tip></li>;
+          })}</ul> : <p className="py-4 text-sm text-muted">Your shopping bag is empty.</p>}
+        </Modal>
+      </>}
       <Modal open={phrases} onOpenChange={setPhrases} title={`Phrasebook · ${level.title}`} description={`${level.tagline}. Click a phrase to send it, or better: say it out loud!`} wide>
         <div className="grid gap-4 sm:grid-cols-2">
           {level.phrases.map((g) => (

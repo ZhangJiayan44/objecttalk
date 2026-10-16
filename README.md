@@ -76,7 +76,7 @@ Set `PUBLIC_URL` so QR codes point at your domain.
 | 📚 | **Cozy Study** | 🧭 Guide sees the gold target | 🛠️ Builder picks & places on the desk | *next to / between / on YOUR left / closer to you* |
 | 🐶 | **Pet Shop** | 🧑‍🔧 Shop owner knows which pet | 🧤 Helper picks up & moves the animals | *the small bunny next to the turtle · the puppy closest to you* |
 | ☕ | **Corner Café** | 🙋 Customer holds the order card | 🧑‍🍳 Barista fills the tray from the display case (19-dish menu) | *Could I have two croissants and a large coffee? · Small or large? · Anything else?* |
-| 🏮 | **Night Market** | 🙋 Customer orders for friends | 🧑‍🍳 Stall owner, under lanterns | *two bowls of noodles · a bag of chestnuts · an ear of corn · a large bubble tea* |
+| 🏮 | **Night Market** | 🧭 Partner holds a private shopping list and street map | 🛍️ Shopper walks between six stores and buys from merchants | *Go to Moon Noodle House and buy two bowls of noodles · turn into the side lane · a large bubble tea* |
 | 🏙️ | **Toy Town** | 🗺️ Navigator has the map | 🚶 Walker **walks the streets** (WASD) | *Excuse me, how do I get to…? · Turn left at the bank · It's on your right* |
 | 🛏️ | **Messy Bedroom** | 🤔 Owner remembers where things are | 🔦 Seeker **walks the room**, opens boxes | *under the bed · on top of the wardrobe · inside the toy box · warmer / colder* |
 | 🎸 | **Music Room** ✨ | 🎼 Band leader | 🧰 Roadie | instrument words + perspective (made by the Scene Agent) |
@@ -113,6 +113,8 @@ today, so classmates can compare scores.
 <img src="docs/images/lifeline.jpg" alt="The Chinese lifeline: Chinese in, a private English line out" width="100%" />
 
 ## 🎮 Controls
+
+**Night Market shopping:** a main street connects Peach Lane and Chestnut Lane, with four timber shops and two temporary table stalls. The partner alone receives the shopping list; every list visits at least two shops and a side lane. Walk to a merchant and click their counter (or press **B**) to buy, return incorrect items from the shopping bag, then bring the bag to the entrance gate and press **F** to deliver. Movement, purchase distance and delivery are checked by the server. Solo AI, two players, AI-vs-AI, mobile joystick and path replays are supported. The shared [Rodin shopkeeper](assets/rodin/nightmarket-owner.json) uses an idle sway without skeletal animation. See the [Chinese walkthrough](README.zh-CN.md#灯火夜市结伴采购).
 
 Click the 3D view once and the mouse is yours, **CS-style**: moving the mouse turns your head,
 the crosshair is your pointer, click to interact, <kbd>Esc</kbd> gives the mouse back to the page.

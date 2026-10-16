@@ -5,6 +5,7 @@ import { getKind, kindsFor } from './catalog';
 import { estimateCefr } from './cefr';
 import { parseDirections, planRoute, type Pose, type RouteMission, type Town } from './city';
 import type { Role, SceneState } from './types';
+import { marketOrderSpeech } from './nightmarket';
 
 /**
  * Post-game coaches for the café, the town and the bedroom. Same idea as the
@@ -172,7 +173,7 @@ export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: 
       continue;
     }
     if (!humans.has('guide')) continue;
-    const p = parseOrder(msg.text, level, specials);
+    const p = parseOrder(level === 'nightmarket' ? marketOrderSpeech(msg.text) : msg.text, level, specials);
     const isOrder = p.lines.length > 0;
     if (!isOrder) {
       if (p.done) good.add("That's all, thanks.");
@@ -217,13 +218,13 @@ export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: 
       missionIndex: rec.mission.index,
       verdict,
       issues: uniq,
-      praise: verdict === 'clear' ? 'Clear, complete and polite. Exactly what the counter needs to hear!' : undefined,
+      praise: verdict === 'clear' ? level === 'nightmarket' ? 'Clear shop, quantity and size. Your shopping partner knows what to buy!' : 'Clear, complete and polite. Exactly what the counter needs to hear!' : undefined,
       suggestion: verdict === 'clear' ? undefined : orderSentence(order),
     });
   }
   const extraTips: string[] = [];
   if (!instructional && humans.has('guide')) extraTips.push('Say your order out loud (hold Space) so the coach can check it.');
-  if (humans.has('builder') && !baristaChecks) extraTips.push('Behind the counter, ask: "Small or large?", "How many?", "Anything else?"');
+  if (humans.has('builder') && !baristaChecks) extraTips.push(level === 'nightmarket' ? 'Ask your partner: "Which shop?", "How many?", "Small or large?"' : 'Behind the counter, ask: "Small or large?", "How many?", "Anything else?"');
   return finish({
     level,
     skillNames: { spatial: 'Food words & numbers', perspective: 'Sizes & plurals', clarifying: humans.has('builder') ? 'Asking & confirming' : 'Polite requests', speed: 'Speed' },

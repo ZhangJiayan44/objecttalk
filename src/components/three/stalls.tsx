@@ -136,7 +136,7 @@ export function MarketSet({ sign, palette }: { sign: string; palette?: Palette }
 }
 
 /** Warm paper lanterns on a string, gently swaying. */
-function LanternString({ from, to, count, color = '#ff6b6b', sag = 0.45 }: { from: [number, number, number]; to: [number, number, number]; count: number; color?: string; sag?: number }) {
+export function LanternString({ from, to, count, color = '#ff6b6b', sag = 0.45 }: { from: [number, number, number]; to: [number, number, number]; count: number; color?: string; sag?: number }) {
   const ref = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
     ref.current?.children.forEach((c, i) => (c.rotation.z = Math.sin(clock.elapsedTime * 1.3 + i) * 0.06));
@@ -157,6 +157,14 @@ function LanternString({ from, to, count, color = '#ff6b6b', sag = 0.45 }: { fro
             <cylinderGeometry args={[0.07, 0.07, 0.05, 10]} />
             <meshStandardMaterial color={INK} />
           </mesh>
+          <mesh position={[0, -0.2, 0]}>
+            <cylinderGeometry args={[0.065, 0.065, 0.045, 10]} />
+            <meshStandardMaterial color="#d9ac53" />
+          </mesh>
+          <mesh position={[0, -0.29, 0]}>
+            <cylinderGeometry args={[0.014, 0.03, 0.15, 6]} />
+            <meshStandardMaterial color="#c84543" />
+          </mesh>
         </group>
       ))}
     </group>
@@ -164,7 +172,7 @@ function LanternString({ from, to, count, color = '#ff6b6b', sag = 0.45 }: { fro
 }
 
 /** Steam rising from the woks (soft white puffs). */
-function Steam({ position }: { position: [number, number, number] }) {
+export function Steam({ position }: { position: [number, number, number] }) {
   const ref = useRef<THREE.Group>(null);
   const puffs = useMemo(() => Array.from({ length: 6 }, (_, i) => ({ o: i / 6, x: (Math.random() - 0.5) * 0.2 })), []);
   useFrame(({ clock }) => {
@@ -188,7 +196,7 @@ function Steam({ position }: { position: [number, number, number] }) {
 }
 
 /** Tiny twinkling stars on the night sky. */
-function Stars() {
+export function Stars() {
   const geo = useMemo(() => {
     const n = 260;
     const pos = new Float32Array(n * 3);

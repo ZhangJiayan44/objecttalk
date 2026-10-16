@@ -67,16 +67,34 @@ export function useCommsPrefs() {
 export type CommsPrefs = ReturnType<typeof useCommsPrefs>;
 
 /** Partner lines get read aloud: AI always, humans unless you hear them live over the voice link. */
-function useReadAloud(chat: ChatMessage[], me: string | undefined, enabled: boolean, liveVoice: boolean) {
-  const spoken = useRef(new Set<string>());
+export function useReadAloud(enabled: boolean, liveVoice = false, allAI = false) {
+  const client = useGameClient();
+  const phase = useGame((s) => s.state?.phase);
   useEffect(() => {
-    const last = chat[chat.length - 1];
-    if (!last || spoken.current.has(last.id)) return;
-    spoken.current.add(last.id);
-    if (!enabled || last.playerId === me || !last.role || Date.now() - last.at > 6000) return;
-    if (last.via !== 'ai' && liveVoice) return;
-    speak(last.text, { pitch: last.role === 'guide' ? 1.12 : 0.92 });
-  }, [chat, me, enabled, liveVoice]);
+    if (!enabled || phase !== 'playing') return;
+    let cancel: (() => void) | undefined;
+    const read = (line: ChatMessage) => {
+      const state = client.store.getState().state;
+      if (!state || !line.role || (allAI ? line.via !== 'ai' : line.playerId === state.you)) return;
+      if (line.via !== 'ai' && liveVoice) return;
+      const sync = state.settings.mode === 'sim' && state.players.some((p) => p.id === state.you && p.isHost);
+      const playback = (status: 'started' | 'ended' | 'unavailable') => {
+        if (sync) client.socket.emit('chat:playback', { id: line.id, state: status });
+      };
+      cancel = speak(line.text, {
+        pitch: line.role === 'guide' ? 1.12 : 0.92,
+        onStart: () => playback('started'),
+        onEnd: () => playback('ended'),
+        onError: () => playback('unavailable'),
+      });
+    };
+    // History is never narrated again when a view mounts or a new round starts.
+    client.socket.on('chat', read);
+    return () => {
+      client.socket.off('chat', read);
+      cancel?.();
+    };
+  }, [client, enabled, liveVoice, allAI, phase]);
 }
 
 export function VoiceBar({ prefs, compact = false, pttKey = true, tts = true, liveVoice = false }: { prefs: CommsPrefs; compact?: boolean; pttKey?: boolean; tts?: boolean; liveVoice?: boolean }) {
@@ -93,7 +111,7 @@ export function VoiceBar({ prefs, compact = false, pttKey = true, tts = true, li
   const inputRef = useRef<HTMLInputElement>(null);
   const quick = role ? level.quick[role].slice(0, 6) : [];
 
-  useReadAloud(chat, me, tts && prefs.voiceOut, liveVoice);
+  useReadAloud(tts && prefs.voiceOut, liveVoice);
 
   const send = useCallback(
     (t: string, via: 'text' | 'quick' = 'text') => {

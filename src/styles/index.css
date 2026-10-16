@@ -1,5 +1,21 @@
 @import 'tailwindcss';
 
+.market-buy {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 2px solid #2d3748;
+  border-radius: 8px;
+  background: #b8e1cd;
+  box-shadow: 2px 2px 0 #2d3748;
+}
+.market-buy:hover { background: #ffd166; }
+.market-buy:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.market-map-label { padding: 4px 8px; border: 1px solid #725a4e; border-radius: 4px; background: #fff9eced; color: #443b40; font-size: 13px; font-weight: 800; text-align: center; white-space: nowrap; }
+.market-map-label small { display: block; font-size: 10px; }
+
 /*
  * ObjectTalk claymorphism design system.
  * Palette and card/button recipe follow the "playful educational platform"
