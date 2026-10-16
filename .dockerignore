@@ -1,0 +1,12 @@
+node_modules
+dist
+data
+agent/packs
+agent/runs
+.git
+.github
+.env
+.env.*
+*.log
+coverage
+docs/images
