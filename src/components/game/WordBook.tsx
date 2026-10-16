@@ -44,7 +44,7 @@ export function WordBook() {
       <div className="clay-card p-6">
         <h2 className="text-xl font-bold">📒 Word book</h2>
         <p className="mt-2 text-sm text-muted">
-          Empty for now. It fills up as you play: point at things in a scene and click them, use 🛟 中文求助 when you are stuck, or turn your own photos into 3D objects in the Object Studio.
+          Empty for now. It fills up as you play: point at things in a scene and click them, or turn your own photos into 3D objects in the Object Studio.
         </p>
       </div>
     );

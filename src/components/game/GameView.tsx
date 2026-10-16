@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import { BookOpen, BrainCircuit, Eye, EyeOff, Headphones, LogOut, Volume2, VolumeX } from 'lucide-react';
+import { BookOpen, BrainCircuit, Eye, EyeOff, Headphones, LogOut, ShoppingBag, Volume2, VolumeX, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
@@ -10,6 +10,10 @@ import type { Role } from '@shared/types';
 import { BedroomScene } from '@/components/three/BedroomScene';
 import { CafeScene } from '@/components/three/CafeScene';
 import { CityScene } from '@/components/three/CityScene';
+import { MarketMenu, NightMarketScene } from '@/components/three/NightMarketScene';
+import { atMeeting, closestShop, MARKET_SHOPS, MARKET_START } from '@shared/nightmarket';
+import { getKind } from '@shared/catalog';
+import { lineText } from '@shared/cafe';
 import { input } from '@/components/three/controls';
 import { RoomScene, type Pointer } from '@/components/three/RoomScene';
 import { btn, Kbd, Modal, Tip } from '@/components/ui';
@@ -18,8 +22,7 @@ import { serverNow, useGame, useGameClient } from '@/lib/game-client';
 import { sfx } from '@/lib/sfx';
 import { useVoiceLink } from '@/lib/voice';
 import { AgentPanel } from './AgentPanel';
-import { MissionCard, missionChip } from './MissionCard';
-import { Lifeline } from './Lifeline';
+import { MissionCard } from './MissionCard';
 import { Transcript, useCommsPrefs, VoiceBar } from './VoiceBar';
 
 /** Which place surrounds the shop counter. */
@@ -162,12 +165,12 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
   const navigate = useNavigate();
   const st = useGame((s) => s.state);
   const offset = useGame((s) => s.clockOffset);
+  const chat = useGame((s) => s.chat);
   const remoteHover = useGame((s) => s.remoteHover);
   const remotePose = useGame((s) => s.remotePose);
   const fx = useGame((s) => s.fx);
   const prefs = useCommsPrefs();
   const [hover, setHover] = useState<Pointer | null>(null);
-  const [cardOpen, setCardOpen] = useState(() => !embedded && (typeof window === 'undefined' || window.innerWidth >= 640));
   const [phrases, setPhrases] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
   const [labels, setLabels] = useState(true);
@@ -176,8 +179,11 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
   const [locked, setLocked] = useState(false);
   const [ice, setIce] = useState<ServerInfo['iceServers']>([]);
   const [localPose, setLocalPose] = useState<Pose | null>(null);
+  const [marketShop, setMarketShop] = useState<string | null>(null);
+  const [bagOpen, setBagOpen] = useState(false);
   const lastPoseAt = useRef(0);
   const partner = st?.players.find((p) => p.role && p.role !== st.yourRole && !p.isAI && p.connected) ?? null;
+  const lastPartner = useMemo(() => [...chat].reverse().find((m) => m.playerId !== st?.you && m.role && m.via !== 'system'), [chat, st?.you]);
   const voice = useVoiceLink(client, voiceOn && !!partner && !embedded, partner?.id ?? null, ice);
   useEffect(() => {
     if (!embedded) fetchInfo().then((i) => setIce(i.iceServers)).catch(() => undefined);
@@ -200,13 +206,6 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
-      if (e.key === 'e' || e.key === 'E') setCardOpen((o) => !o);
-      if (e.key === 'g' || e.key === 'G') setAgentOpen((o) => !o);
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        if (document.pointerLockElement) document.exitPointerLock();
-        setPhrases((o) => !o);
-      }
       if (e.key === 'Escape' && st?.held) client.actions.drop();
       if (e.key === 'l' || e.key === 'L') setLabels((v) => !v);
       if ((e.key === 'f' || e.key === 'F') && isBuilder && level.engine === 'order') client.actions.serve();
@@ -216,6 +215,12 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
   }, [client, st?.held, embedded, isBuilder, level.engine]);
 
   useEffect(() => setHover(null), [st?.mission?.id, st?.held?.objectId]);
+  useEffect(() => { setMarketShop(null); setLocalPose(null); }, [st?.code, st?.startedAt]);
+  useEffect(() => { if (!playing) setMarketShop(null); }, [playing]);
+  const openMarket = useCallback((id: string) => {
+    if (document.pointerLockElement) document.exitPointerLock();
+    setMarketShop(id);
+  }, []);
 
   const onMove = useCallback(
     (p: Pose) => {
@@ -239,7 +244,7 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
   if (!st) return null;
   const names = Object.fromEntries(st.players.filter((p) => p.role).map((p) => [p.role, p.name])) as Partial<Record<Role, string>>;
   const world = st.world;
-  const sharedPose = remotePose ?? (world && 'pose' in world ? world.pose : null);
+  const sharedPose = remotePose ?? (world?.kind === 'cafe' ? world.market?.pose ?? null : world && 'pose' in world ? world.pose : null);
   // The walker predicts their own pose; everyone else follows the stream.
   const pose: Pose | null = view === 'builder' && interactive ? (localPose ?? sharedPose) : sharedPose;
   const missionKey = st.mission?.id;
@@ -274,7 +279,7 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
       />
     );
   } else if (level.engine === 'order' && st.scene && world?.kind === 'cafe') {
-    sceneEl = (
+    sceneEl = level.id === 'nightmarket' ? <NightMarketScene className="!absolute inset-0" scene={st.scene} tray={world.tray} pose={pose ?? MARKET_START} view={view} interactive={isBuilder && !embedded} capture={interactive} paused={!!marketShop || bagOpen} onMove={onMove} onShop={openMarket} onServe={() => client.actions.serve()} onLockChange={setLocked} shopperName={names.builder} /> : (
       <CafeScene
         className="!absolute inset-0"
         scene={st.scene}
@@ -333,7 +338,9 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
 
   const copy = role && !viewOverride ? level.roles[role] : null;
   const capturing = interactive && (view === 'builder' || level.guideView === 'stand');
-  const keyHint = level.engine === 'order' ? 'F = serve' : level.engine === 'tabletop' ? 'click = pick / place' : level.engine === 'walksearch' ? 'click = pick up / open' : 'find the door';
+  const keyHint = level.id === 'nightmarket' ? 'B = shop · F = deliver at gate' : level.engine === 'order' ? 'F = serve' : level.engine === 'tabletop' ? 'click = pick / place' : level.engine === 'walksearch' ? 'click = pick up / open' : 'find the door';
+  const nearbyShop = level.id === 'nightmarket' && pose ? closestShop(pose) : undefined;
+  const marketWorld = world?.kind === 'cafe' && !!world.market;
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-cream">
@@ -347,6 +354,12 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
       )}
       {capturing && sceneEl && <AimOverlay locked={locked} walk={walkLevel} hint={keyHint} />}
       {interactive && walkLevel && <Joystick />}
+      {marketWorld && isBuilder && !embedded && (
+        <div className="absolute right-3 bottom-52 z-30 flex flex-col items-end gap-2 sm:top-16 sm:bottom-auto">
+          <Tip label="Shopping bag"><button className={btn('white', 'sm')} aria-label="Shopping bag" onClick={() => { if (document.pointerLockElement) document.exitPointerLock(); setBagOpen(true); }}><ShoppingBag size={18} /> {world.tray.length}/6</button></Tip>
+          {nearbyShop && <button className={btn('sun', 'sm', 'max-w-56 !whitespace-normal text-right')} onClick={() => openMarket(nearbyShop.id)}><ShoppingBag size={16} className="shrink-0" />{nearbyShop.name}<Kbd>B</Kbd></button>}
+        </div>
+      )}
 
       {/* Top bar */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-nowrap items-start justify-between gap-1.5 p-2 sm:gap-2 sm:p-3">
@@ -374,12 +387,12 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
           </div>
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
-          <Tip label={<span>Phrasebook <Kbd>Tab</Kbd></span>}>
+          <Tip label="Phrasebook">
             <button className={btn('white', 'sm', '!px-2.5')} onClick={() => setPhrases(true)} aria-label="Phrasebook">
               <BookOpen size={18} strokeWidth={3} />
             </button>
           </Tip>
-          <Tip label={<span>AI partner brain <Kbd>G</Kbd></span>}>
+          <Tip label="AI partner brain">
             <button className={btn(agentOpen ? 'grape' : 'white', 'sm', 'hidden !px-2.5 sm:inline-flex')} onClick={() => setAgentOpen((o) => !o)} aria-label="Agent panel" aria-pressed={agentOpen}>
               <BrainCircuit size={18} strokeWidth={3} />
             </button>
@@ -429,15 +442,7 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
 
       <div className="pointer-events-none absolute top-14 left-2 z-20 max-h-[45%] w-[min(24rem,calc(100%-1rem))] overflow-y-auto sm:top-16 sm:left-3 sm:max-h-[calc(100%-12rem)]">
         <div className="pointer-events-auto">
-          {cardOpen && <MissionCard st={st} pose={pose} view={view === 'overview' ? 'guide' : view} onClose={() => setCardOpen(false)} />}
-          {!cardOpen && st.mission && (
-            <button className={btn('sun', 'sm')} onClick={() => setCardOpen(true)}>
-              {missionChip(st)}
-              <span className="hidden sm:inline">
-                <Kbd>E</Kbd>
-              </span>
-            </button>
-          )}
+          <MissionCard st={st} pose={pose} view={view === 'overview' ? 'guide' : view} />
         </div>
       </div>
 
@@ -463,19 +468,38 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
           </button>
         )}
         {isBuilder && level.engine === 'order' && world?.kind === 'cafe' && world.tray.length > 0 && (
-          <button className={btn('sun', 'sm', 'pointer-events-auto')} onClick={() => client.actions.serve()}>
-            🔔 Serve the tray <Kbd>F</Kbd>
+          <button className={btn('sun', 'sm', 'pointer-events-auto')} disabled={marketWorld && !atMeeting(pose ?? MARKET_START)} onClick={() => client.actions.serve()}>
+            {marketWorld ? 'Deliver shopping bag' : '🔔 Serve the tray'} <Kbd>F</Kbd>
           </button>
         )}
-        {!embedded && <Lifeline hotkey={pttKey} />}
         <VoiceBar prefs={prefs} compact={embedded} pttKey={pttKey && !embedded} tts={tts} liveVoice={voice.status === 'live'} />
         {!embedded && (
           <div className="hidden text-xs font-bold text-ink/70 lg:block">
-            <Kbd>Space</Kbd> talk · <Kbd>H</Kbd> 中文求助 · <Kbd>Enter</Kbd> type · <Kbd>C</Kbd> captions · <Kbd>T</Kbd> transcript · <Kbd>1</Kbd>-<Kbd>6</Kbd> phrases · <Kbd>E</Kbd> mission · <Kbd>Tab</Kbd> phrasebook · <Kbd>G</Kbd> AI brain
+            <Kbd>Space</Kbd> talk · <Kbd>Enter</Kbd> type · <Kbd>C</Kbd> captions · <Kbd>T</Kbd> transcript · <Kbd>1</Kbd>-<Kbd>6</Kbd> phrases
           </div>
         )}
       </div>
 
+      {marketWorld && st.scene && world?.kind === 'cafe' && <>
+        <Modal open={!!marketShop} onOpenChange={(open) => { if (!open) setMarketShop(null); }} title={MARKET_SHOPS.find((s) => s.id === marketShop)?.name ?? 'Shop'}>
+          {marketShop && <MarketMenu shopId={marketShop} scene={st.scene} tray={world.tray} onBuy={(id) => client.actions.tray(id, true)} />}
+        </Modal>
+        <Modal open={bagOpen} onOpenChange={setBagOpen} title="Shopping bag" description={`${world.tray.length}/6`}>
+          {world.tray.length ? <ul className="divide-y-2 divide-line">{world.tray.map((id) => {
+            const o = st.scene!.objects.find((x) => x.id === id);
+            if (!o) return null;
+            return <li key={id} className="flex items-center justify-between gap-3 py-3"><span className="font-semibold">{getKind(o.kind)?.emoji} {lineText({ kind: o.kind, qty: 1, size: o.size === 'regular' ? null : o.size })}</span><Tip label="Return item"><button className={btn('white', 'sm', '!px-2')} aria-label={`Return ${getKind(o.kind)?.name}`} onClick={() => client.actions.tray(id, false)}><X size={16} /></button></Tip></li>;
+          })}</ul> : <p className="py-4 text-sm text-muted">Your shopping bag is empty.</p>}
+        </Modal>
+      </>}
+      {marketShop && prefs.captions && lastPartner && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-8 z-[100] flex justify-center px-4" aria-live="polite">
+          <div className="max-w-2xl rounded-2xl border-[3px] border-ink bg-white/95 px-5 py-3 text-center font-semibold shadow-[3px_3px_0_#2d3748] backdrop-blur-sm">
+            <span className="mr-2 font-display text-sm text-muted">{lastPartner.name}</span>
+            {lastPartner.text}
+          </div>
+        </div>
+      )}
       <Modal open={phrases} onOpenChange={setPhrases} title={`Phrasebook · ${level.title}`} description={`${level.tagline}. Click a phrase to send it, or better: say it out loud!`} wide>
         <div className="grid gap-4 sm:grid-cols-2">
           {level.phrases.map((g) => (

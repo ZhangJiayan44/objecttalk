@@ -1,6 +1,5 @@
 import { BrainCircuit, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { Kbd } from '@/components/ui';
 import { useGame } from '@/lib/game-client';
 
 /**
@@ -21,7 +20,7 @@ export function AgentPanel({ onClose }: { onClose(): void }) {
           <BrainCircuit size={18} strokeWidth={2.5} /> AI partner brain
         </span>
         <button className="rounded-lg px-1 text-xs font-bold text-muted hover:text-ink" onClick={onClose} aria-label="Close agent panel">
-          <Kbd>G</Kbd> <X size={12} className="inline" strokeWidth={3} />
+          <X size={15} strokeWidth={3} />
         </button>
       </div>
       <div ref={listRef} className="space-y-2 overflow-y-auto p-3 text-xs">

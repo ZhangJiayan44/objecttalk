@@ -106,7 +106,11 @@ export function createGameClient(opts: { persistIdentity?: boolean } = {}): Game
   });
   socket.on('disconnect', () => store.setState({ connected: false }));
   socket.on('room:state', (s) => {
-    store.setState({ state: s, clockOffset: s.serverNow - Date.now() });
+    const prev = store.getState().state;
+    const newRound = prev?.code === s.code && ((s.phase === 'lobby' && prev.phase !== 'lobby') || (s.phase === 'countdown' && prev.phase !== 'countdown'));
+    const reset = prev?.code !== s.code || newRound;
+    // On joining, chat:history arrives before room:state. Preserve that fresh history.
+    store.setState({ state: s, clockOffset: s.serverNow - Date.now(), ...(reset ? { fx: [], traces: [] } : {}), ...(newRound ? { chat: [] } : {}) });
     if (s.phase !== 'playing') store.setState({ remoteHover: null, remotePose: null });
   });
   socket.on('pose', (p) => store.setState({ remotePose: { ...p, at: performance.now() } }));

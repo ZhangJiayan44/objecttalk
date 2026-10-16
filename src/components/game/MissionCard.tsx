@@ -4,23 +4,18 @@ import { lineText, trayStatus } from '@shared/cafe';
 import { getKind } from '@shared/catalog';
 import { PLACE_DEFS, planRoute, type PlaceKind } from '@shared/city';
 import { levelOf } from '@shared/levels';
+import { shopForKind } from '@shared/nightmarket';
 import type { ClientRoomState, Pose } from '@shared/protocol';
 import { asset } from '@/lib/asset';
 import { Kbd } from '@/components/ui';
 
-/** The top-left mission card, one layout per kind of level. E hides / shows it. */
+/** The top-left mission card, one layout per kind of level. */
 
-function Shell({ title, chip, onClose, children }: { title: string; chip: string; onClose(): void; children: React.ReactNode }) {
+function Shell({ title, chip, children }: { title: string; chip: string; children: React.ReactNode }) {
   return (
     <div className="clay-card w-full max-w-sm animate-pop bg-white/95 p-4 backdrop-blur">
-      <div className="mb-2 flex items-center justify-between gap-2">
+      <div className="mb-2 flex items-center gap-2">
         <span className={`clay-chip !py-0.5 ${chip}`}>{title}</span>
-        <button onClick={onClose} className="rounded-lg px-1 text-xs font-bold text-muted hover:text-ink" aria-label="Hide mission card">
-          <span className="hidden sm:inline">
-            <Kbd>E</Kbd>{' '}
-          </span>
-          hide ✕
-        </button>
       </div>
       {children}
     </div>
@@ -38,7 +33,7 @@ function ModelSentence({ text, id }: { text?: string; id: string }) {
   );
 }
 
-export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; pose: Pose | null; view: 'guide' | 'builder'; onClose(): void }) {
+export function MissionCard({ st, pose, view }: { st: ClientRoomState; pose: Pose | null; view: 'guide' | 'builder' }) {
   const m = st.mission;
   if (!m) return null;
   const level = levelOf(st.settings.level);
@@ -50,7 +45,7 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
     const obj = secretId ? st.scene?.objects.find((o) => o.id === secretId) : undefined;
     const kind = obj ? getKind(obj.kind) : undefined;
     return (
-      <Shell title={`${m.type === 'find' ? '🔎 Find it' : '📦 Place it'} · ${m.index + 1}`} chip={m.type === 'find' ? 'bg-sun' : 'bg-lavender'} onClose={onClose}>
+      <Shell title={`${m.type === 'find' ? '🔎 Find it' : '📦 Place it'} · ${m.index + 1}`} chip={m.type === 'find' ? 'bg-sun' : 'bg-lavender'}>
         <p className="text-sm font-semibold">{m.brief}</p>
         {isGuide && obj && (
           <div className="mt-3 flex items-center gap-3 rounded-2xl border-2 border-dashed border-ink bg-cream p-2">
@@ -79,11 +74,12 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
   }
 
   if (m.type === 'order') {
+    const market = level.id === 'nightmarket';
     const world = st.world?.kind === 'cafe' ? st.world : null;
     const tray = world && st.scene ? world.tray.map((id) => st.scene!.objects.find((o) => o.id === id)).filter((o) => !!o) : [];
     const status = isGuide && m.order && world && st.scene ? trayStatus({ scene: st.scene, tray: world.tray }, m.order) : null;
     return (
-      <Shell title={`${isGuide ? '🧾 Your order' : '☕ New customer'} · ${m.index + 1}`} chip="bg-sun" onClose={onClose}>
+      <Shell title={`${market ? isGuide ? 'Shopping list' : 'Shopping run' : isGuide ? '🧾 Your order' : '☕ New customer'} · ${m.index + 1}`} chip="bg-sun">
         <p className="text-sm font-semibold">{m.brief}</p>
         {isGuide && m.order && (
           <ul className="mt-3 space-y-1 rounded-2xl border-2 border-dashed border-ink bg-cream p-3">
@@ -93,7 +89,7 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
               return (
                 <li key={`${l.kind}${l.size}`} className="flex items-center gap-2 font-display text-base font-semibold">
                   <span className="text-xl">{k?.emoji ?? '🍽️'}</span>
-                  <span className={missing ? '' : 'text-cta-deep line-through decoration-2'}>{lineText(l)}</span>
+                  <span className={missing ? '' : 'text-cta-deep line-through decoration-2'}>{lineText(l)}{market && <small className="block font-sans text-xs text-muted">{shopForKind(l.kind).name}{missing && ` · ${missing.qty} left`}</small>}</span>
                 </li>
               );
             })}
@@ -101,7 +97,7 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
         )}
         {!isGuide && (
           <div className="mt-3 rounded-2xl border-2 border-dashed border-ink bg-cream p-3 text-sm">
-            <div className="font-display font-semibold">On your tray</div>
+            <div className="font-display font-semibold">{market ? 'In your shopping bag' : 'On your tray'}</div>
             {tray.length ? (
               <div className="mt-1 flex flex-wrap gap-1">
                 {tray.map((o) => (
@@ -112,10 +108,10 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
                 ))}
               </div>
             ) : (
-              <div className="text-muted">Nothing yet. Click food in the case to add it.</div>
+              <div className="text-muted">{market ? 'Your bag is empty.' : 'Nothing yet. Click food in the case to add it.'}</div>
             )}
             <div className="mt-2 text-muted">
-              Ring the bell <Kbd>F</Kbd> to serve. Ask: “Small or large?”, “How many?”, “Anything else?”
+              {market ? 'Meeting point: entrance gate' : <>Ring the bell <Kbd>F</Kbd> to serve. Ask: “Small or large?”, “How many?”, “Anything else?”</>}
             </div>
           </div>
         )}
@@ -131,7 +127,7 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
     const name = PLACE_DEFS[dest]?.name ?? dest;
     const plan = isGuide && town && pose ? planRoute(town, pose, dest) : null;
     return (
-      <Shell title={`🗺️ To the ${name}`} chip="bg-sky" onClose={onClose}>
+      <Shell title={`🗺️ To the ${name}`} chip="bg-sky">
         <p className="text-sm font-semibold">{m.brief}</p>
         {isGuide ? (
           <>
@@ -160,7 +156,7 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
   const item = isGuide && m.targetId ? world?.items.find((i) => i.id === m.targetId) : undefined;
   const kind = item ? getKind(item.kind) : undefined;
   return (
-    <Shell title={isGuide ? `🤔 ${m.title}` : `🔦 ${m.title}`} chip="bg-lavender" onClose={onClose}>
+    <Shell title={isGuide ? `🤔 ${m.title}` : `🔦 ${m.title}`} chip="bg-lavender">
       <p className="text-sm font-semibold">{m.brief}</p>
       {isGuide && item && (
         <div className="mt-3 flex items-center gap-3 rounded-2xl border-2 border-dashed border-ink bg-cream p-2">

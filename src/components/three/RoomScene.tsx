@@ -4,9 +4,7 @@ import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { AVATAR_Z, cellToWorld, TABLE_Y, VIEWPOINT } from '@shared/room';
-import { getKind } from '@shared/catalog';
 import { entityLabel, freeCells } from '@shared/spatial';
-import { zhName } from '@shared/zh';
 import type { Palette } from '@shared/levels';
 import { cellKey, sameCell, type Cell, type Role, type SceneObject, type SceneState } from '@shared/types';
 import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
@@ -222,7 +220,6 @@ function SceneItem({
         <Html position={[0, 0.5, 0]} center distanceFactor={3.2} zIndexRange={[12, 0]} style={{ pointerEvents: 'none' }}>
           <div className="flex flex-col items-center whitespace-nowrap rounded-2xl border-2 border-ink bg-white px-2.5 py-0.5 font-display text-ink shadow-[2px_2px_0_#2d3748]">
             <span className="text-sm leading-tight font-semibold">{entityLabel({ ...obj, landmark: false })}</span>
-            {zhName(getKind(obj.kind)) && <span className="text-[10px] leading-tight font-bold text-ink/55">{zhName(getKind(obj.kind))}</span>}
           </div>
         </Html>
       )}
