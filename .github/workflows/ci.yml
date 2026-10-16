@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit + end-to-end tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Playability validation (Scene Agent)
+        run: npm run agent -- validate --runs 200
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t objecttalk:ci .
+      - name: Smoke test
+        run: |
+          docker run -d --name ot -p 8787:8787 objecttalk:ci
+          for i in $(seq 1 30); do curl -sf http://localhost:8787/api/health && exit 0; sleep 1; done
+          docker logs ot; exit 1

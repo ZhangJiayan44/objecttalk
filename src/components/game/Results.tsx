@@ -1,0 +1,200 @@
+import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
+import type { SessionReport, Verdict } from '@shared/analysis';
+import type { Coaching, ServerInfo } from '@shared/protocol';
+import { Bar, btn } from '@/components/ui';
+import { fetchInfo, shareUrl } from '@/lib/api';
+import { useGame, useGameClient } from '@/lib/game-client';
+import { addSession } from '@/lib/profile';
+
+export const VERDICT_STYLE: Record<Verdict, { label: string; cls: string }> = {
+  clear: { label: 'Clear', cls: 'bg-mint' },
+  ok: { label: 'OK, but…', cls: 'bg-sun' },
+  unclear: { label: 'Unclear', cls: 'bg-peach' },
+  misleading: { label: 'Misleading', cls: 'bg-coral text-white' },
+  chat: { label: 'Chat', cls: 'bg-line' },
+};
+
+export function Stars({ n }: { n: number }) {
+  return (
+    <div className="flex gap-1 text-4xl" aria-label={`${n} of 3 stars`}>
+      {[1, 2, 3].map((i) => (
+        <span key={i} className={i <= n ? 'animate-pop' : 'opacity-25 grayscale'} style={{ animationDelay: `${i * 120}ms` }}>
+          ⭐
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function SkillBars({ skills }: { skills: SessionReport['skills'] }) {
+  const rows: [string, number, string][] = [
+    ['Spatial words', skills.spatial, 'bg-cta'],
+    ['Perspective (“your left”)', skills.perspective, 'bg-grape'],
+    ['Clarifying questions', skills.clarifying, 'bg-sky-deep'],
+    ['Speed', skills.speed, 'bg-sun'],
+  ];
+  return (
+    <div className="space-y-3">
+      {rows.map(([label, v, color]) => (
+        <div key={label}>
+          <div className="mb-1 flex justify-between text-sm font-bold">
+            <span>{label}</span>
+            <span>{v}%</span>
+          </div>
+          <Bar value={v} color={color} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function ReviewList({ report, coaching }: { report: SessionReport; coaching?: Coaching }) {
+  return (
+    <div className="space-y-3">
+      {coaching && (
+        <div className="rounded-2xl border-[3px] border-ink bg-lavender p-4">
+          <div className="mb-1 font-display text-lg font-semibold">🤖 Coach Claude says</div>
+          <p className="font-semibold">{coaching.summary}</p>
+          {coaching.rewrites.map((r, i) => (
+            <div key={i} className="mt-2 rounded-xl bg-white/80 p-2 text-sm">
+              <span className="text-muted line-through">{r.original}</span> → <span className="font-bold text-cta-deep">{r.better}</span>
+              <div className="text-muted">{r.why}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {report.reviews.length === 0 && <p className="text-muted">No transcript this time. Use the mic or chat so the coach can review your English!</p>}
+      {report.reviews.map((r) => {
+        const v = VERDICT_STYLE[r.verdict];
+        return (
+          <div key={r.messageId} className="rounded-2xl border-2 border-ink bg-white p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`rounded-full border-2 border-ink px-2 py-0.5 text-xs font-bold ${v.cls}`}>{v.label}</span>
+              <span className="text-xs font-bold text-muted">
+                {r.role === 'guide' ? '🧭' : '🛠️'} {(r.t / 1000).toFixed(1)}s · mission {r.missionIndex + 1}
+              </span>
+            </div>
+            <p className="mt-1 font-semibold">“{r.text}”</p>
+            {r.praise && <p className="mt-1 text-sm font-semibold text-cta-deep">👍 {r.praise}</p>}
+            {r.issues.map((i) => (
+              <p key={i.type} className="mt-1 text-sm text-ink/80">
+                ⚠️ {i.message}
+              </p>
+            ))}
+            {r.suggestion && (
+              <p className="mt-1 rounded-xl bg-mint/40 px-2 py-1 text-sm font-bold">
+                Try: <span className="text-cta-deep">“{r.suggestion}”</span>
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function Results() {
+  const client = useGameClient();
+  const st = useGame((s) => s.state)!;
+  const [info, setInfo] = useState<ServerInfo | null>(null);
+  useEffect(() => {
+    fetchInfo().then(setInfo).catch(() => undefined);
+  }, []);
+  const res = st.results;
+  const role = st.yourRole;
+  useEffect(() => {
+    if (!res || !role) return;
+    addSession({
+      replayId: res.replayId,
+      at: Date.now(),
+      role,
+      partner: st.settings.mode === 'ai' ? 'ai' : 'friend',
+      clarity: res.report.clarity,
+      stars: res.report.stars,
+      missionsDone: res.report.missionsDone,
+      missionsTotal: res.report.missionsTotal,
+      mistakes: res.report.mistakes,
+      skills: res.report.skills,
+    });
+  }, [res, role, st.settings.mode]);
+
+  if (!res) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="clay-chip animate-pulse bg-white">Scoring your English…</div>
+      </div>
+    );
+  }
+  const r = res.report;
+  const replayUrl = shareUrl(info, `/replay/${res.replayId}`);
+  const me = st.players.find((p) => p.id === st.you);
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 pt-28 pb-16">
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+        <section className="clay-card bg-sun/30 p-6">
+          <span className="clay-chip bg-white">{r.missionsDone === r.missionsTotal ? '🏆 All missions done!' : '⏱ Round over'}</span>
+          <div className="mt-4 flex items-end justify-between gap-4">
+            <div>
+              <div className="text-sm font-bold text-muted">Clarity score</div>
+              <div className="font-display text-7xl font-bold">{r.clarity}</div>
+            </div>
+            <Stars n={r.stars} />
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+            {[
+              ['Missions', `${r.missionsDone}/${r.missionsTotal}`],
+              ['Mistakes', r.mistakes],
+              ['Questions', r.questions],
+            ].map(([k, v]) => (
+              <div key={k} className="rounded-2xl border-2 border-ink bg-white p-2">
+                <div className="font-display text-2xl font-bold">{v}</div>
+                <div className="text-xs font-bold text-muted">{k}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6">
+            <SkillBars skills={r.skills} />
+          </div>
+          <div className="mt-6 rounded-2xl border-2 border-dashed border-ink bg-white p-4">
+            <h3 className="font-display text-lg font-semibold">Coach’s top tips</h3>
+            <ul className="mt-2 space-y-1.5 text-sm font-semibold">
+              {r.tips.map((t) => (
+                <li key={t}>💡 {t}</li>
+              ))}
+            </ul>
+            {r.goodPhrases.length > 0 && <p className="mt-3 text-sm">Great phrases you used: {r.goodPhrases.map((p) => <span key={p} className="mr-1 rounded-full bg-mint px-2 py-0.5 font-bold">{p}</span>)}</p>}
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link to={`/replay/${res.replayId}`} className={btn('primary')}>
+              ▶ Watch the replay
+            </Link>
+            {me?.isHost && (
+              <button className={btn('secondary')} onClick={() => client.actions.again()}>
+                Play again
+              </button>
+            )}
+          </div>
+        </section>
+
+        <section className="clay-card p-6">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold">Sentence by sentence</h2>
+              <p className="text-sm text-muted">Each instruction is checked from your partner’s side of the table.</p>
+            </div>
+            <div className="flex items-center gap-3 rounded-2xl border-2 border-ink bg-cream p-2">
+              <QRCodeSVG value={replayUrl} size={72} fgColor="#2d3748" />
+              <span className="max-w-24 text-xs font-bold">Scan to take your replay home</span>
+            </div>
+          </div>
+          <div className="max-h-[60vh] overflow-y-auto pr-1">
+            <ReviewList report={r} coaching={res.coaching} />
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
