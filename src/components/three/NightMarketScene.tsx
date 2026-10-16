@@ -1,4 +1,4 @@
-import { Html, OrbitControls, useGLTF } from '@react-three/drei';
+import { Html, OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
@@ -44,13 +44,36 @@ function Roof({ width = 4.8, depth = 3.8, y = 3.2, color = '#548a83' }: { width?
   </group>;
 }
 
-function Shopkeeper({ shop }: { shop: MarketShop }) {
-  const gltf = useGLTF(asset('/models/nightmarket/shopkeeper.glb'), false, true);
-  const root = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
+function MarketPerson({ shop }: { shop: MarketShop }) {
   const ref = useRef<THREE.Group>(null);
   useFrame(({ clock }) => { if (ref.current) ref.current.rotation.z = Math.sin(clock.elapsedTime * 1.4 + shop.x) * 0.018; });
   return <group position={[0, 0, 0.05]} ref={ref}>
-    <primitive object={root} scale={1.8} />
+    <group position={[0, 0, 0]}>
+      <mesh castShadow position={[0, 0.72, 0]}>
+        <capsuleGeometry args={[0.28, 0.72, 6, 12]} />
+        <meshStandardMaterial color={shop.color} roughness={0.82} />
+      </mesh>
+      <mesh castShadow position={[0, 1.36, 0]}>
+        <sphereGeometry args={[0.27, 16, 12]} />
+        <meshStandardMaterial color="#f3c9a8" roughness={0.8} />
+      </mesh>
+      <mesh castShadow position={[0, 1.57, 0]} rotation={[0, 0, 0.04]}>
+        <coneGeometry args={[0.3, 0.18, 12]} />
+        <meshStandardMaterial color="#59494a" roughness={0.9} />
+      </mesh>
+      <mesh position={[-0.095, 1.38, 0.24]}>
+        <sphereGeometry args={[0.034, 8, 8]} />
+        <meshStandardMaterial color="#403b3c" roughness={0.7} />
+      </mesh>
+      <mesh position={[0.095, 1.38, 0.24]}>
+        <sphereGeometry args={[0.034, 8, 8]} />
+        <meshStandardMaterial color="#403b3c" roughness={0.7} />
+      </mesh>
+      <mesh castShadow position={[0, 0.84, 0.28]}>
+        <boxGeometry args={[0.34, 0.38, 0.035]} />
+        <meshStandardMaterial color="#f5e8d0" roughness={0.95} />
+      </mesh>
+    </group>
     <Sign lines={[shop.owner]} position={[0, 2.02, 0.08]} size={[1.8, 0.32]} bg="#fff2d6" fg="#433b43" border={shop.color} />
   </group>;
 }
@@ -79,7 +102,7 @@ function Shop({ shop, scene, interactive, onShop }: { shop: MarketShop; scene: S
       <Roof width={3.8} depth={2.3} y={2.65} color={shop.color} />
       <Box size={[3.3, 0.32, 0.04]} position={[0, 2.45, 1.0]} color={shop.color} radius={0.01} />
     </>}
-    <Shopkeeper shop={shop} />
+    <MarketPerson shop={shop} />
     <Sign lines={[shop.name]} size={[shop.temporary ? 3.1 : 3.65, 0.65]} position={[0, shop.temporary ? 2.38 : 2.68, shop.temporary ? 1.03 : 0.76]} bg="#4c3b41" fg="#ffe2a0" border={shop.color} emissive={0.3} />
     <group onClick={(e) => { e.stopPropagation(); activate(); }} onPointerOver={(e) => { e.stopPropagation(); setHover(true); }} onPointerOut={() => setHover(false)}>
       <Box size={[3.25, 0.15, 1.05]} position={[0, 0.98, 1.22]} color={hover ? '#ffe49e' : '#deb58a'} radius={0.04} />
@@ -105,11 +128,14 @@ function PavedRoad({ road, index }: { road: typeof MARKET_ROADS[number]; index: 
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 256;
     const g = canvas.getContext('2d')!;
-    g.fillStyle = '#7f8788';
+    g.fillStyle = '#827c76';
     g.fillRect(0, 0, 256, 256);
     for (let row = 0; row < 4; row++) for (let col = -1; col < 5; col++) {
-      g.fillStyle = ['#a2a5a3', '#a9aaa5', '#9fa2a1'][(row * 7 + col + 10) % 3];
+      g.fillStyle = ['#a49d94', '#aaa39a', '#9b958d'][(row * 7 + col + 10) % 3];
       g.fillRect(col * 64 + (row % 2) * 32 + 1, row * 64 + 1, 61, 61);
+      g.strokeStyle = 'rgba(72, 64, 60, 0.12)';
+      g.lineWidth = 2;
+      g.strokeRect(col * 64 + (row % 2) * 32 + 2, row * 64 + 2, 59, 59);
     }
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -127,37 +153,37 @@ function PavedRoad({ road, index }: { road: typeof MARKET_ROADS[number]; index: 
 
 function StreetSet() {
   return <>
-    <SkyDome top="#20243f" bottom="#616277" radius={90} />
+    <SkyDome top="#293246" bottom="#85787b" radius={90} />
     <Stars />
-    <fog attach="fog" args={['#53576b', 38, 85]} />
-    <hemisphereLight args={['#c4d9ea', '#90806a', 1.1]} />
-    <ambientLight intensity={0.45} />
-    <directionalLight position={[-10, 23, 15]} intensity={1.9} color="#fce3bc" castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-23} shadow-camera-right={23} shadow-camera-top={24} shadow-camera-bottom={-24} shadow-normalBias={0.06} />
-    <SoftIBL warm="#ffcb94" cool="#b4d1d4" intensity={0.8} />
-    <mesh rotation-x={-Math.PI / 2} position={[0, -0.04, 0]} receiveShadow><planeGeometry args={[100, 100]} /><meshStandardMaterial color="#687a73" /></mesh>
+    <fog attach="fog" args={['#6e686d', 34, 78]} />
+    <hemisphereLight args={['#d8d7d0', '#766c64', 1.25]} />
+    <ambientLight intensity={0.52} color="#fff3dc" />
+    <directionalLight position={[-10, 23, 15]} intensity={1.55} color="#ffe2bb" castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-23} shadow-camera-right={23} shadow-camera-top={24} shadow-camera-bottom={-24} shadow-normalBias={0.06} />
+    <SoftIBL warm="#f2b981" cool="#b9c3c0" intensity={0.62} />
+    <mesh rotation-x={-Math.PI / 2} position={[0, -0.04, 0]} receiveShadow><planeGeometry args={[100, 100]} /><meshStandardMaterial color="#6f766e" roughness={1} /></mesh>
     {MARKET_ROADS.map((road, index) => <PavedRoad key={index} road={road} index={index} />)}
     {[-15, -9, -3, 3, 9, 15].map((z) => <group key={z}>
-      <LanternString from={[-3.3, 4.6, z]} to={[3.3, 4.6, z]} count={5} sag={0.4} />
-      {[-3.3, 3.3].map((x) => <Box key={x} size={[0.08, 4.5, 0.08]} position={[x, 2.25, z]} color="#835250" radius={0.01} />)}
+      <LanternString from={[-3.3, 4.6, z]} to={[3.3, 4.6, z]} count={5} sag={0.4} color="#d1a266" />
+      {[-3.3, 3.3].map((x) => <Box key={x} size={[0.08, 4.5, 0.08]} position={[x, 2.25, z]} color="#745851" radius={0.01} />)}
     </group>)}
     {[-6, 6].map((z) => <LanternString key={z} from={[-14, 3.6, z]} to={[14, 3.6, z]} count={17} sag={0.4} color="#e4aa59" />)}
     {[-6, 6].map((z) => <Sign key={`lane${z}`} lines={[z > 0 ? '桃花巷 · Peach Lane' : '栗香巷 · Chestnut Lane']} position={[-3.15, 2.5, z + 2.4]} rotation={[0, Math.PI / 2, 0]} size={[3.5, 0.45]} bg="#52736a" fg="#ffe6b4" border="#c6a970" />)}
     {/* Timber infill creates visible blocks between the two cross lanes. */}
     {[-6, 6].map((x) => <group key={x} position={[x, 0, 0]}>
-      <Box size={[5.2, 2.8, 5.6]} position={[0, 1.4, -0.5]} color="#d7c6ae" radius={0.04} />
-      <Roof width={5.7} depth={6.1} color={x < 0 ? '#7a9b92' : '#8a849b'} />
+      <Box size={[5.2, 2.8, 5.6]} position={[0, 1.4, -0.5]} color="#d1c2ae" radius={0.04} />
+      <Roof width={5.7} depth={6.1} color={x < 0 ? '#718d83' : '#9b6b62'} />
       {[-2, 2].map((z) => <Box key={z} size={[5.3, 0.12, 0.14]} position={[0, 1.4, z]} color="#9e6760" radius={0.02} />)}
     </group>)}
     {/* The main street terminates at a little pavilion. */}
     <group position={[0, 0, -20]}>
       {[-2, 2].flatMap((x) => [-1, 1].map((z) => <Box key={`${x}${z}`} size={[0.22, 3.4, 0.22]} position={[x, 1.7, z]} color="#a44f4a" radius={0.03} />))}
       <Roof width={5.5} depth={4.5} color="#689b8c" />
-      <Sign lines={['望月亭', 'Moon Pavilion']} position={[0, 2.6, 1.2]} size={[3.6, 0.6]} bg="#5c4149" fg="#ffe0a0" border="#d0ad66" />
+      <Sign lines={['望月亭', 'Moon Pavilion']} position={[0, 2.6, 1.2]} size={[3.6, 0.6]} bg="#63504d" fg="#f8e2b6" border="#c49b68" />
     </group>
     <group position={[0, 0, 18.5]}>
       {[-3.1, 3.1].map((x) => <Box key={x} size={[0.32, 4.6, 0.35]} position={[x, 2.3, 0]} color="#b14f4c" radius={0.06} />)}
       <Box size={[7.2, 0.36, 0.65]} position={[0, 4.3, 0]} color="#568a81" radius={0.08} />
-      <Sign lines={['灯火夜市', 'LANTERN STREET']} position={[0, 3.75, -0.37]} rotation={[0, Math.PI, 0]} size={[3.8, 0.85]} bg="#643f46" fg="#ffe2a0" border="#dfb565" emissive={0.2} />
+      <Sign lines={['灯火夜市', 'LANTERN STREET']} position={[0, 3.75, -0.37]} rotation={[0, Math.PI, 0]} size={[3.8, 0.85]} bg="#66504d" fg="#f7dfb0" border="#c59b68" emissive={0.04} />
     </group>
     {[-1, 1].map((side) => <group key={side} position={[side * 11.5, 0, 14]}>
       <mesh position={[0, 0.7, 0]} castShadow><cylinderGeometry args={[0.9, 0.9, 0.12, 24]} /><meshStandardMaterial color="#c79573" /></mesh>
@@ -206,12 +232,12 @@ function Contents(p: Props) {
       </mesh>
       <Sign lines={['集合处 · Meeting Point']} position={[0, 0.12, 1.8]} rotation={[-Math.PI / 2, 0, 0]} size={[3.8, 0.6]} bg="#5b6f66" fg="#ffe3a2" border="#c4a767" />
     </group>
-    <PostFx quality={quality} ao={false} bloom={0.3} vignette={0.16} />
+    <PostFx quality={quality} ao={true} bloom={0.12} vignette={0.1} />
   </>;
 }
 
 export function NightMarketScene(props: Props) {
-  return <Canvas className={props.className} shadows dpr={[1, 1.5]} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 150, position: props.view === 'builder' ? [MARKET_START.x, 1.65, MARKET_START.z] : [30, 35, 40] }} gl={{ antialias: false, powerPreference: 'high-performance' }}>
+  return <Canvas className={props.className} shadows dpr={[1, 1.5]} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 150, position: props.view === 'builder' ? [MARKET_START.x, 1.65, MARKET_START.z] : [30, 35, 40] }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
     <Suspense fallback={<Html center>Opening the night market...</Html>}><Contents {...props} /></Suspense>
   </Canvas>;
 }
