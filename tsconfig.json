@@ -20,7 +20,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@shared/*": ["shared/*"]
+      "@shared/*": ["shared/*"],
+      "@static-server": ["src/static/server.ts"]
     }
   },
   "include": ["src", "server", "shared", "agent", "tests", "scripts", "vite.config.ts", "vitest.config.ts"]

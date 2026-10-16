@@ -2,6 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Menu, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { asset } from '@/lib/asset';
 import { Link, NavLink } from 'react-router';
 
 /** Claymorphism UI primitives (styled Radix + Tailwind). */
@@ -26,7 +27,7 @@ export function btn(variant: BtnVariant = 'primary', size: 'sm' | 'md' | 'lg' = 
 export function Logo({ size = 40, withText = true }: { size?: number; withText?: boolean }) {
   return (
     <span className="inline-flex items-center gap-2">
-      <img src="/favicon.svg" width={size} height={size} alt="" className="drop-shadow-[2px_2px_0_rgba(45,55,72,0.25)]" />
+      <img src={asset('/favicon.svg')} width={size} height={size} alt="" className="drop-shadow-[2px_2px_0_rgba(45,55,72,0.25)]" />
       {withText && (
         <span className="font-display text-xl font-bold tracking-tight text-ink">
           Object<span className="text-cta">Talk</span>
@@ -116,10 +117,22 @@ const LINKS = [
   { to: '/demo', label: 'Duo demo' },
 ];
 
+/** GitHub Pages build: the game runs in this tab, so say what needs the full server. */
+export function StaticNotice() {
+  if (!import.meta.env.VITE_STATIC) return null;
+  return (
+    <div className="mx-auto mb-2 max-w-6xl rounded-2xl border-2 border-ink bg-sun px-3 py-1 text-center text-xs font-bold text-ink shadow-[2px_2px_0_#2d3748]">
+      Browser demo on GitHub Pages: play with the AI partner or watch AI vs AI. Friend mode across devices, the LLM agent and live Rodin
+      generation need the full server (<code className="rounded bg-white/70 px-1">npm start</code>).
+    </div>
+  );
+}
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
   return (
     <nav className="fixed top-3 right-3 left-3 z-50 sm:top-4 sm:right-4 sm:left-4">
+      <StaticNotice />
       <div className="clay-card mx-auto max-w-6xl px-4 py-3 sm:px-6">
         <div className="flex items-center justify-between">
           <Link to="/" aria-label="ObjectTalk home">

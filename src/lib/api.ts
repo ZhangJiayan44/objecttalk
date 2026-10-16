@@ -4,7 +4,26 @@ import type { ItemsResponse, LevelsResponse, Replay, ServerInfo } from '@shared/
 
 /** Thin REST helpers for the ObjectTalk server. */
 
+/** Static GitHub Pages build: the server runs in the page, so the REST API is answered here. */
+async function staticJson(url: string): Promise<unknown> {
+  // Guarded by the build-time flag so the normal build never bundles the in-page server.
+  if (!import.meta.env.VITE_STATIC) throw new Error('static only');
+  const s = await import('@static-server');
+  const { allKinds } = await import('@shared/catalog');
+  if (url === '/api/info') return s.info();
+  if (url === '/api/items') return { kinds: allKinds() };
+  if (url === '/api/levels') return { levels: s.levels() };
+  const replay = /^\/api\/replays\/(.+)$/.exec(url);
+  if (replay) {
+    const r = s.getReplay(decodeURIComponent(replay[1]));
+    if (!r) throw new Error('This replay was played on another device (replays stay in the browser that played them).');
+    return r;
+  }
+  throw new Error('Not available in the static demo: run the full server (npm start).');
+}
+
 async function getJson<T>(url: string): Promise<T> {
+  if (import.meta.env.VITE_STATIC) return (await staticJson(url)) as T;
   const res = await fetch(url);
   if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? `HTTP ${res.status}`);
   return (await res.json()) as T;
@@ -65,6 +84,7 @@ export interface StudioJobStatus {
 }
 
 export async function submitStudioJob(form: FormData): Promise<string> {
+  if (import.meta.env.VITE_STATIC) throw new Error('Live Rodin generation needs the full server with RODIN_API_KEY (npm start).');
   const res = await fetch('/api/studio/generate', { method: 'POST', body: form });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
@@ -76,6 +96,7 @@ export const fetchStudioJob = (id: string) => getJson<StudioJobStatus>(`/api/stu
 /** Best URL for a phone to reach this room (LAN address in dev, PUBLIC_URL in production). */
 export function shareUrl(info: ServerInfo | null, pathname: string): string {
   const here = window.location;
+  if (import.meta.env.VITE_STATIC) return `${here.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}${pathname}`;
   const isLocal = /^(localhost|127\.|\[::1\])/.test(here.hostname);
   if (info?.publicUrl) return `${info.publicUrl.replace(/\/$/, '')}${pathname}`;
   if (isLocal && info?.lanUrls[0]) {
@@ -98,6 +119,7 @@ export interface IdentifiedObject {
 }
 
 export async function identifyStudioPhoto(file: File): Promise<IdentifiedObject | null> {
+  if (import.meta.env.VITE_STATIC) return null;
   const form = new FormData();
   form.append('image', file);
   const res = await fetch('/api/studio/identify', { method: 'POST', body: form });

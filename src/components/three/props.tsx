@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { getKind } from '@shared/catalog';
 import { DECOR } from '@shared/wave4';
+import { asset } from '@/lib/asset';
 import { speak } from '@/lib/speech';
 import { addWord } from '@/lib/words';
 import { clickInteracts } from './controls';
@@ -73,7 +74,7 @@ const ANIMALS = new Set<DecorName>(['kitten', 'puppy', 'duck', 'parrot', 'turtle
 
 /** A Rodin model, normalized (largest side = `size` metres), resting on y = 0, centred. */
 export function useProp(url: string) {
-  const gltf = useGLTF(url, false, true);
+  const gltf = useGLTF(asset(url), false, true);
   return useMemo(() => {
     const c = gltf.scene.clone(true);
     c.traverse((o) => {
@@ -180,5 +181,5 @@ export function kindWords(kind: string): [string, string] | null {
 
 /** Warm the cache for a set of props (call in the lobby or while the countdown runs). */
 export function preloadProps(names: DecorName[]) {
-  for (const n of names) useGLTF.preload(DECOR[n], false, true);
+  for (const n of names) useGLTF.preload(asset(DECOR[n]), false, true);
 }

@@ -5,6 +5,7 @@ import { getKind } from '@shared/catalog';
 import { PLACE_DEFS, planRoute, type PlaceKind } from '@shared/city';
 import { levelOf } from '@shared/levels';
 import type { ClientRoomState, Pose } from '@shared/protocol';
+import { asset } from '@/lib/asset';
 import { Kbd } from '@/components/ui';
 
 /** The top-left mission card, one layout per kind of level. E hides / shows it. */
@@ -53,7 +54,7 @@ export function MissionCard({ st, pose, view, onClose }: { st: ClientRoomState; 
         <p className="text-sm font-semibold">{m.brief}</p>
         {isGuide && obj && (
           <div className="mt-3 flex items-center gap-3 rounded-2xl border-2 border-dashed border-ink bg-cream p-2">
-            {kind?.ref ? <img src={kind.ref} alt="" className="h-12 w-12 object-contain" /> : <span className="text-3xl">{kind?.emoji ?? '☕'}</span>}
+            {kind?.ref ? <img src={asset(kind.ref)} alt="" className="h-12 w-12 object-contain" /> : <span className="text-3xl">{kind?.emoji ?? '☕'}</span>}
             <div className="text-sm">
               <div className="font-display text-base font-semibold">
                 Target: {obj.size !== 'regular' ? `${obj.size} ` : ''}

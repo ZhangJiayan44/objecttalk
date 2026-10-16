@@ -4,6 +4,7 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { DECOR_MODELS } from '@shared/catalog';
 import type { Palette } from '@shared/levels';
+import { asset } from '@/lib/asset';
 import { Dust, LightShaft, Sign, useTextTexture } from './env';
 
 /**
@@ -74,7 +75,7 @@ export function usePatternTexture(bg: string, dot: string, kind: 'dots' | 'strip
 
 /** A Rodin decor model scaled to a target size (largest side in metres). */
 export function Decor({ url, size, position, rotation = 0 }: { url: string; size: number; position: [number, number, number]; rotation?: number }) {
-  const gltf = useGLTF(url, false, true);
+  const gltf = useGLTF(asset(url), false, true);
   const obj = useMemo(() => {
     const c = gltf.scene.clone(true);
     c.traverse((o) => {

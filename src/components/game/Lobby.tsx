@@ -8,6 +8,7 @@ import type { Mode, ServerInfo } from '@shared/protocol';
 import type { Difficulty, InterestId, Role } from '@shared/types';
 import { questsFor, today } from '@shared/quests';
 import { btn } from '@/components/ui';
+import { asset } from '@/lib/asset';
 import { fetchInfo, loadItems, loadLevels, myObjectIds, shareUrl } from '@/lib/api';
 import { useGame, useGameClient } from '@/lib/game-client';
 
@@ -62,7 +63,7 @@ function LevelCard({ level, active, disabled, onPick }: { level: LevelMeta; acti
         <div className="mt-2 flex -space-x-1">
           {kinds.slice(0, 6).map((k) => (
             <span key={k.id} className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-ink bg-white text-sm">
-              {k.ref ? <img src={k.ref} alt="" className="h-full w-full object-contain" /> : k.emoji}
+              {k.ref ? <img src={asset(k.ref)} alt="" className="h-full w-full object-contain" /> : k.emoji}
             </span>
           ))}
         </div>
@@ -204,7 +205,7 @@ export function Lobby() {
                 const kind = allKinds().find((k) => k.id === i.kind);
                 return (
                   <button key={i.id} disabled={!host} onClick={() => toggleInterest(i.id)} className={`clay-sm flex flex-col items-center p-2 transition ${on ? 'bg-mint' : 'bg-white opacity-70 hover:opacity-100'} disabled:cursor-default`} aria-pressed={on}>
-                    <img src={kind?.ref} alt="" className="h-14 w-14 object-contain" />
+                    <img src={asset(kind?.ref)} alt="" className="h-14 w-14 object-contain" />
                     <span className="mt-1 text-sm font-bold">{i.label}</span>
                   </button>
                 );
@@ -221,7 +222,7 @@ export function Lobby() {
                 const on = s.customKinds.includes(k.id);
                 return (
                   <button key={k.id} disabled={!host} onClick={() => client.actions.updateSettings({ customKinds: on ? s.customKinds.filter((x) => x !== k.id) : [...s.customKinds, k.id].slice(-2) })} className={`clay-chip ${on ? 'bg-mint' : 'bg-white'}`}>
-                    {k.ref && <img src={k.ref} alt="" className="h-6 w-6 rounded object-cover" />} {k.name}
+                    {k.ref && <img src={asset(k.ref)} alt="" className="h-6 w-6 rounded object-cover" />} {k.name}
                   </button>
                 );
               })}
@@ -277,7 +278,11 @@ export function Lobby() {
         {s.mode === 'duo' ? (
           <section className="clay-card bg-sun/40 p-6 text-center">
             <h2 className="text-2xl font-bold">Scan to join</h2>
-            <p className="mb-4 text-sm text-muted">Your friend scans this with their phone (same Wi-Fi).</p>
+            <p className="mb-4 text-sm text-muted">
+              {import.meta.env.VITE_STATIC
+                ? 'This GitHub Pages demo has no server, so a friend on another device cannot join. Switch to “AI partner”, try the split-screen duo demo, or run the full server (npm start) to play together.'
+                : 'Your friend scans this with their phone (same Wi-Fi).'}
+            </p>
             <div className="mx-auto w-fit rounded-3xl border-[3px] border-ink bg-white p-4 shadow-[6px_6px_0_#2d3748]">
               <QRCodeSVG value={joinUrl} size={196} fgColor="#2d3748" level="M" />
             </div>

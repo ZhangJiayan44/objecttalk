@@ -66,9 +66,12 @@ export interface GameClient {
 
 const idKey = (code: string) => `objecttalk:pid:${code}`;
 
+/** The static GitHub Pages build runs the server in the page (src/static/server.ts). */
+const staticServer = import.meta.env.VITE_STATIC ? import('@static-server') : null;
+
 export function createGameClient(opts: { persistIdentity?: boolean } = {}): GameClient {
   const persist = opts.persistIdentity ?? true;
-  const socket: Socket<ServerToClient, ClientToServer> = io({ transports: ['websocket', 'polling'], reconnectionDelayMax: 3000 });
+  const socket: Socket<ServerToClient, ClientToServer> = staticServer ? lazySocket(staticServer) : io({ transports: ['websocket', 'polling'], reconnectionDelayMax: 3000 });
   const store = createStore<GameState>(() => ({ connected: false, state: null, chat: [], remoteHover: null, remotePose: null, traces: [], fx: [], clockOffset: 0, error: null }));
   let session: { code: string; name: string; playerId: string; spectate?: boolean; viewAs?: Role | null } | null = null;
   let fxKey = 0;
@@ -197,6 +200,44 @@ export function createGameClient(opts: { persistIdentity?: boolean } = {}): Game
     (w.__ot ??= { clients: [] }).clients.push(client);
   }
   return client;
+}
+
+/**
+ * A socket that forwards to the in-page server once its module has loaded (it is code-split,
+ * so the normal build never ships it). Listeners and emits made before that are queued.
+ */
+function lazySocket(mod: Promise<typeof import('@static-server')>): Socket<ServerToClient, ClientToServer> {
+  let real: Socket<ServerToClient, ClientToServer> | null = null;
+  // Closed before the module loaded (React StrictMode mounts twice): never open a connection.
+  let closed = false;
+  const queued: ((s: Socket<ServerToClient, ClientToServer>) => void)[] = [];
+  const run = (fn: (s: Socket<ServerToClient, ClientToServer>) => void) => {
+    if (closed) return;
+    if (real) fn(real);
+    else queued.push(fn);
+  };
+  void mod.then((m) => {
+    if (closed) return;
+    real = m.connect();
+    for (const fn of queued.splice(0)) fn(real);
+  });
+  const proxy = {
+    get connected() {
+      return real?.connected ?? false;
+    },
+    on: (ev: string, fn: (...a: unknown[]) => void) => (run((s) => s.on(ev as never, fn as never)), proxy),
+    off: (ev: string, fn?: (...a: unknown[]) => void) => (run((s) => s.off(ev as never, fn as never)), proxy),
+    emit: (ev: string, ...args: unknown[]) => (run((s) => (s.emit as (e: string, ...a: unknown[]) => void)(ev, ...args)), proxy),
+    removeAllListeners: () => (run((s) => s.removeAllListeners()), proxy),
+    close: () => {
+      if (closed) return proxy;
+      real?.close();
+      closed = true;
+      queued.length = 0;
+      return proxy;
+    },
+  };
+  return proxy as unknown as Socket<ServerToClient, ClientToServer>;
 }
 
 export const GameContext = createContext<GameClient | null>(null);
