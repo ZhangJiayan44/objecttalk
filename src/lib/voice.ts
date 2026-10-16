@@ -8,7 +8,7 @@ import type { GameClient } from './game-client';
  * out loud; this is for playing across the internet.
  */
 
-type Signal = { type: 'offer' | 'answer'; sdp: string } | { type: 'ice'; candidate: RTCIceCandidateInit } | { type: 'bye' };
+type Signal = { type: 'offer' | 'answer'; sdp: string } | { type: 'ice'; candidate: RTCIceCandidateInit } | { type: 'hello' };
 
 export function useVoiceLink(client: GameClient, enabled: boolean, partnerId: string | null, ice: ServerInfo['iceServers']) {
   const [status, setStatus] = useState<'off' | 'connecting' | 'live' | 'error'>('off');
@@ -44,11 +44,23 @@ export function useVoiceLink(client: GameClient, enabled: boolean, partnerId: st
       }
     };
 
+    const offerer = me < partnerId;
+    let ready = false;
+    const sendOffer = async () => {
+      if (!ready || cancelled) return;
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      send({ type: 'offer', sdp: offer.sdp ?? '' });
+    };
+
     const onSignal = async ({ from, data }: { from: string; data: unknown }) => {
       if (from !== partnerId || cancelled) return;
       const sig = data as Signal;
       try {
-        if (sig.type === 'offer') {
+        // The partner just switched voice on: the offerer (smaller id) (re)starts negotiation.
+        if (sig.type === 'hello') {
+          if (offerer && pc.connectionState !== 'connected') await sendOffer();
+        } else if (sig.type === 'offer') {
           await pc.setRemoteDescription({ type: 'offer', sdp: sig.sdp });
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
@@ -67,12 +79,10 @@ export function useVoiceLink(client: GameClient, enabled: boolean, partnerId: st
         stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
         if (cancelled) return;
         stream.getTracks().forEach((t) => pc.addTrack(t, stream!));
-        // The lexicographically smaller id makes the offer, so exactly one side does.
-        if (me < partnerId) {
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          send({ type: 'offer', sdp: offer.sdp ?? '' });
-        }
+        ready = true;
+        // Announce ourselves; whichever side switches on second triggers the real offer.
+        send({ type: 'hello' });
+        if (offerer) await sendOffer();
       } catch (err) {
         setStatus('error');
         setError((err as Error).name === 'NotAllowedError' ? 'Microphone blocked by the browser.' : 'Could not start the microphone (HTTPS or localhost is required).');
