@@ -2,7 +2,7 @@ import { Html, RoundedBox, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { getKind } from '@shared/catalog';
+import { DECOR_MODELS, getKind, kindsFor } from '@shared/catalog';
 import { TABLE_D, TABLE_W, TABLE_Y } from '@shared/room';
 import { COLOR_HEX, type ColorName, type LandmarkKind, type Role, type SizeName } from '@shared/types';
 
@@ -103,8 +103,12 @@ export function ItemModel({ kind, color, size, look = {} }: { kind: string; colo
   return <group scale={scale}>{def?.model ? <GlbModel url={def.model} rotation={def.rotation} look={look} /> : <Mug color={color} look={look} />}</group>;
 }
 
-export function preloadModels() {
-  for (const url of ['/models/rocket.glb', '/models/teddy_bear.glb', '/models/cupcake.glb', '/models/sneaker.glb', '/models/game_controller.glb']) useGLTF.preload(url, false, true);
+/** Warm the GLB cache for a level (or the hero items) while the lobby is open. */
+export function preloadModels(level?: string) {
+  const urls = new Set(['/models/rocket.glb', '/models/teddy_bear.glb', '/models/cupcake.glb', '/models/sneaker.glb', '/models/game_controller.glb', DECOR_MODELS.plant, DECOR_MODELS.books]);
+  if (level) for (const k of kindsFor(level)) if (k.model) urls.add(k.model);
+  if (level === 'city') for (const u of ['/models/bank.glb', '/models/convenience_store.glb', '/models/hospital.glb', '/models/school.glb', '/models/post_office.glb', '/models/hotel.glb', '/models/museum.glb', '/models/house.glb', '/models/fountain.glb', '/models/tree.glb', '/models/traffic_light.glb', '/models/bus_stop.glb']) urls.add(u);
+  for (const url of urls) useGLTF.preload(url, false, true);
 }
 
 // ---------------------------------------------------------------------------

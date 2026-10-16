@@ -2,25 +2,37 @@ import * as Slider from '@radix-ui/react-slider';
 import { Pause, Play } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
+import { START_POSE } from '@shared/bedroom';
+import { levelOf } from '@shared/levels';
 import { moveObject } from '@shared/missions';
-import type { Replay } from '@shared/protocol';
-import type { SceneState } from '@shared/types';
-import { ReviewList, SkillBars, Stars, VERDICT_STYLE } from '@/components/game/Results';
+import type { Pose, Replay } from '@shared/protocol';
+import type { Role, SceneState } from '@shared/types';
+import { CefrCard, ReviewList, SkillBars, Stars, VERDICT_STYLE } from '@/components/game/Results';
+import { BedroomScene } from '@/components/three/BedroomScene';
+import { CafeScene } from '@/components/three/CafeScene';
+import { CityScene } from '@/components/three/CityScene';
 import { RoomScene, type Pointer, type ViewMode } from '@/components/three/RoomScene';
 import { btn, Navbar } from '@/components/ui';
-import { fetchReplay, loadItems } from '@/lib/api';
+import { fetchReplay, loadItems, loadLevels } from '@/lib/api';
 
 interface Frame {
-  scene: SceneState;
+  scene: SceneState | null;
   heldId: string | null;
+  tray: string[];
+  open: string[];
+  found: string[];
   missionIndex: number;
   pointer: Pointer | null;
+  pose: Pose | null;
 }
 
-/** Rebuild the table at time t from the initial scene + the event log. */
+/** Rebuild the world at time t from the initial state + the event log (+ the walker's trail). */
 function frameAt(replay: Replay, t: number): Frame {
   let scene = replay.initialScene;
   let heldId: string | null = null;
+  let tray: string[] = [];
+  const open = new Set<string>();
+  const found: string[] = [];
   let missionIndex = -1;
   let pointer: Pointer | null = null;
   for (const e of replay.events) {
@@ -30,14 +42,38 @@ function frameAt(replay: Replay, t: number): Frame {
       missionIndex = e.missionIndex ?? missionIndex + 1;
       heldId = null;
       pointer = null;
+      tray = [];
     } else if (e.type === 'hover') pointer = { objectId: e.objectId ?? null, cell: e.cell ?? null };
     else if (e.type === 'pick' && type === 'place') heldId = e.objectId ?? null;
-    else if (e.type === 'place' && e.objectId && e.cell) {
+    else if (e.type === 'place' && e.objectId && e.cell && scene) {
       scene = moveObject(scene, e.objectId, e.cell);
       heldId = null;
     } else if (e.type === 'drop') heldId = null;
+    else if (e.type === 'tray' && e.objectId) tray = [...tray, e.objectId];
+    else if (e.type === 'untray' && e.objectId) tray = tray.filter((id) => id !== e.objectId);
+    else if (e.type === 'serve' && e.message === 'ok' && scene) {
+      // Served items leave the case (refills are not logged; the case simply looks emptier).
+      scene = { ...scene, objects: scene.objects.filter((o) => !tray.includes(o.id)) };
+      tray = [];
+    } else if (e.type === 'reveal' && e.message) {
+      const [act, id] = e.message.split(' ');
+      if (act === 'open') open.add(id);
+      else open.delete(id);
+    } else if (e.type === 'success' && type === 'seek') {
+      const m = replay.missions[missionIndex];
+      if (m?.targetId) found.push(m.targetId);
+    }
   }
-  return { scene, heldId, missionIndex, pointer };
+  let pose: Pose | null = null;
+  if (replay.poses?.length) {
+    let lo = replay.poses[0];
+    for (const p of replay.poses) {
+      if (p[0] > t) break;
+      lo = p;
+    }
+    pose = { x: lo[1], z: lo[2], yaw: lo[3] };
+  }
+  return { scene, heldId, tray, open: [...open], found, missionIndex, pointer, pose };
 }
 
 const fmt = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`;
@@ -53,11 +89,11 @@ export default function ReplayPage() {
   const raf = useRef(0);
 
   useEffect(() => {
-    loadItems()
-      .catch(() => undefined)
+    Promise.all([loadItems().catch(() => undefined), loadLevels().catch(() => undefined)])
       .then(() => fetchReplay(id))
       .then((r) => {
         setReplay(r);
+        setView(levelOf(r.level).controls === 'walk' ? 'guide' : 'overview');
         setPlaying(true);
       })
       .catch((err: Error) => setError(err.message));
@@ -108,14 +144,29 @@ export default function ReplayPage() {
       </div>
     );
 
+  const level = levelOf(replay.level);
   const mission = replay.missions[frame.missionIndex];
-  const target = mission ? { findId: mission.targetId, itemId: mission.itemId, cell: mission.targetCell } : null;
-  const names = Object.fromEntries(replay.players.map((p) => [p.role, p.name]));
+  const names = Object.fromEntries(replay.players.map((p) => [p.role, p.name])) as Partial<Record<Role, string>>;
   const visibleMsgs = replay.messages.filter((m) => m.t <= t);
   const markers = [
     ...replay.events.filter((e) => e.type === 'wrong' || e.type === 'success' || e.type === 'mission').map((e) => ({ t: e.t, cls: e.type === 'wrong' ? 'bg-coral' : e.type === 'success' ? 'bg-cta' : 'bg-grape', label: e.type })),
     ...replay.messages.map((m) => ({ t: m.t, cls: 'bg-ink h-2 w-1 rounded-none', label: m.text })),
   ];
+  const views: ViewMode[] = level.controls === 'walk' ? ['guide', 'builder'] : ['guide', 'builder', 'overview'];
+  const world = replay.initialWorld;
+
+  let sceneEl: React.ReactNode = null;
+  if (level.engine === 'tabletop' && frame.scene) {
+    const target = mission ? { findId: mission.targetId, itemId: mission.itemId, cell: mission.targetCell } : null;
+    sceneEl = <RoomScene className="!absolute inset-0" scene={frame.scene} view={view} heldId={frame.heldId} target={target} pointer={frame.pointer} names={names} />;
+  } else if (level.engine === 'order' && frame.scene)
+    sceneEl = <CafeScene className="!absolute inset-0" scene={frame.scene} tray={frame.tray} view={view} interactive={false} pointer={frame.pointer} names={names} level={replay.level} />;
+  else if (level.engine === 'walknav' && world?.kind === 'city')
+    sceneEl = <CityScene className="!absolute inset-0" town={world.town} pose={frame.pose ?? world.town.start} view={view} interactive={false} destination={mission?.destination ?? null} walkerName={names.builder} />;
+  else if (level.engine === 'walksearch' && world?.kind === 'bedroom')
+    sceneEl = (
+      <BedroomScene className="!absolute inset-0" items={world.items} found={frame.found} open={frame.open} pose={frame.pose ?? START_POSE} view={view} interactive={false} targetId={view === 'guide' ? (mission?.targetId ?? null) : null} names={names} />
+    );
 
   return (
     <div className="min-h-dvh bg-cream">
@@ -123,18 +174,18 @@ export default function ReplayPage() {
       <main className="mx-auto max-w-7xl px-3 pt-24 pb-12 sm:px-4 sm:pt-28">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span className="clay-chip bg-lavender">📼 Replay · room {replay.code}</span>
-            <h1 className="mt-2 text-3xl font-bold">
-              {replay.players.map((p) => `${p.isAI ? '🤖 ' : ''}${p.name}`).join(' & ')}
-            </h1>
+            <span className="clay-chip bg-lavender">
+              📼 Replay · {level.emoji} {level.title} · room {replay.code}
+            </span>
+            <h1 className="mt-2 text-3xl font-bold">{replay.players.map((p) => `${p.isAI ? '🤖 ' : ''}${p.name}`).join(' & ')}</h1>
             <p className="text-muted">
               {new Date(replay.createdAt).toLocaleString()} · {replay.settings.difficulty} · {replay.report.missionsDone}/{replay.report.missionsTotal} missions
             </p>
           </div>
           <div className="flex rounded-2xl border-[3px] border-ink bg-white p-1" role="radiogroup" aria-label="Camera">
-            {(['guide', 'builder', 'overview'] as ViewMode[]).map((v) => (
+            {views.map((v) => (
               <button key={v} onClick={() => setView(v)} className={`rounded-xl px-3 py-1.5 text-sm font-bold ${view === v ? 'bg-sun shadow-[2px_2px_0_#2d3748]' : 'text-muted'}`} aria-pressed={view === v}>
-                {v === 'guide' ? '🧭 Guide view' : v === 'builder' ? '🛠️ Builder view' : '👀 Both sides'}
+                {v === 'overview' ? '👀 Both sides' : `${level.roles[v].icon} ${level.roles[v].name} view`}
               </button>
             ))}
           </div>
@@ -143,10 +194,10 @@ export default function ReplayPage() {
         <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
           <div className="space-y-4">
             <div className="clay-card relative aspect-[16/10] overflow-hidden bg-gradient-to-b from-[#fff4ef] to-[#e9f6fb]">
-              <RoomScene className="!absolute inset-0" scene={frame.scene} view={view} heldId={frame.heldId} target={target} pointer={frame.pointer} names={names} />
+              {sceneEl}
               {mission && (
                 <div className="absolute top-3 left-3 clay-chip bg-white">
-                  {mission.type === 'find' ? '🔎' : '📦'} Mission {mission.index + 1} · {mission.success ? '✅' : '…'}
+                  Mission {mission.index + 1}: {mission.title ?? mission.type} · {mission.success ? '✅' : '…'}
                 </div>
               )}
               {visibleMsgs.length > 0 && (
@@ -156,7 +207,7 @@ export default function ReplayPage() {
                     const fresh = t - m.t < 3500;
                     return fresh ? (
                       <div key={m.id} className={`animate-pop rounded-2xl border-[3px] border-ink px-4 py-2 text-center font-bold shadow-[3px_3px_0_#2d3748] ${m.role === 'guide' ? 'bg-peach' : 'bg-sky'}`}>
-                        {m.role === 'guide' ? '🧭' : '🛠️'} {m.text}
+                        {level.roles[m.role].icon} {m.text}
                       </div>
                     ) : null;
                   })()}
@@ -194,7 +245,7 @@ export default function ReplayPage() {
                   <i className="h-2 w-2 rounded-full bg-grape" /> mission start
                 </span>
                 <span className="flex items-center gap-1">
-                  <i className="h-2 w-2 rounded-full bg-coral" /> wrong pick
+                  <i className="h-2 w-2 rounded-full bg-coral" /> mistake
                 </span>
                 <span className="flex items-center gap-1">
                   <i className="h-2 w-2 rounded-full bg-cta" /> success
@@ -207,7 +258,7 @@ export default function ReplayPage() {
 
             <div className="clay-card p-4">
               <h2 className="mb-2 font-display text-xl font-semibold">Transcript</h2>
-              <ol className="space-y-1.5">
+              <ol className="max-h-[50vh] space-y-1.5 overflow-y-auto pr-1">
                 {replay.messages.map((m) => {
                   const r = reviews.get(m.id);
                   const past = m.t <= t;
@@ -215,7 +266,7 @@ export default function ReplayPage() {
                     <li key={m.id}>
                       <button onClick={() => setT(Math.max(0, m.t - 300))} className={`flex w-full items-start gap-2 rounded-xl px-2 py-1 text-left hover:bg-cream ${past ? '' : 'opacity-40'}`}>
                         <span className="w-12 shrink-0 font-display text-sm text-muted tabular-nums">{fmt(m.t)}</span>
-                        <span className="shrink-0">{m.role === 'guide' ? '🧭' : '🛠️'}</span>
+                        <span className="shrink-0">{level.roles[m.role].icon}</span>
                         <span className="flex-1 font-semibold">{m.text}</span>
                         {r && <span className={`shrink-0 rounded-full border-2 border-ink px-2 text-xs font-bold ${VERDICT_STYLE[r.verdict].cls}`}>{VERDICT_STYLE[r.verdict].label}</span>}
                       </button>
@@ -237,7 +288,7 @@ export default function ReplayPage() {
                 <Stars n={replay.report.stars} />
               </div>
               <div className="mt-4">
-                <SkillBars skills={replay.report.skills} />
+                <SkillBars skills={replay.report.skills} names={replay.report.skillNames} />
               </div>
               <ul className="mt-4 space-y-1.5 text-sm font-semibold">
                 {replay.report.tips.map((tip) => (
@@ -245,9 +296,12 @@ export default function ReplayPage() {
                 ))}
               </ul>
             </div>
+            <CefrCard report={replay.report} coaching={replay.coaching} />
             <div className="clay-card p-5">
               <h2 className="mb-3 font-display text-xl font-semibold">Coach review</h2>
-              <ReviewList report={replay.report} coaching={replay.coaching} />
+              <div className="max-h-[60vh] overflow-y-auto pr-1">
+                <ReviewList report={replay.report} coaching={replay.coaching} />
+              </div>
             </div>
             <Link to="/play" className={btn('primary', 'md', 'w-full')}>
               Play another round

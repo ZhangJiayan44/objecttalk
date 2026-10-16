@@ -1,7 +1,8 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import type { SessionReport, Verdict } from '@shared/analysis';
+import type { SessionReport, SkillScores, Verdict } from '@shared/analysis';
+import { levelOf } from '@shared/levels';
 import type { Coaching, ServerInfo } from '@shared/protocol';
 import { Bar, btn } from '@/components/ui';
 import { fetchInfo, shareUrl } from '@/lib/api';
@@ -28,12 +29,12 @@ export function Stars({ n }: { n: number }) {
   );
 }
 
-export function SkillBars({ skills }: { skills: SessionReport['skills'] }) {
+export function SkillBars({ skills, names }: { skills: SessionReport['skills']; names?: Partial<Record<keyof SkillScores, string>> }) {
   const rows: [string, number, string][] = [
-    ['Spatial words', skills.spatial, 'bg-cta'],
-    ['Perspective (“your left”)', skills.perspective, 'bg-grape'],
-    ['Clarifying questions', skills.clarifying, 'bg-sky-deep'],
-    ['Speed', skills.speed, 'bg-sun'],
+    [names?.spatial ?? 'Spatial words', skills.spatial, 'bg-cta'],
+    [names?.perspective ?? 'Perspective (“your left”)', skills.perspective, 'bg-grape'],
+    [names?.clarifying ?? 'Clarifying questions', skills.clarifying, 'bg-sky-deep'],
+    [names?.speed ?? 'Speed', skills.speed, 'bg-sun'],
   ];
   return (
     <div className="space-y-3">
@@ -46,6 +47,44 @@ export function SkillBars({ skills }: { skills: SessionReport['skills'] }) {
           <Bar value={v} color={color} />
         </div>
       ))}
+    </div>
+  );
+}
+
+const CEFR_STEPS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const;
+
+/** Rough speaking-level estimate (rule-based, optionally refined by the Claude coach). */
+export function CefrCard({ report, coaching }: { report: SessionReport; coaching?: Coaching }) {
+  const est = report.cefr;
+  const level = coaching?.cefr ?? est?.level;
+  return (
+    <div className="clay-card bg-lavender/60 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-display text-lg font-semibold">🎯 Your English this round</h3>
+        {coaching?.cefr && <span className="clay-chip bg-white !py-0.5 !text-xs">🤖 checked by Claude</span>}
+      </div>
+      {level ? (
+        <>
+          <div className="mt-3 flex gap-1.5">
+            {CEFR_STEPS.map((c) => (
+              <div key={c} className={`flex-1 rounded-xl border-2 border-ink py-1.5 text-center font-display text-lg font-bold ${c === level ? 'scale-110 bg-sun shadow-[2px_2px_0_#2d3748]' : 'bg-white opacity-60'}`}>
+                {c}
+              </div>
+            ))}
+          </div>
+          {est && (
+            <ul className="mt-3 space-y-1 text-sm font-semibold">
+              {est.reasons.map((r) => (
+                <li key={r}>• {r}</li>
+              ))}
+              <li className="mt-2 rounded-xl bg-white/80 p-2">➡️ {est.next}</li>
+            </ul>
+          )}
+          <p className="mt-2 text-xs text-muted">A rough guide from {est?.sample ?? 'your'} sentences, not an exam result.</p>
+        </>
+      ) : (
+        <p className="mt-2 text-sm font-semibold text-muted">Say at least three sentences (hold Space) and the coach will estimate your level (CEFR A1 to C1).</p>
+      )}
     </div>
   );
 }
@@ -73,7 +112,7 @@ export function ReviewList({ report, coaching }: { report: SessionReport; coachi
             <div className="flex flex-wrap items-center gap-2">
               <span className={`rounded-full border-2 border-ink px-2 py-0.5 text-xs font-bold ${v.cls}`}>{v.label}</span>
               <span className="text-xs font-bold text-muted">
-                {r.role === 'guide' ? '🧭' : '🛠️'} {(r.t / 1000).toFixed(1)}s · mission {r.missionIndex + 1}
+                {levelOf(report.level).roles[r.role].icon} {(r.t / 1000).toFixed(1)}s · mission {r.missionIndex + 1}
               </span>
             </div>
             <p className="mt-1 font-semibold">“{r.text}”</p>
@@ -156,7 +195,7 @@ export function Results() {
             ))}
           </div>
           <div className="mt-6">
-            <SkillBars skills={r.skills} />
+            <SkillBars skills={r.skills} names={r.skillNames} />
           </div>
           <div className="mt-6 rounded-2xl border-2 border-dashed border-ink bg-white p-4">
             <h3 className="font-display text-lg font-semibold">Coach’s top tips</h3>
@@ -179,11 +218,13 @@ export function Results() {
           </div>
         </section>
 
-        <section className="clay-card p-6">
+        <section className="flex flex-col gap-6">
+        <CefrCard report={r} coaching={res.coaching} />
+        <div className="clay-card p-6">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold">Sentence by sentence</h2>
-              <p className="text-sm text-muted">Each instruction is checked from your partner’s side of the table.</p>
+              <p className="text-sm text-muted">Each sentence is checked from your partner’s point of view.</p>
             </div>
             <div className="flex items-center gap-3 rounded-2xl border-2 border-ink bg-cream p-2">
               <QRCodeSVG value={replayUrl} size={72} fgColor="#2d3748" />
@@ -193,6 +234,7 @@ export function Results() {
           <div className="max-h-[60vh] overflow-y-auto pr-1">
             <ReviewList report={r} coaching={res.coaching} />
           </div>
+        </div>
         </section>
       </div>
     </div>

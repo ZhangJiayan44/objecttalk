@@ -1,4 +1,8 @@
-import type { SessionReport, MissionRecord, ChatRecord } from './analysis';
+import type { ChatRecord, MissionRecord, SessionReport } from './analysis';
+import type { BedroomItem } from './bedroom';
+import type { OrderLine } from './cafe';
+import type { Pose, Town } from './city';
+import type { LevelMeta } from './levels';
 import type { Cell, Difficulty, InterestId, ItemKind, MissionType, Role, SceneState } from './types';
 
 /**
@@ -7,7 +11,8 @@ import type { Cell, Difficulty, InterestId, ItemKind, MissionType, Role, SceneSt
  * information gap is enforced on the wire, not just hidden in the UI.
  */
 
-export type Mode = 'duo' | 'ai';
+/** duo: two humans; ai: one human + an AI partner; sim: two AI partners, humans watch. */
+export type Mode = 'duo' | 'ai' | 'sim';
 export type Phase = 'lobby' | 'countdown' | 'playing' | 'results';
 export type Via = 'voice' | 'text' | 'quick' | 'ai' | 'system';
 
@@ -21,6 +26,8 @@ export interface PlayerInfo {
 }
 
 export interface RoomSettings {
+  /** A built-in level id (study, cafe, city, bedroom) or an agent-made level id. */
+  level: string;
   mode: Mode;
   /** Role the AI partner plays in `ai` mode. */
   aiRole: Role;
@@ -32,6 +39,7 @@ export interface RoomSettings {
 }
 
 export const DEFAULT_SETTINGS: RoomSettings = {
+  level: 'study',
   mode: 'duo',
   aiRole: 'guide',
   interests: ['space', 'food', 'games'],
@@ -40,19 +48,39 @@ export const DEFAULT_SETTINGS: RoomSettings = {
   customKinds: [],
 };
 
+export type { Pose };
+
+/**
+ * Level-specific shared world. The tabletop and the cafe display case live in
+ * `ClientRoomState.scene`; walking levels add the walker's pose.
+ */
+export type WorldState =
+  | { kind: 'tabletop' }
+  | { kind: 'cafe'; tray: string[]; served: number }
+  | { kind: 'city'; town: Town; pose: Pose }
+  | { kind: 'bedroom'; items: BedroomItem[]; found: string[]; pose: Pose; open: string[] };
+
 /** What every player may know about the current mission. */
 export interface PublicMission {
   id: string;
   index: number;
   type: MissionType;
+  /** Short card title, e.g. "Find it", "Order 2", "Get to the hospital". */
+  title: string;
   brief: string;
+  /** City: where the walker wants to go (the walker knows the name, not the way). */
+  destination?: string;
 }
 
-/** Extra information only the guide (and spectators) receive. */
+/** Extra information only the guide (and guide-view spectators) receive. */
 export interface SecretMission {
   targetId?: string;
   itemId?: string;
   targetCell?: Cell;
+  /** Cafe: the customer's order card. */
+  order?: OrderLine[];
+  /** Bedroom: the spot the lost item is in. */
+  spotId?: string;
   modelAnswer: string;
   hint: string;
 }
@@ -70,9 +98,12 @@ export interface ClientRoomState {
   you: string;
   yourRole: Role | null;
   spectator: boolean;
+  /** Spectators (and sim-mode viewers) see one role's filtered view. */
+  viewAs: Role | null;
   players: PlayerInfo[];
   settings: RoomSettings;
   scene: SceneState | null;
+  world: WorldState | null;
   held: Held | null;
   mission: ClientMission | null;
   missionsTotal: number;
@@ -89,6 +120,8 @@ export interface ClientRoomState {
 export interface Coaching {
   summary: string;
   rewrites: { original: string; better: string; why: string }[];
+  /** CEFR estimate refined by the LLM coach (the rule estimate is in the report). */
+  cefr?: string;
 }
 
 export interface ChatMessage {
@@ -103,7 +136,7 @@ export interface ChatMessage {
   via: Via;
 }
 
-export type FxType = 'pick' | 'place' | 'drop' | 'wrong' | 'success' | 'mission' | 'timeup' | 'complete';
+export type FxType = 'pick' | 'place' | 'drop' | 'wrong' | 'success' | 'mission' | 'timeup' | 'complete' | 'tray' | 'serve' | 'reveal' | 'arrive';
 
 export interface FxEvent {
   type: FxType;
@@ -118,7 +151,7 @@ export interface HoverEvent {
   cell: Cell | null;
 }
 
-export type ReplayEventType = 'mission' | 'hover' | 'pick' | 'place' | 'drop' | 'wrong' | 'success' | 'end';
+export type ReplayEventType = 'mission' | 'hover' | 'pick' | 'place' | 'drop' | 'wrong' | 'success' | 'end' | 'tray' | 'untray' | 'serve' | 'reveal';
 
 export interface ReplayEvent {
   t: number;
@@ -132,6 +165,7 @@ export interface ReplayEvent {
 export interface ReplayMission {
   index: number;
   type: MissionType;
+  title?: string;
   startT: number;
   endT: number;
   success: boolean;
@@ -140,19 +174,39 @@ export interface ReplayMission {
   targetId?: string;
   itemId?: string;
   targetCell?: Cell;
+  order?: OrderLine[];
+  destination?: string;
+  spotId?: string;
+}
+
+/** One step the AI partner took: which brain answered and which tools it used. */
+export interface AgentTrace {
+  id: string;
+  t: number;
+  role: Role;
+  brain: 'rules' | 'claude';
+  input: string;
+  steps: { tool: string; args: string; result: string }[];
+  output: string;
+  ms: number;
 }
 
 export interface Replay {
   id: string;
   createdAt: number;
   code: string;
+  level: string;
   settings: RoomSettings;
   players: { name: string; role: Role; isAI: boolean }[];
-  initialScene: SceneState;
+  initialScene: SceneState | null;
+  initialWorld?: WorldState | null;
+  /** Walking levels: the walker's path, sampled a few times a second. [t, x, z, yaw] */
+  poses?: [number, number, number, number][];
   missions: ReplayMission[];
   records: MissionRecord[];
   events: ReplayEvent[];
   messages: ChatRecord[];
+  traces?: AgentTrace[];
   durationMs: number;
   report: SessionReport;
   coaching?: Coaching;
@@ -162,7 +216,7 @@ export interface ServerInfo {
   version: string;
   lanUrls: string[];
   publicUrl: string | null;
-  features: { rodin: boolean; llm: boolean };
+  features: { rodin: boolean; llm: boolean; llmModel?: string };
   iceServers: { urls: string | string[]; username?: string; credential?: string }[];
 }
 
@@ -170,11 +224,15 @@ export interface ItemsResponse {
   kinds: ItemKind[];
 }
 
+export interface LevelsResponse {
+  levels: LevelMeta[];
+}
+
 export type Ack<T = object> = (res: ({ ok: true } & T) | { ok: false; error: string }) => void;
 
 export interface ClientToServer {
   'room:create': (p: { name: string; playerId?: string; settings?: Partial<RoomSettings>; role?: Role | null }, ack: Ack<{ code: string; playerId: string }>) => void;
-  'room:join': (p: { code: string; name: string; playerId?: string; role?: Role | null; spectate?: boolean }, ack: Ack<{ code: string; playerId: string }>) => void;
+  'room:join': (p: { code: string; name: string; playerId?: string; role?: Role | null; spectate?: boolean; viewAs?: Role | null }, ack: Ack<{ code: string; playerId: string }>) => void;
   'room:leave': () => void;
   'room:settings': (p: Partial<RoomSettings>) => void;
   'room:role': (p: { role: Role | null }) => void;
@@ -184,6 +242,14 @@ export interface ClientToServer {
   'act:pick': (p: { objectId: string }) => void;
   'act:place': (p: { cell: Cell }) => void;
   'act:drop': () => void;
+  /** Cafe: put a display-case item on the tray (or take it back off). */
+  'act:tray': (p: { objectId: string; add: boolean }) => void;
+  /** Cafe: hand the tray to the customer. */
+  'act:serve': () => void;
+  /** Walking levels: the walker's pose (client-predicted, server-validated). */
+  'act:move': (p: Pose) => void;
+  /** Bedroom: open or close the toy box / wardrobe. */
+  'act:open': (p: { id: string; open: boolean }) => void;
   'chat:send': (p: { text: string; via: Via }) => void;
   'rtc:signal': (p: { to: string; data: unknown }) => void;
 }
@@ -195,5 +261,9 @@ export interface ServerToClient {
   chat: (m: ChatMessage) => void;
   'chat:history': (m: ChatMessage[]) => void;
   hover: (e: HoverEvent & { by: string }) => void;
+  /** Live walker pose for everyone but the walker. */
+  pose: (p: Pose & { by: string }) => void;
+  /** AI partner reasoning steps (shown in the agent panel). */
+  'ai:trace': (t: AgentTrace) => void;
   'rtc:signal': (p: { from: string; data: unknown }) => void;
 }

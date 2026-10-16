@@ -1,5 +1,5 @@
 {
-  "description": "Provenance of the 5 built-in ObjectTalk objects. Generated via the Hyper3D MCP (rodin_create_uploads -> PUT -> rodin_generate -> rodin_wait -> rodin_get_result) from inside Claude Code, then optimized with scripts/optimize-models.ts.",
+  "description": "Provenance of every Rodin model in ObjectTalk. All were generated image-to-3D with Hyper3D Rodin Gen-2.5-High through the Hyper3D MCP (rodin_create_uploads -> PUT -> rodin_generate -> rodin_wait -> rodin_get_result) from inside Claude Code, then optimized with server/services/optimize.ts.",
   "generatedAt": "2026-10-13",
   "settings": {
     "mode": "image-to-3D (plus a short guiding prompt)",
@@ -74,5 +74,465 @@
       "notes": "Generated standing up (front view reference); laid flat in-engine via catalog rotation [-90deg, 0, 0] with automatic re-seating."
     }
   ],
-  "totals": { "rawBytes": 39820624, "optimizedBytes": 1440500, "reduction": "96.4%" }
+  "totals": {
+    "rawBytes": 39820624,
+    "optimizedBytes": 1440500,
+    "reduction": "96.4%",
+    "models": 57
+  },
+  "waves": [
+    {
+      "wave": 1,
+      "what": "5 hero objects (rocket, teddy bear, cupcake, sneaker, game controller)",
+      "count": 5
+    },
+    {
+      "wave": 2,
+      "what": "32 models for the new levels: desk & bedroom belongings, cafe menu, Toy Town buildings and landmarks, decor",
+      "count": 32
+    },
+    {
+      "wave": 3,
+      "what": "2 whole levels made by the Scene Agent (Music Room, Fruit Market)",
+      "count": 20
+    }
+  ],
+  "wave2": [
+    {
+      "id": "alarm_clock",
+      "file": "public/models/alarm_clock.glb",
+      "generationId": "b0bbc3be-6eb9-45d6-9f9c-c4f4ddb623b8",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/b0bbc3be-6eb9-45d6-9f9c-c4f4ddb623b8",
+      "reference": "Fluent Emoji 3D 'Alarm clock' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "backpack",
+      "file": "public/models/backpack.glb",
+      "generationId": "8b88f6fb-8816-4d6b-a9c4-c42ca72bbf6e",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/8b88f6fb-8816-4d6b-a9c4-c42ca72bbf6e",
+      "reference": "Fluent Emoji 3D 'Backpack' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "bank",
+      "file": "public/models/bank.glb",
+      "generationId": "90929ec0-6e11-4949-8af5-6b954b2b330d",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/90929ec0-6e11-4949-8af5-6b954b2b330d",
+      "reference": "Fluent Emoji 3D 'Bank' (MIT)",
+      "use": "Toy Town building"
+    },
+    {
+      "id": "books",
+      "file": "public/models/books.glb",
+      "generationId": "d0a8d88b-069c-4dac-8bac-d929bf977599",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/d0a8d88b-069c-4dac-8bac-d929bf977599",
+      "reference": "Fluent Emoji 3D 'Books' (MIT)",
+      "use": "bookshelf decor"
+    },
+    {
+      "id": "bus_stop",
+      "file": "public/models/bus_stop.glb",
+      "generationId": "d282ef51-6bb2-4cb2-8524-09d5ceb45458",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/d282ef51-6bb2-4cb2-8524-09d5ceb45458",
+      "reference": "Fluent Emoji 3D 'Bus stop' (MIT)",
+      "use": "Toy Town landmark"
+    },
+    {
+      "id": "camera",
+      "file": "public/models/camera.glb",
+      "generationId": "89d3c4bd-ed8d-4c4d-a603-2495fce3bec5",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/89d3c4bd-ed8d-4c4d-a603-2495fce3bec5",
+      "reference": "Fluent Emoji 3D 'Camera' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "cap",
+      "file": "public/models/cap.glb",
+      "generationId": "a2f8b878-d41f-477f-85fe-dbfddd2c2e7f",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/a2f8b878-d41f-477f-85fe-dbfddd2c2e7f",
+      "reference": "Fluent Emoji 3D 'Billed cap' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "coffee",
+      "file": "public/models/coffee.glb",
+      "generationId": "d4f5ff83-4cc9-4c53-904d-54af09236429",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/d4f5ff83-4cc9-4c53-904d-54af09236429",
+      "reference": "Fluent Emoji 3D 'Hot beverage' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "convenience_store",
+      "file": "public/models/convenience_store.glb",
+      "generationId": "918957d7-9a68-4c38-a4d9-54c1e5625325",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/918957d7-9a68-4c38-a4d9-54c1e5625325",
+      "reference": "Fluent Emoji 3D 'Convenience store' (MIT)",
+      "use": "Toy Town building"
+    },
+    {
+      "id": "croissant",
+      "file": "public/models/croissant.glb",
+      "generationId": "a21a2bb1-4d45-4285-92a4-e08337b4a66d",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/a21a2bb1-4d45-4285-92a4-e08337b4a66d",
+      "reference": "Fluent Emoji 3D 'Croissant' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "doughnut",
+      "file": "public/models/doughnut.glb",
+      "generationId": "9f0fbf09-c452-4a74-9a75-ff9d6732e12e",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/9f0fbf09-c452-4a74-9a75-ff9d6732e12e",
+      "reference": "Fluent Emoji 3D 'Doughnut' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "fountain",
+      "file": "public/models/fountain.glb",
+      "generationId": "acaf275c-50d5-481e-a197-e0e99bb5d170",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/acaf275c-50d5-481e-a197-e0e99bb5d170",
+      "reference": "Fluent Emoji 3D 'Fountain' (MIT)",
+      "use": "Toy Town park"
+    },
+    {
+      "id": "glasses",
+      "file": "public/models/glasses.glb",
+      "generationId": "550e1a4a-7090-464a-91e7-28ed6c806a1c",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/550e1a4a-7090-464a-91e7-28ed6c806a1c",
+      "reference": "Fluent Emoji 3D 'Glasses' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "hamburger",
+      "file": "public/models/hamburger.glb",
+      "generationId": "cdad0523-dfc2-474d-956e-dfbe14248bb9",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/cdad0523-dfc2-474d-956e-dfbe14248bb9",
+      "reference": "Fluent Emoji 3D 'Hamburger' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "headphones",
+      "file": "public/models/headphones.glb",
+      "generationId": "b52eed6c-1f29-46b4-baf9-88310cb257cf",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/b52eed6c-1f29-46b4-baf9-88310cb257cf",
+      "reference": "Fluent Emoji 3D 'Headphone' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "hospital",
+      "file": "public/models/hospital.glb",
+      "generationId": "d558ce3c-0827-4bc0-970e-0d675762c5ad",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/d558ce3c-0827-4bc0-970e-0d675762c5ad",
+      "reference": "Fluent Emoji 3D 'Hospital' (MIT)",
+      "use": "Toy Town building"
+    },
+    {
+      "id": "hotel",
+      "file": "public/models/hotel.glb",
+      "generationId": "2b588a68-1fcb-42d5-b109-f7df64278c25",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/2b588a68-1fcb-42d5-b109-f7df64278c25",
+      "reference": "Fluent Emoji 3D 'Hotel' (MIT)",
+      "use": "Toy Town building"
+    },
+    {
+      "id": "house",
+      "file": "public/models/house.glb",
+      "generationId": "4e46feac-fe2f-4e16-8c32-5b03e99bb8f7",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/4e46feac-fe2f-4e16-8c32-5b03e99bb8f7",
+      "reference": "Fluent Emoji 3D 'House' (MIT)",
+      "use": "Toy Town building"
+    },
+    {
+      "id": "ice_cream",
+      "file": "public/models/ice_cream.glb",
+      "generationId": "cc0bc9b1-a89c-4595-8c17-06a497c8dda5",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/cc0bc9b1-a89c-4595-8c17-06a497c8dda5",
+      "reference": "Fluent Emoji 3D 'Soft ice cream' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "key",
+      "file": "public/models/key.glb",
+      "generationId": "2c0857b2-dcc8-43f0-aa0e-7f38ede39ad7",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/2c0857b2-dcc8-43f0-aa0e-7f38ede39ad7",
+      "reference": "Fluent Emoji 3D 'Key' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "museum",
+      "file": "public/models/museum.glb",
+      "generationId": "2b3d6ca3-45e0-4484-b3cc-dd2699c424b2",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/2b3d6ca3-45e0-4484-b3cc-dd2699c424b2",
+      "reference": "Fluent Emoji 3D 'Classical building' (MIT)",
+      "use": "Toy Town building"
+    },
+    {
+      "id": "phone",
+      "file": "public/models/phone.glb",
+      "generationId": "523025d6-497c-451e-ac97-4d0d0ff73c48",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/523025d6-497c-451e-ac97-4d0d0ff73c48",
+      "reference": "Fluent Emoji 3D 'Mobile phone' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "pizza",
+      "file": "public/models/pizza.glb",
+      "generationId": "1303a48f-f3da-4037-ad9e-90522e01bee6",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/1303a48f-f3da-4037-ad9e-90522e01bee6",
+      "reference": "Fluent Emoji 3D 'Pizza' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "post_office",
+      "file": "public/models/post_office.glb",
+      "generationId": "5bd8b761-3ead-40c3-88b2-59480a4e8e60",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/5bd8b761-3ead-40c3-88b2-59480a4e8e60",
+      "reference": "Fluent Emoji 3D 'Post office' (MIT)",
+      "use": "Toy Town building"
+    },
+    {
+      "id": "potted_plant",
+      "file": "public/models/potted_plant.glb",
+      "generationId": "1247dcad-dfbb-43e3-9e29-c20ca4ba4fa9",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/1247dcad-dfbb-43e3-9e29-c20ca4ba4fa9",
+      "reference": "Fluent Emoji 3D 'Potted plant' (MIT)",
+      "use": "room decor"
+    },
+    {
+      "id": "sandwich",
+      "file": "public/models/sandwich.glb",
+      "generationId": "044e9182-c5a1-4769-9129-5a69ebfac34f",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/044e9182-c5a1-4769-9129-5a69ebfac34f",
+      "reference": "Fluent Emoji 3D 'Sandwich' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "school",
+      "file": "public/models/school.glb",
+      "generationId": "7ea7a7ef-6bbd-4f37-99cb-c78e14f766bf",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/7ea7a7ef-6bbd-4f37-99cb-c78e14f766bf",
+      "reference": "Fluent Emoji 3D 'School' (MIT)",
+      "use": "Toy Town building"
+    },
+    {
+      "id": "shortcake",
+      "file": "public/models/shortcake.glb",
+      "generationId": "0ecbd693-a2ea-443e-9577-b38fd2a7056e",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/0ecbd693-a2ea-443e-9577-b38fd2a7056e",
+      "reference": "Fluent Emoji 3D 'Shortcake' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "soda",
+      "file": "public/models/soda.glb",
+      "generationId": "9db44434-39d3-4347-abf3-54b9ba841f86",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/9db44434-39d3-4347-abf3-54b9ba841f86",
+      "reference": "Fluent Emoji 3D 'Cup with straw' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    },
+    {
+      "id": "traffic_light",
+      "file": "public/models/traffic_light.glb",
+      "generationId": "ca1d9b91-e8ac-4303-a0e6-e32710abed47",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/ca1d9b91-e8ac-4303-a0e6-e32710abed47",
+      "reference": "Fluent Emoji 3D 'Vertical traffic light' (MIT)",
+      "use": "Toy Town landmark"
+    },
+    {
+      "id": "tree",
+      "file": "public/models/tree.glb",
+      "generationId": "168ab0ac-cd69-4227-be20-ac7abc45168f",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/168ab0ac-cd69-4227-be20-ac7abc45168f",
+      "reference": "Fluent Emoji 3D 'Deciduous tree' (MIT)",
+      "use": "Toy Town street trees"
+    },
+    {
+      "id": "watch",
+      "file": "public/models/watch.glb",
+      "generationId": "311f47cc-c5e3-4e46-8bb9-eb31542b973b",
+      "displayUrl": "https://hyper3d.ai/workspace/rodin/311f47cc-c5e3-4e46-8bb9-eb31542b973b",
+      "reference": "Fluent Emoji 3D 'Watch' (MIT)",
+      "use": "mission object (study / cafe / bedroom)"
+    }
+  ],
+  "levels": [
+    {
+      "level": "music-room",
+      "title": "Music Room",
+      "engine": "tabletop",
+      "madeBy": "Scene Agent v2 (npm run agent -- level) -> hand-off -> Hyper3D MCP in Claude Code -> level-finish",
+      "validation": "200 simulated rounds per difficulty: all PASS",
+      "items": [
+        {
+          "id": "music-room--guitar",
+          "file": "public/models/levels/music-room/guitar.glb",
+          "generationId": "36195613-f87a-4f16-96e2-f7521b5fc3f1",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/36195613-f87a-4f16-96e2-f7521b5fc3f1",
+          "prompt": "A cute red electric guitar, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Guitar\" (MIT)"
+        },
+        {
+          "id": "music-room--trumpet",
+          "file": "public/models/levels/music-room/trumpet.glb",
+          "generationId": "35710d40-e09f-4f3f-8d3b-a1d0e1eb0b06",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/35710d40-e09f-4f3f-8d3b-a1d0e1eb0b06",
+          "prompt": "A cute golden trumpet lying on its side, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Trumpet\" (MIT)"
+        },
+        {
+          "id": "music-room--drum",
+          "file": "public/models/levels/music-room/drum.glb",
+          "generationId": "fc37f58a-ba2d-4b40-8077-d3854c267880",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/fc37f58a-ba2d-4b40-8077-d3854c267880",
+          "prompt": "A cute red toy drum with two drumsticks, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Drum\" (MIT)"
+        },
+        {
+          "id": "music-room--violin",
+          "file": "public/models/levels/music-room/violin.glb",
+          "generationId": "2c03c2a0-821e-4376-a86c-a1f5b2b59248",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/2c03c2a0-821e-4376-a86c-a1f5b2b59248",
+          "prompt": "A cute brown violin with a bow, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Violin\" (MIT)"
+        },
+        {
+          "id": "music-room--saxophone",
+          "file": "public/models/levels/music-room/saxophone.glb",
+          "generationId": "4d9ad683-4189-4faa-88c6-5d842c68b11f",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/4d9ad683-4189-4faa-88c6-5d842c68b11f",
+          "prompt": "A cute golden saxophone, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Saxophone\" (MIT)"
+        },
+        {
+          "id": "music-room--maracas",
+          "file": "public/models/levels/music-room/maracas.glb",
+          "generationId": "e4af1aaa-70a9-416a-8dcd-b99448433096",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/e4af1aaa-70a9-416a-8dcd-b99448433096",
+          "prompt": "A cute pair of colorful maracas, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Maracas\" (MIT)"
+        },
+        {
+          "id": "music-room--microphone",
+          "file": "public/models/levels/music-room/microphone.glb",
+          "generationId": "46454ff4-baec-4aca-84fd-d51d6d173b56",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/46454ff4-baec-4aca-84fd-d51d6d173b56",
+          "prompt": "A cute handheld microphone standing on its handle, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Microphone\" (MIT)"
+        },
+        {
+          "id": "music-room--accordion",
+          "file": "public/models/levels/music-room/accordion.glb",
+          "generationId": "f732a3da-493b-4fd7-b4df-c0dc9507f632",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/f732a3da-493b-4fd7-b4df-c0dc9507f632",
+          "prompt": "A cute red accordion, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Accordion\" (MIT)"
+        }
+      ]
+    },
+    {
+      "level": "fruit-market",
+      "title": "Fruit Market",
+      "engine": "order",
+      "madeBy": "Scene Agent v2 (npm run agent -- level) -> hand-off -> Hyper3D MCP in Claude Code -> level-finish",
+      "validation": "200 simulated rounds per difficulty: all PASS",
+      "items": [
+        {
+          "id": "fruit-market--apple",
+          "file": "public/models/levels/fruit-market/apple.glb",
+          "generationId": "a78beecf-ab4a-4e7e-9c09-e53f06ddca19",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/a78beecf-ab4a-4e7e-9c09-e53f06ddca19",
+          "prompt": "A shiny red apple with a leaf, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Red apple\" (MIT)"
+        },
+        {
+          "id": "fruit-market--banana",
+          "file": "public/models/levels/fruit-market/banana.glb",
+          "generationId": "e3b1c82c-3117-4964-8ee5-d9749180ca57",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/e3b1c82c-3117-4964-8ee5-d9749180ca57",
+          "prompt": "A cute yellow banana, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Banana\" (MIT)"
+        },
+        {
+          "id": "fruit-market--pear",
+          "file": "public/models/levels/fruit-market/pear.glb",
+          "generationId": "1e15f69e-3bb5-4dae-ad6a-d24f884f513b",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/1e15f69e-3bb5-4dae-ad6a-d24f884f513b",
+          "prompt": "A cute green pear, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Pear\" (MIT)"
+        },
+        {
+          "id": "fruit-market--peach",
+          "file": "public/models/levels/fruit-market/peach.glb",
+          "generationId": "caa34525-4956-4e37-956b-73143fece08f",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/caa34525-4956-4e37-956b-73143fece08f",
+          "prompt": "A cute fuzzy peach with a leaf, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Peach\" (MIT)"
+        },
+        {
+          "id": "fruit-market--lemon",
+          "file": "public/models/levels/fruit-market/lemon.glb",
+          "generationId": "f9ad60b7-9a58-4324-bdd8-7c2f38358241",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/f9ad60b7-9a58-4324-bdd8-7c2f38358241",
+          "prompt": "A cute yellow lemon, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Lemon\" (MIT)"
+        },
+        {
+          "id": "fruit-market--strawberry",
+          "file": "public/models/levels/fruit-market/strawberry.glb",
+          "generationId": "253315ea-936e-49e2-b143-7ac564d716d3",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/253315ea-936e-49e2-b143-7ac564d716d3",
+          "prompt": "A cute red strawberry, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Strawberry\" (MIT)"
+        },
+        {
+          "id": "fruit-market--tomato",
+          "file": "public/models/levels/fruit-market/tomato.glb",
+          "generationId": "1747a43a-da33-4d8e-ab7e-9948db9cb6c5",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/1747a43a-da33-4d8e-ab7e-9948db9cb6c5",
+          "prompt": "A cute ripe red tomato, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Tomato\" (MIT)"
+        },
+        {
+          "id": "fruit-market--carrot",
+          "file": "public/models/levels/fruit-market/carrot.glb",
+          "generationId": "75119899-1c90-492d-b63f-5780888623a3",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/75119899-1c90-492d-b63f-5780888623a3",
+          "prompt": "A cute orange carrot with green leaves lying on its side, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Carrot\" (MIT)"
+        },
+        {
+          "id": "fruit-market--mushroom",
+          "file": "public/models/levels/fruit-market/mushroom.glb",
+          "generationId": "9ea88142-5cf3-4544-9e23-38f8625536b3",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/9ea88142-5cf3-4544-9e23-38f8625536b3",
+          "prompt": "A cute red-capped mushroom with white spots, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Mushroom\" (MIT)"
+        },
+        {
+          "id": "fruit-market--avocado",
+          "file": "public/models/levels/fruit-market/avocado.glb",
+          "generationId": "db7efecc-126c-4f35-bf18-83a84845691f",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/db7efecc-126c-4f35-bf18-83a84845691f",
+          "prompt": "A cute avocado cut in half with its pit, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Avocado\" (MIT)"
+        },
+        {
+          "id": "fruit-market--watermelon",
+          "file": "public/models/levels/fruit-market/watermelon.glb",
+          "generationId": "6a33cf76-55a3-4510-b07d-f0c4657d427d",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/6a33cf76-55a3-4510-b07d-f0c4657d427d",
+          "prompt": "A cute slice of watermelon, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Watermelon\" (MIT)"
+        },
+        {
+          "id": "fruit-market--pineapple",
+          "file": "public/models/levels/fruit-market/pineapple.glb",
+          "generationId": "1da4e222-02a3-497c-b045-92a3f9677238",
+          "displayUrl": "https://hyper3d.ai/workspace/rodin/1da4e222-02a3-497c-b045-92a3f9677238",
+          "prompt": "A cute upright pineapple with green leaves, stylized 3D toy style",
+          "reference": "Fluent Emoji 3D \"Pineapple\" (MIT)"
+        }
+      ]
+    }
+  ]
 }

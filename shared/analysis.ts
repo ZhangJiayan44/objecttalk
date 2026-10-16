@@ -1,3 +1,4 @@
+import { estimateCefr, type CefrEstimate } from './cefr';
 import { describeObject, describeCell, cap } from './reg';
 import { GUIDE_VOICE } from './missions';
 import { parseUtterance, type ParsedUtterance } from './nlu';
@@ -11,7 +12,28 @@ import { sameCell, type Mission, type Role, type SceneState } from './types';
  * been a clearer way to say it?
  */
 
-export type IssueType = 'perspective-flip' | 'unmarked-direction' | 'speaker-frame' | 'vague' | 'ambiguous' | 'misleading' | 'no-anchor';
+export type IssueType =
+  | 'perspective-flip'
+  | 'unmarked-direction'
+  | 'speaker-frame'
+  | 'vague'
+  | 'ambiguous'
+  | 'misleading'
+  | 'no-anchor'
+  // cafe
+  | 'missing-size'
+  | 'missing-number'
+  | 'plural'
+  | 'not-on-card'
+  | 'wrong-amount'
+  | 'impolite'
+  // city
+  | 'map-words'
+  | 'wrong-turn'
+  | 'no-landmark'
+  // bedroom
+  | 'wrong-prep'
+  | 'wrong-place';
 
 export interface Issue {
   type: IssueType;
@@ -57,6 +79,12 @@ export interface SkillScores {
 }
 
 export interface SessionReport {
+  /** Level id the report is for (missing = the tabletop study). */
+  level?: string;
+  /** Level-specific names for the four skill bars. */
+  skillNames?: Partial<Record<keyof SkillScores, string>>;
+  /** Rough CEFR estimate from the human players' sentences. */
+  cefr?: CefrEstimate | null;
   clarity: number;
   stars: 1 | 2 | 3;
   missionsDone: number;
@@ -70,7 +98,18 @@ export interface SessionReport {
   goodPhrases: string[];
 }
 
-const ISSUE_TEXT: Record<IssueType, string> = {
+export const ISSUE_TEXT: Record<IssueType, string> = {
+  'missing-size': 'Drinks come in two sizes. Say "a small …" or "a large …" so the barista does not have to guess.',
+  'missing-number': 'You used a plural without a number ("croissants"). Say how many: "two croissants".',
+  plural: 'After two, three … the food word needs -s: "two croissants", "three sandwiches".',
+  'not-on-card': 'That is not on your order card. Check the card and order exactly those items.',
+  'wrong-amount': 'The number does not match your order card.',
+  impolite: 'Add a polite frame: "Could I have …, please?" or "I’d like …".',
+  'map-words': 'The walker has no map: "north", "up" or "down" mean nothing to them. Say left, right or straight ahead.',
+  'wrong-turn': 'From the WALKER’s point of view that turn goes the wrong way. Picture yourself facing where they face.',
+  'no-landmark': 'Add a landmark at the corner: "turn left at the bank".',
+  'wrong-prep': 'Right furniture, wrong preposition: under / on / inside / behind change the place completely.',
+  'wrong-place': 'That furniture is not where the thing is.',
   'perspective-flip': 'You described it from YOUR side. Your partner faces you, so left/right and front/behind flip.',
   'unmarked-direction': 'A bare "left" or "in front of" has no owner. Say "your left" or "closer to you".',
   'speaker-frame': '"My left" is correct but makes your partner flip it in their head. "Your left" is kinder.',
@@ -80,7 +119,18 @@ const ISSUE_TEXT: Record<IssueType, string> = {
   'no-anchor': 'Give a landmark so your partner knows where to look.',
 };
 
-const TIP_TEXT: Record<IssueType, string> = {
+export const TIP_TEXT: Record<IssueType, string> = {
+  'missing-size': 'Put the size before the drink: "a large coffee", "a small soda".',
+  'missing-number': 'Say the number before the food: "two croissants and one doughnut".',
+  plural: 'One croissant, two croissantS: listen for the -s at the end.',
+  'not-on-card': 'Read the order card first, then order item by item.',
+  'wrong-amount': 'Double-check the numbers on the card before you say them.',
+  impolite: 'Polite ordering: "Could I have …, please?" / "I’d like …" / "That’s all, thanks."',
+  'map-words': 'Turn the map in your head: if the walker faces down the map, their left is the map’s right.',
+  'wrong-turn': 'Before you say left or right, check which way the walker is facing on the map.',
+  'no-landmark': 'Use corners: "go straight to the traffic lights, then turn right".',
+  'wrong-prep': 'Learn the set: under the bed, on the bed, inside the box, on top of the wardrobe, behind the curtain.',
+  'wrong-place': 'Name the furniture first, then the preposition: "the desk … under the desk".',
   'perspective-flip': 'Before you say left/right, picture standing on your partner\'s side - or use landmarks instead.',
   'unmarked-direction': 'Always attach an owner to directions: "on YOUR left", "closer to YOU".',
   'speaker-frame': 'Switch "my left" to "your left" so your partner can act without mental rotation.',
@@ -279,6 +329,8 @@ export function analyzeSession(input: { missions: MissionRecord[]; messages: Cha
   const stars: 1 | 2 | 3 = missionsDone === input.missionsTotal && clarity >= 75 ? 3 : missionsDone >= Math.ceil(input.missionsTotal / 2) ? 2 : 1;
 
   return {
+    level: 'study',
+    cefr: estimateCefr(input.messages.filter((m) => humans.has(m.role)).map((m) => m.text)),
     clarity,
     stars,
     missionsDone,

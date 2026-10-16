@@ -257,8 +257,13 @@ const VAGUE_PATTERNS: [RegExp, string][] = [
 ];
 
 /** Parse an utterance said by `ctx.speaker` to `ctx.listener`. */
+/** Openers that carry no instruction ("Okay!", "Here we go!", "Ready?") and would otherwise look like questions. */
+const OPENER = /^\s*(?:ok(?:ay)?|alright|all right|here we go|ready|great|cool|so|well|now|right|let'?s go|next one|no problem|no worries)\s*[,.!?]+\s+(?=\S)/i;
+
 export function parseUtterance(raw: string, ctx: Ctx): ParsedUtterance {
-  const text = normalize(raw);
+  let body = raw;
+  while (OPENER.test(body)) body = body.replace(OPENER, '');
+  const text = normalize(body);
   const result: ParsedUtterance = { text: raw, intent: 'other', unmarked: [], speakerFrame: [], listenerFrame: [], vague: [], mentions: [] };
 
   for (const [re, label] of VAGUE_PATTERNS) if (re.test(text)) result.vague.push(label);
@@ -266,7 +271,7 @@ export function parseUtterance(raw: string, ctx: Ctx): ParsedUtterance {
   const trimmed = text.trim();
   if (/^(?:yes|yeah|yep|yup|correct|exactly|perfect|great|good|right|that is it|that is the one|bingo|ok that one|nice)\b(?!.* (?:of|next|side|left))/.test(trimmed) && trimmed.split(' ').length <= 5) {
     result.intent = 'confirm';
-  } else if (/^(?:no|nope|not that|not this|wrong|the other one|other one|not quite)\b/.test(trimmed)) {
+  } else if (/^(?:no(?! problem| worries)|nope|not that|not this|wrong|the other one|other one|not quite)\b/.test(trimmed)) {
     result.intent = 'deny';
   }
 
@@ -274,7 +279,12 @@ export function parseUtterance(raw: string, ctx: Ctx): ParsedUtterance {
   const words = tokens.filter((t): t is Extract<Token, { t: 'word' }> => t.t === 'word').map((t) => t.w);
   const hasPlaceVerb = words.some((w) => PLACE_VERBS.has(w));
   const hasPickVerb = words.some((w) => PICK_VERBS.has(w));
-  const isQuestion = text.includes('?') || /^(?:which|what|where|who|how|is it|is this|is that|do you|did you|can you|could you|should i|my left|your left|my right|your right|this one|that one|here)\b/.test(trimmed);
+  // Only the last sentence decides: "Ready? Pick up the mug." is an instruction, not a question.
+  const lastSentence = trimmed.split(/(?<=[.?])\s+/).filter(Boolean).pop() ?? trimmed;
+  const isQuestion =
+    lastSentence.includes('?') ||
+    /^(?:which|what|where|who|how|is it|is this|is that|do you|did you|can you|could you|should i|my left|your left|my right|your right|this one|that one)\b/.test(lastSentence) ||
+    /^here\??$/.test(lastSentence);
 
   // Collect NPs and attach relations / superlatives / frame markers.
   const nps: NP[] = [];

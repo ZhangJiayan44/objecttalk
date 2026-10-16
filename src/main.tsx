@@ -18,6 +18,7 @@ const ReplayPage = lazy(() => import('./pages/Replay'));
 const Studio = lazy(() => import('./pages/Studio'));
 const Progress = lazy(() => import('./pages/Progress'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const DevModels = lazy(() => import('./pages/DevModels'));
 
 function PageLoader() {
   return (
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
   { path: '/replay/:id', element: page(<ReplayPage />) },
   { path: '/studio', element: page(<Studio />) },
   { path: '/progress', element: page(<Progress />) },
+  ...(import.meta.env.DEV ? [{ path: '/dev/models', element: page(<DevModels />) }] : []),
   { path: '*', element: page(<NotFound />) },
 ]);
 

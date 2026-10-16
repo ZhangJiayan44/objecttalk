@@ -1,12 +1,16 @@
-import { Environment, Html, Lightformer, OrbitControls } from '@react-three/drei';
+import { Html, OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { AVATAR_Z, cellToWorld, TABLE_Y, VIEWPOINT } from '@shared/room';
 import { entityLabel, freeCells } from '@shared/spatial';
+import type { Palette } from '@shared/levels';
 import { cellKey, sameCell, type Cell, type Role, type SceneObject, type SceneState } from '@shared/types';
-import { Avatar, ItemModel, LandmarkModel, RoomShell, Table } from './models';
+import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
+import { detectQuality, PostFx, SoftIBL } from './env';
+import { StudyRoom } from './furniture';
+import { Avatar, ItemModel, LandmarkModel, Table } from './models';
 
 export type ViewMode = Role | 'overview';
 
@@ -36,6 +40,15 @@ export interface RoomSceneProps {
   className?: string;
   /** Slowly orbit the overview camera (landing page hero). */
   autoRotate?: boolean;
+  /** First-person view for players (mouse-look, crosshair). Spectators and replays orbit. */
+  firstPerson?: boolean;
+  /** Capture the mouse on click (the local player). Off: drag to look. */
+  capture?: boolean;
+  /** Agent-made levels repaint the room. */
+  palette?: Palette;
+  sign?: string;
+  missionKey?: string;
+  onLockChange?(locked: boolean): void;
 }
 
 const wrapAngle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -81,26 +94,23 @@ function CameraRig({ view, autoRotate = false }: { view: ViewMode; autoRotate?: 
 function Lights() {
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <hemisphereLight args={['#fff4e6', '#d9c6b0', 0.6]} />
+      <hemisphereLight args={['#fff4e6', '#c9a27e', 0.55]} />
+      <ambientLight intensity={0.18} />
+      {/* afternoon sun through the east window */}
       <directionalLight
-        position={[2.5, 6, 3]}
-        intensity={1.5}
+        position={[7, 6.5, -1.5]}
+        intensity={2.1}
+        color="#ffe2b8"
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
-        shadow-camera-left={-4}
-        shadow-camera-right={4}
-        shadow-camera-top={4}
-        shadow-camera-bottom={-4}
+        shadow-normalBias={0.02}
+        shadow-camera-left={-7}
+        shadow-camera-right={7}
+        shadow-camera-top={7}
+        shadow-camera-bottom={-7}
       />
-      {/* Local image-based lighting for the PBR Rodin models: no HDR download needed. */}
-      <Environment resolution={128} frames={1}>
-        <Lightformer intensity={2.2} position={[0, 5, 0]} rotation-x={Math.PI / 2} scale={[10, 10, 1]} />
-        <Lightformer intensity={1.2} position={[-5, 2, 1]} rotation-y={Math.PI / 2} scale={[6, 3, 1]} color="#ffe0d6" />
-        <Lightformer intensity={1.2} position={[5, 2, -1]} rotation-y={-Math.PI / 2} scale={[6, 3, 1]} color="#d6ecff" />
-        <Lightformer intensity={0.8} position={[0, 1, 6]} scale={[8, 2, 1]} color="#fff6e0" />
-      </Environment>
+      <SoftIBL intensity={0.8} />
     </>
   );
 }
@@ -191,7 +201,7 @@ function SceneItem({
           document.body.style.cursor = '';
         },
         onClick: (e: ThreeEvent<MouseEvent>) => {
-          if (e.delta > 8) return;
+          if (e.delta > 8 || !clickInteracts()) return;
           e.stopPropagation();
           if (held) onDrop?.();
           else onPick?.(obj.id);
@@ -232,7 +242,7 @@ function Slots({ scene, heldId, hoverCell, onHover, onPlace }: { scene: SceneSta
             }}
             onPointerOut={() => (document.body.style.cursor = '')}
             onClick={(e) => {
-              if (e.delta > 8) return;
+              if (e.delta > 8 || !clickInteracts()) return;
               e.stopPropagation();
               onPlace?.(cell);
             }}
@@ -279,17 +289,34 @@ function DevProbe({ scene }: { scene: SceneState }) {
 }
 
 function SceneContents(props: RoomSceneProps) {
-  const { scene, view, heldId, target, pointer, localHover, interactive = false, onHover, onPick, onPlace, onDrop, wrong, names, labels = true, autoRotate } = props;
+  const { scene, view, heldId, target, pointer, localHover, interactive = false, onHover, onPick, onPlace, onDrop, wrong, names, labels = true, autoRotate, firstPerson, capture = false, missionKey, onLockChange, palette, sign } = props;
+  const fps = firstPerson && view !== 'overview';
+  const quality = useMemo(detectQuality, []);
   const ghostSource = target?.itemId ? scene.objects.find((o) => o.id === target.itemId) : undefined;
   const hoverObj = interactive ? localHover?.objectId : pointer?.objectId;
   const hoverCell = interactive ? (localHover?.cell ?? null) : (pointer?.cell ?? null);
   return (
     <>
-      <CameraRig view={view} autoRotate={autoRotate} />
+      {fps ? (
+        <FirstPersonRig
+          position={[0, 1.72, view === 'guide' ? -2.3 : 2.3]}
+          yaw={view === 'guide' ? Math.PI : 0}
+          pitch={-0.45}
+          yawRange={1.35}
+          pitchMin={-1.05}
+          pitchMax={0.35}
+          resetKey={missionKey}
+          capture={capture}
+          onLockChange={onLockChange}
+        />
+      ) : (
+        <CameraRig view={view} autoRotate={autoRotate} />
+      )}
       {import.meta.env.DEV && interactive && <DevProbe scene={scene} />}
       <Lights />
-      <RoomShell />
+      <StudyRoom palette={palette} sign={sign} />
       <Table />
+      <PostFx quality={quality} />
       {scene.landmarks.map((l) => {
         const [x, y, z] = cellToWorld(l.cell);
         return (
@@ -365,10 +392,12 @@ export function RoomScene(props: RoomSceneProps) {
       className={props.className}
       shadows
       dpr={[1, 2]}
-      camera={{ fov: 45, near: 0.1, far: 60, position: [0, 3, 4] }}
-      gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false }}
+      events={centerRayEvents}
+      camera={{ fov: props.firstPerson ? 62 : 45, near: 0.05, far: 80, position: [0, 3, 4] }}
+      gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
       onPointerMissed={() => props.interactive && props.onHover?.({ objectId: null, cell: null })}
     >
+      <color attach="background" args={['#f3dccb']} />
       <Suspense fallback={<Loader />}>
         <SceneContents {...props} />
       </Suspense>

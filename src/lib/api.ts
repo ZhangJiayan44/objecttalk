@@ -1,5 +1,6 @@
 import { registerKinds } from '@shared/catalog';
-import type { ItemsResponse, Replay, ServerInfo } from '@shared/protocol';
+import { registerLevels } from '@shared/levels';
+import type { ItemsResponse, LevelsResponse, Replay, ServerInfo } from '@shared/protocol';
 
 /** Thin REST helpers for the ObjectTalk server. */
 
@@ -34,6 +35,23 @@ export function loadItems(force = false): Promise<ItemsResponse> {
       throw err;
     });
   return itemsPromise;
+}
+
+let levelsPromise: Promise<LevelsResponse> | null = null;
+
+/** Agent-made levels (Scene Agent output in data/levels), registered for the lobby and the game. */
+export function loadLevels(force = false): Promise<LevelsResponse> {
+  if (force) levelsPromise = null;
+  levelsPromise ??= getJson<LevelsResponse>('/api/levels')
+    .then((res) => {
+      registerLevels(res.levels);
+      return res;
+    })
+    .catch((err) => {
+      levelsPromise = null;
+      throw err;
+    });
+  return levelsPromise;
 }
 
 export const fetchReplay = (id: string) => getJson<Replay>(`/api/replays/${encodeURIComponent(id)}`);

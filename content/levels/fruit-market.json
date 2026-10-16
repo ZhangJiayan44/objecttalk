@@ -1,0 +1,459 @@
+{
+  "level": {
+    "id": "fruit-market",
+    "title": "Fruit Market",
+    "tagline": "Buy fruit & veg by the piece",
+    "emoji": "🍎",
+    "engine": "order",
+    "skills": [
+      "fruit & vegetable words",
+      "plural -s / -es",
+      "how many",
+      "small or large"
+    ],
+    "roles": {
+      "guide": {
+        "name": "Shopper",
+        "icon": "🛍️",
+        "sees": "their shopping list",
+        "does": "asks for everything on it, politely"
+      },
+      "builder": {
+        "name": "Stallholder",
+        "icon": "🧑‍🌾",
+        "sees": "the fruit stall",
+        "does": "puts the right things in the basket"
+      }
+    },
+    "controls": "stand",
+    "guideView": "stand",
+    "durationSec": 120,
+    "missions": 3,
+    "color": "bg-sun",
+    "quick": {
+      "builder": [
+        "What would you like?",
+        "How many?",
+        "Small or large?",
+        "Anything else?",
+        "Here you are!"
+      ],
+      "guide": [
+        "Could I have…",
+        "Three, please.",
+        "Just one, please.",
+        "That’s all, thanks!",
+        "No, I didn’t ask for that."
+      ]
+    },
+    "phrases": [
+      {
+        "title": "🛍️ Asking",
+        "items": [
+          [
+            "Could I have three apples, please?",
+            "请给我三个苹果好吗？"
+          ],
+          [
+            "I’d like two tomatoes.",
+            "我想要两个西红柿。"
+          ],
+          [
+            "A large watermelon, please.",
+            "请给我一个大西瓜。"
+          ],
+          [
+            "That’s all, thanks.",
+            "就这些，谢谢。"
+          ]
+        ]
+      },
+      {
+        "title": "🔢 Plurals",
+        "items": [
+          [
+            "an apple → two apples",
+            "加 s"
+          ],
+          [
+            "a peach → three peaches",
+            "加 es"
+          ],
+          [
+            "a tomato → two tomatoes",
+            "o 结尾加 es"
+          ],
+          [
+            "a strawberry → strawberries",
+            "y 变 ies"
+          ]
+        ]
+      },
+      {
+        "title": "🧑‍🌾 Selling",
+        "items": [
+          [
+            "How many would you like?",
+            "您要几个？"
+          ],
+          [
+            "Small or large?",
+            "小的还是大的？"
+          ],
+          [
+            "Anything else?",
+            "还要别的吗？"
+          ]
+        ]
+      }
+    ],
+    "generated": {
+      "theme": "fruit market",
+      "createdAt": 1791870522562,
+      "kinds": [
+        "fruit-market--apple",
+        "fruit-market--banana",
+        "fruit-market--pear",
+        "fruit-market--peach",
+        "fruit-market--lemon",
+        "fruit-market--strawberry",
+        "fruit-market--tomato",
+        "fruit-market--carrot",
+        "fruit-market--mushroom",
+        "fruit-market--avocado",
+        "fruit-market--watermelon",
+        "fruit-market--pineapple"
+      ],
+      "palette": {
+        "wall": "#fff3d6",
+        "wallLow": "#22c55e",
+        "floor": "#e8cfae",
+        "accent": "#ff9f43"
+      },
+      "sign": "Sunny Fruit Market",
+      "agent": {
+        "planner": "offline level library",
+        "backend": "Hyper3D Rodin Gen-2.5-High via mcp",
+        "review": "human gate (no Claude): references come from a curated MIT 3D emoji set",
+        "generations": 12,
+        "validation": "200 simulated rounds per difficulty: all PASS"
+      }
+    }
+  },
+  "kinds": [
+    {
+      "id": "fruit-market--apple",
+      "name": "apple",
+      "plural": "apples",
+      "synonyms": [
+        "red apple",
+        "apples",
+        "apple"
+      ],
+      "interest": "food",
+      "emoji": "🍎",
+      "model": "/models/levels/fruit-market/apple.glb",
+      "ref": "/models/levels/fruit-market/apple.png",
+      "baseColor": "red",
+      "footprint": 0.2,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "a78beecf-ab4a-4e7e-9c09-e53f06ddca19",
+        "tier": "Gen-2.5-High",
+        "prompt": "A shiny red apple with a leaf, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Red apple\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--banana",
+      "name": "banana",
+      "plural": "bananas",
+      "synonyms": [
+        "bananas",
+        "banana"
+      ],
+      "interest": "food",
+      "emoji": "🍌",
+      "model": "/models/levels/fruit-market/banana.glb",
+      "ref": "/models/levels/fruit-market/banana.png",
+      "baseColor": "yellow",
+      "footprint": 0.26,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "e3b1c82c-3117-4964-8ee5-d9749180ca57",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute yellow banana, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Banana\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--pear",
+      "name": "pear",
+      "plural": "pears",
+      "synonyms": [
+        "pears",
+        "pear"
+      ],
+      "interest": "food",
+      "emoji": "🍐",
+      "model": "/models/levels/fruit-market/pear.glb",
+      "ref": "/models/levels/fruit-market/pear.png",
+      "baseColor": "green",
+      "footprint": 0.22,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "1e15f69e-3bb5-4dae-ad6a-d24f884f513b",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute green pear, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Pear\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--peach",
+      "name": "peach",
+      "plural": "peaches",
+      "synonyms": [
+        "peaches",
+        "peach"
+      ],
+      "interest": "food",
+      "emoji": "🍑",
+      "model": "/models/levels/fruit-market/peach.glb",
+      "ref": "/models/levels/fruit-market/peach.png",
+      "baseColor": "orange",
+      "footprint": 0.2,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "caa34525-4956-4e37-956b-73143fece08f",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute fuzzy peach with a leaf, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Peach\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--lemon",
+      "name": "lemon",
+      "plural": "lemons",
+      "synonyms": [
+        "lemons",
+        "lemon"
+      ],
+      "interest": "food",
+      "emoji": "🍋",
+      "model": "/models/levels/fruit-market/lemon.glb",
+      "ref": "/models/levels/fruit-market/lemon.png",
+      "baseColor": "yellow",
+      "footprint": 0.2,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "f9ad60b7-9a58-4324-bdd8-7c2f38358241",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute yellow lemon, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Lemon\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--strawberry",
+      "name": "strawberry",
+      "plural": "strawberries",
+      "synonyms": [
+        "strawberries",
+        "strawberry"
+      ],
+      "interest": "food",
+      "emoji": "🍓",
+      "model": "/models/levels/fruit-market/strawberry.glb",
+      "ref": "/models/levels/fruit-market/strawberry.png",
+      "baseColor": "red",
+      "footprint": 0.18,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "253315ea-936e-49e2-b143-7ac564d716d3",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute red strawberry, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Strawberry\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--tomato",
+      "name": "tomato",
+      "plural": "tomatoes",
+      "synonyms": [
+        "tomatoes",
+        "tomato"
+      ],
+      "interest": "food",
+      "emoji": "🍅",
+      "model": "/models/levels/fruit-market/tomato.glb",
+      "ref": "/models/levels/fruit-market/tomato.png",
+      "baseColor": "red",
+      "footprint": 0.2,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "1747a43a-da33-4d8e-ab7e-9948db9cb6c5",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute ripe red tomato, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Tomato\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--carrot",
+      "name": "carrot",
+      "plural": "carrots",
+      "synonyms": [
+        "carrots",
+        "carrot"
+      ],
+      "interest": "food",
+      "emoji": "🥕",
+      "model": "/models/levels/fruit-market/carrot.glb",
+      "ref": "/models/levels/fruit-market/carrot.png",
+      "baseColor": "orange",
+      "footprint": 0.26,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "75119899-1c90-492d-b63f-5780888623a3",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute orange carrot with green leaves lying on its side, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Carrot\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--mushroom",
+      "name": "mushroom",
+      "plural": "mushrooms",
+      "synonyms": [
+        "mushrooms",
+        "mushroom"
+      ],
+      "interest": "food",
+      "emoji": "🍄",
+      "model": "/models/levels/fruit-market/mushroom.glb",
+      "ref": "/models/levels/fruit-market/mushroom.png",
+      "baseColor": "red",
+      "footprint": 0.2,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "9ea88142-5cf3-4544-9e23-38f8625536b3",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute red-capped mushroom with white spots, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Mushroom\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--avocado",
+      "name": "avocado",
+      "plural": "avocados",
+      "synonyms": [
+        "avocados",
+        "avocado"
+      ],
+      "interest": "food",
+      "emoji": "🥑",
+      "model": "/models/levels/fruit-market/avocado.glb",
+      "ref": "/models/levels/fruit-market/avocado.png",
+      "baseColor": "green",
+      "footprint": 0.22,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": false,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "db7efecc-126c-4f35-bf18-83a84845691f",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute avocado cut in half with its pit, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Avocado\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--watermelon",
+      "name": "watermelon",
+      "plural": "watermelons",
+      "synonyms": [
+        "watermelons",
+        "watermelon",
+        "melon"
+      ],
+      "interest": "food",
+      "emoji": "🍉",
+      "model": "/models/levels/fruit-market/watermelon.glb",
+      "ref": "/models/levels/fruit-market/watermelon.png",
+      "baseColor": "green",
+      "footprint": 0.26,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": true,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "6a33cf76-55a3-4510-b07d-f0c4657d427d",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute slice of watermelon, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Watermelon\" (MIT)"
+      }
+    },
+    {
+      "id": "fruit-market--pineapple",
+      "name": "pineapple",
+      "plural": "pineapples",
+      "synonyms": [
+        "pineapples",
+        "pineapple"
+      ],
+      "interest": "food",
+      "emoji": "🍍",
+      "model": "/models/levels/fruit-market/pineapple.glb",
+      "ref": "/models/levels/fruit-market/pineapple.png",
+      "baseColor": "yellow",
+      "footprint": 0.28,
+      "levels": [
+        "fruit-market"
+      ],
+      "sized": true,
+      "source": "rodin",
+      "rodin": {
+        "generationId": "1da4e222-02a3-497c-b045-92a3f9677238",
+        "tier": "Gen-2.5-High",
+        "prompt": "A cute upright pineapple with green leaves, stylized 3D toy style",
+        "reference": "Fluent Emoji 3D \"Pineapple\" (MIT)"
+      }
+    }
+  ]
+}

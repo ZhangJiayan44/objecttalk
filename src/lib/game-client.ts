@@ -3,11 +3,13 @@ import { io, type Socket } from 'socket.io-client';
 import { createStore, useStore, type StoreApi } from 'zustand';
 import type {
   Ack,
+  AgentTrace,
   ChatMessage,
   ClientRoomState,
   ClientToServer,
   FxEvent,
   HoverEvent,
+  Pose,
   RoomSettings,
   ServerToClient,
   Via,
@@ -25,6 +27,10 @@ export interface GameState {
   chat: ChatMessage[];
   /** What the builder is pointing at (seen by everyone else). */
   remoteHover: (HoverEvent & { by: string }) | null;
+  /** The walker's live pose in walking levels (for everyone but the walker). */
+  remotePose: (Pose & { by: string; at: number }) | null;
+  /** AI partner reasoning steps (agent panel). */
+  traces: AgentTrace[];
   fx: (FxEvent & { key: number })[];
   clockOffset: number;
   error: string | null;
@@ -32,7 +38,7 @@ export interface GameState {
 
 export interface GameActions {
   create(name: string, opts?: { settings?: Partial<RoomSettings>; role?: Role | null }): Promise<string>;
-  join(code: string, name: string, opts?: { role?: Role | null; spectate?: boolean }): Promise<string>;
+  join(code: string, name: string, opts?: { role?: Role | null; spectate?: boolean; viewAs?: Role | null }): Promise<string>;
   leave(): void;
   start(): Promise<void>;
   again(): void;
@@ -42,6 +48,10 @@ export interface GameActions {
   pick(objectId: string): void;
   place(cell: Cell): void;
   drop(): void;
+  tray(objectId: string, add: boolean): void;
+  serve(): void;
+  move(pose: Pose): void;
+  open(id: string, open: boolean): void;
   say(text: string, via?: Via): void;
 }
 
@@ -57,13 +67,16 @@ const idKey = (code: string) => `objecttalk:pid:${code}`;
 export function createGameClient(opts: { persistIdentity?: boolean } = {}): GameClient {
   const persist = opts.persistIdentity ?? true;
   const socket: Socket<ServerToClient, ClientToServer> = io({ transports: ['websocket', 'polling'], reconnectionDelayMax: 3000 });
-  const store = createStore<GameState>(() => ({ connected: false, state: null, chat: [], remoteHover: null, fx: [], clockOffset: 0, error: null }));
-  let session: { code: string; name: string; playerId: string; spectate?: boolean } | null = null;
+  const store = createStore<GameState>(() => ({ connected: false, state: null, chat: [], remoteHover: null, remotePose: null, traces: [], fx: [], clockOffset: 0, error: null }));
+  let session: { code: string; name: string; playerId: string; spectate?: boolean; viewAs?: Role | null } | null = null;
   let fxKey = 0;
   let lastHover = 0;
+  let lastMove = 0;
+  let queuedPose: Pose | null = null;
+  let moveTimer: ReturnType<typeof setTimeout> | null = null;
 
-  const remember = (code: string, playerId: string, name: string, spectate?: boolean) => {
-    session = { code, playerId, name, spectate };
+  const remember = (code: string, playerId: string, name: string, spectate?: boolean, viewAs?: Role | null) => {
+    session = { code, playerId, name, spectate, viewAs };
     if (persist) {
       try {
         sessionStorage.setItem(idKey(code), playerId);
@@ -84,13 +97,15 @@ export function createGameClient(opts: { persistIdentity?: boolean } = {}): Game
   socket.on('connect', () => {
     store.setState({ connected: true, error: null });
     // Transparent rejoin after a dropped connection (Wi-Fi hiccup, phone sleep...).
-    if (session) socket.emit('room:join', { code: session.code, name: session.name, playerId: session.playerId, spectate: session.spectate }, () => {});
+    if (session) socket.emit('room:join', { code: session.code, name: session.name, playerId: session.playerId, spectate: session.spectate, viewAs: session.viewAs }, () => {});
   });
   socket.on('disconnect', () => store.setState({ connected: false }));
   socket.on('room:state', (s) => {
     store.setState({ state: s, clockOffset: s.serverNow - Date.now() });
-    if (s.phase !== 'playing') store.setState({ remoteHover: null });
+    if (s.phase !== 'playing') store.setState({ remoteHover: null, remotePose: null });
   });
+  socket.on('pose', (p) => store.setState({ remotePose: { ...p, at: performance.now() } }));
+  socket.on('ai:trace', (t) => store.setState((st) => ({ traces: [...st.traces, t].slice(-60) })));
   socket.on('chat', (m) => store.setState((st) => ({ chat: [...st.chat, m].slice(-200) })));
   socket.on('chat:history', (m) => store.setState({ chat: m }));
   socket.on('hover', (e) => store.setState({ remoteHover: e }));
@@ -116,15 +131,15 @@ export function createGameClient(opts: { persistIdentity?: boolean } = {}): Game
     async join(code, name, o = {}) {
       const upper = code.trim().toUpperCase();
       const res = await ackToPromise<{ code: string; playerId: string }>((ack) =>
-        socket.emit('room:join', { code: upper, name, playerId: storedId(upper), role: o.role ?? null, spectate: o.spectate }, ack),
+        socket.emit('room:join', { code: upper, name, playerId: storedId(upper), role: o.role ?? null, spectate: o.spectate, viewAs: o.viewAs ?? null }, ack),
       );
-      remember(res.code, res.playerId, name, o.spectate);
+      remember(res.code, res.playerId, name, o.spectate, o.viewAs);
       return res.code;
     },
     leave() {
       socket.emit('room:leave');
       session = null;
-      store.setState({ state: null, chat: [], remoteHover: null, fx: [] });
+      store.setState({ state: null, chat: [], remoteHover: null, remotePose: null, traces: [], fx: [] });
     },
     async start() {
       await ackToPromise((ack) => socket.emit('game:start', ack));
@@ -141,6 +156,26 @@ export function createGameClient(opts: { persistIdentity?: boolean } = {}): Game
     pick: (objectId) => socket.emit('act:pick', { objectId }),
     place: (cell) => socket.emit('act:place', { cell }),
     drop: () => socket.emit('act:drop'),
+    tray: (objectId, add) => socket.emit('act:tray', { objectId, add }),
+    serve: () => socket.emit('act:serve'),
+    open: (id, open) => socket.emit('act:open', { id, open }),
+    move(pose) {
+      // ~12 updates a second is plenty for a walking avatar; always send the latest pose.
+      queuedPose = pose;
+      const wait = 80 - (performance.now() - lastMove);
+      if (wait <= 0) {
+        lastMove = performance.now();
+        socket.emit('act:move', pose);
+        queuedPose = null;
+      } else if (!moveTimer)
+        moveTimer = setTimeout(() => {
+          moveTimer = null;
+          if (!queuedPose) return;
+          lastMove = performance.now();
+          socket.emit('act:move', queuedPose);
+          queuedPose = null;
+        }, wait);
+    },
     say: (text, via = 'text') => socket.emit('chat:send', { text, via }),
   };
 
