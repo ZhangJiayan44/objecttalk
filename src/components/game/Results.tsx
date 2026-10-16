@@ -226,7 +226,7 @@ export function Results() {
             <div>
               <div className="text-sm font-bold text-muted">Clarity score</div>
               <div className="font-display text-7xl font-bold">{r.clarity}</div>
-              {r.lifelinePenalty ? <div className="text-xs font-bold text-muted">incl. −{r.lifelinePenalty} for 中文求助</div> : null}
+              {r.lifelinePenalty ? <div className="text-xs font-bold text-muted">incl. −{r.lifelinePenalty} for borrowed help</div> : null}
             </div>
             <Stars n={r.stars} />
           </div>

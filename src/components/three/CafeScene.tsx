@@ -4,7 +4,6 @@ import { Suspense, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { CAFE_COLS, TRAY_SLOTS } from '@shared/cafe';
 import { getKind, kindsFor } from '@shared/catalog';
-import { zhName } from '@shared/zh';
 import type { Palette } from '@shared/levels';
 import type { HoverEvent } from '@shared/protocol';
 import type { Role, SceneObject, SceneState } from '@shared/types';
@@ -280,7 +279,6 @@ function CaseItem({ obj, pos, hovered, interactive, onHover, onClick, shakeKey, 
         <Html position={[0, 0.42, 0]} center distanceFactor={2.6} zIndexRange={[12, 0]} style={{ pointerEvents: 'none' }}>
           <div className="flex flex-col items-center whitespace-nowrap rounded-2xl border-2 border-ink bg-white px-2 py-0.5 font-display text-ink shadow-[2px_2px_0_#2d3748]">
             <span className="text-sm leading-tight font-semibold">{label}</span>
-            {zhName(getKind(obj.kind)) && <span className="text-[10px] leading-tight font-bold text-ink/55">{zhName(getKind(obj.kind))}</span>}
           </div>
         </Html>
       )}

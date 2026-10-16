@@ -104,13 +104,10 @@ today, so classmates can compare scores.
 
 | | What happens |
 |---|---|
-| 🛟 **中文求助 (Chinese lifeline)** | Stuck for a word? Press <kbd>H</kbd> and type or say it in Chinese. You privately get the English line (DeepSeek, or an offline glossary), hear it, and **say it yourself**. Your partner never sees Chinese; the first lifeline is free, later ones cost 4 points, and lifeline lines do not count for the CEFR estimate. |
 | 📝 **Borrowed words** | After the round, every borrowed phrase is listed (*you said it ✓ / not said yet*) and saved to your word book. |
-| 👆 **Word cards** | Point at any prop in a scene (73 new Rodin props: plants, vehicles, pets…): its English and Chinese name pops up; click to hear it and save it. |
+| 👆 **Word cards** | Point at any prop in a scene (73 new Rodin props: plants, vehicles, pets…): its English name pops up; click to hear it and save it. |
 | 📒 **Word book** | `/progress`: flip-card review of borrowed phrases, looked-up words and your own photo objects, weakest first. |
 | 📷 **Your things in the game** | Object Studio: snap a photo → Qwen3.6 vision names it (English, plural, Chinese, an example sentence) → you practise saying it while Rodin builds it → it hides in the bedroom, sits on the desk or becomes the café's special. |
-
-<img src="docs/images/lifeline.jpg" alt="The Chinese lifeline: Chinese in, a private English line out" width="100%" />
 
 ## 🎮 Controls
 
@@ -124,10 +121,8 @@ the crosshair is your pointer, click to interact, <kbd>Esc</kbd> gives the mouse
 | <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows | walk (town, bedroom); <kbd>Shift</kbd> run | <kbd>Space</kbd> (hold) | talk (speech-to-text) |
 | click | pick up · place · add to tray · open | <kbd>Enter</kbd> | type a message instead |
 | <kbd>F</kbd> | serve the tray (café) | <kbd>1</kbd>–<kbd>6</kbd> | quick phrases for your role |
-| <kbd>E</kbd> | show / hide the mission card | <kbd>C</kbd> | captions on / off (**off by default**) |
-| <kbd>Tab</kbd> | phrasebook (with Chinese glosses) | <kbd>T</kbd> | full transcript |
-| <kbd>G</kbd> | the AI partner's reasoning | <kbd>L</kbd> | object labels |
-| <kbd>H</kbd> | 🛟 中文求助: say it in Chinese, get the English | click a prop | word card: hear it, save it |
+| <kbd>C</kbd> | captions on / off (**off by default**) | <kbd>T</kbd> | full transcript |
+| <kbd>L</kbd> | object labels | click a prop | word card: hear it, save it |
 
 **Voice-first by design.** Reading your partner's text is not speaking practice, so captions are
 off: you *hear* the AI (and your friend's transcribed speech), can replay any line with 👂,
@@ -149,7 +144,7 @@ what its role knows and only talks through the chat, like a human.
   the café, step execution with corner counting in the town, "the top shelf or the bottom shelf?"
   in the bedroom), answers the question you actually asked, never repeats itself verbatim, and
   takes over instantly whenever the LLM is off or slow.
-- Open the **AI brain** panel (<kbd>G</kbd>) to see which brain answered, every tool call and result.
+- Open the **AI brain** panel from the top bar to see which brain answered, every tool call and result.
 - Simulation tests run AI vs AI on every level and difficulty: all missions complete.
 
 ## 🏭 Scene Agent: whole levels from a theme

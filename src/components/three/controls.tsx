@@ -2,6 +2,7 @@ import { events as createPointerEvents, useFrame, useThree, type EventManager, t
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import type { Pose } from '@shared/protocol';
+import { readMouseSensitivity } from '@/lib/settings';
 
 /**
  * First-person controls, CS-style: click the 3D view once to capture the
@@ -125,8 +126,9 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
     };
     const onMouseMove = (e: MouseEvent) => {
       if (document.pointerLockElement !== el) return;
-      look.current.yaw -= e.movementX * SENS_LOCKED;
-      look.current.pitch -= e.movementY * SENS_LOCKED;
+      const sensitivity = readMouseSensitivity();
+      look.current.yaw -= e.movementX * SENS_LOCKED * sensitivity;
+      look.current.pitch -= e.movementY * SENS_LOCKED * sensitivity;
       clampLook();
     };
     // Drag to look (touch, or when the mouse is not captured).
@@ -143,8 +145,9 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
       drag.x = e.clientX;
       drag.y = e.clientY;
       drag.moved += Math.abs(dx) + Math.abs(dy);
-      look.current.yaw -= dx * SENS_DRAG;
-      look.current.pitch -= dy * SENS_DRAG;
+      const sensitivity = readMouseSensitivity();
+      look.current.yaw -= dx * SENS_DRAG * sensitivity;
+      look.current.pitch -= dy * SENS_DRAG * sensitivity;
       clampLook();
     };
     const onUp = (e: PointerEvent) => {

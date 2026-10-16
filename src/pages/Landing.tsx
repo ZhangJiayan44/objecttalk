@@ -152,7 +152,7 @@ export default function Landing() {
         <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
           <div className="text-center lg:text-left">
             <div className="clay-chip mb-6 bg-mint">
-              <span className="h-2 w-2 rounded-full bg-cta" /> New: Pet Shop &amp; Night Market · 中文求助 lifeline · daily challenge
+              <span className="h-2 w-2 rounded-full bg-cta" /> New: Pet Shop &amp; Night Market · daily challenge
             </div>
             <h1 className="mb-6 text-4xl leading-tight font-bold sm:text-5xl lg:text-6xl">
               Say it <span className="text-cta">clearly</span>,

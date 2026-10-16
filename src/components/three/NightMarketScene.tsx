@@ -80,7 +80,7 @@ function Shop({ shop, scene, interactive, onShop }: { shop: MarketShop; scene: S
       <Box size={[3.3, 0.32, 0.04]} position={[0, 2.45, 1.0]} color={shop.color} radius={0.01} />
     </>}
     <Shopkeeper shop={shop} />
-    <Sign lines={[shop.zh, shop.name]} size={[shop.temporary ? 3.1 : 3.65, 0.65]} position={[0, shop.temporary ? 2.38 : 2.68, shop.temporary ? 1.03 : 0.76]} bg="#4c3b41" fg="#ffe2a0" border={shop.color} emissive={0.3} />
+    <Sign lines={[shop.name]} size={[shop.temporary ? 3.1 : 3.65, 0.65]} position={[0, shop.temporary ? 2.38 : 2.68, shop.temporary ? 1.03 : 0.76]} bg="#4c3b41" fg="#ffe2a0" border={shop.color} emissive={0.3} />
     <group onClick={(e) => { e.stopPropagation(); activate(); }} onPointerOver={(e) => { e.stopPropagation(); setHover(true); }} onPointerOut={() => setHover(false)}>
       <Box size={[3.25, 0.15, 1.05]} position={[0, 0.98, 1.22]} color={hover ? '#ffe49e' : '#deb58a'} radius={0.04} />
       {[-1.4, 1.4].flatMap((x) => [-0.35, 0.35].map((z) => <Box key={`${x}${z}`} size={[0.11, 0.96, 0.12]} position={[x, 0.48, 1.22 + z]} color="#8a5f50" radius={0.02} />))}
@@ -197,7 +197,7 @@ function Contents(p: Props) {
     <StreetSet />
     {MARKET_SHOPS.map((shop) => <group key={shop.id}>
       <Shop shop={shop} scene={p.scene} interactive={p.interactive} onShop={p.onShop} />
-      {!walker && <Html position={[shop.x, 4.7, shop.z]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="market-map-label">{shop.zh}<small>{shop.name}</small></div></Html>}
+      {!walker && <Html position={[shop.x, 4.7, shop.z]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="market-map-label">{shop.name}</div></Html>}
     </group>)}
     {!walker && <group position={[p.pose.x, 0, p.pose.z]} rotation-y={p.pose.yaw + Math.PI}><Avatar role="builder" name={p.shopperName ?? 'Shopper'} /></group>}
     <group position={[MARKET_MEETING.x, 0.04, MARKET_MEETING.z]}>
@@ -228,7 +228,7 @@ export function MarketMenu({ shopId, scene, tray, onBuy }: { shopId: string; sce
         const stock = scene.objects.filter((x) => x.kind === o.kind && x.size === o.size && !tray.includes(x.id));
         return <div key={`${o.kind}${o.size}`} className="flex items-center gap-3 py-3">
           {kind?.ref && <img src={asset(kind.ref)} alt="" className="h-14 w-14 shrink-0 object-contain" />}
-          <div className="min-w-0 flex-1"><div className="font-bold">{lineText({ kind: o.kind, qty: 1, size: o.size === 'regular' ? null : o.size })}</div><div className="text-xs text-muted">{kind?.zh} · {stock.length} available</div></div>
+          <div className="min-w-0 flex-1"><div className="font-bold">{lineText({ kind: o.kind, qty: 1, size: o.size === 'regular' ? null : o.size })}</div><div className="text-xs text-muted">{stock.length} available</div></div>
           <button className="market-buy" aria-label={`Buy ${o.size === 'big' ? 'large ' : o.size === 'small' ? 'small ' : ''}${kind?.name}`} title={`Buy ${kind?.name}`} disabled={!stock.length || tray.length >= 6} onClick={() => stock[0] && onBuy(stock[0].id)}><Plus size={20} /></button>
         </div>;
       })}

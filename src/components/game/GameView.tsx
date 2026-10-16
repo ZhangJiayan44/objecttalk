@@ -22,8 +22,7 @@ import { serverNow, useGame, useGameClient } from '@/lib/game-client';
 import { sfx } from '@/lib/sfx';
 import { useVoiceLink } from '@/lib/voice';
 import { AgentPanel } from './AgentPanel';
-import { MissionCard, missionChip } from './MissionCard';
-import { Lifeline } from './Lifeline';
+import { MissionCard } from './MissionCard';
 import { Transcript, useCommsPrefs, VoiceBar } from './VoiceBar';
 
 /** Which place surrounds the shop counter. */
@@ -166,12 +165,12 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
   const navigate = useNavigate();
   const st = useGame((s) => s.state);
   const offset = useGame((s) => s.clockOffset);
+  const chat = useGame((s) => s.chat);
   const remoteHover = useGame((s) => s.remoteHover);
   const remotePose = useGame((s) => s.remotePose);
   const fx = useGame((s) => s.fx);
   const prefs = useCommsPrefs();
   const [hover, setHover] = useState<Pointer | null>(null);
-  const [cardOpen, setCardOpen] = useState(() => !embedded && (typeof window === 'undefined' || window.innerWidth >= 640));
   const [phrases, setPhrases] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
   const [labels, setLabels] = useState(true);
@@ -184,6 +183,7 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
   const [bagOpen, setBagOpen] = useState(false);
   const lastPoseAt = useRef(0);
   const partner = st?.players.find((p) => p.role && p.role !== st.yourRole && !p.isAI && p.connected) ?? null;
+  const lastPartner = useMemo(() => [...chat].reverse().find((m) => m.playerId !== st?.you && m.role && m.via !== 'system'), [chat, st?.you]);
   const voice = useVoiceLink(client, voiceOn && !!partner && !embedded, partner?.id ?? null, ice);
   useEffect(() => {
     if (!embedded) fetchInfo().then((i) => setIce(i.iceServers)).catch(() => undefined);
@@ -206,13 +206,6 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
-      if (e.key === 'e' || e.key === 'E') setCardOpen((o) => !o);
-      if (e.key === 'g' || e.key === 'G') setAgentOpen((o) => !o);
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        if (document.pointerLockElement) document.exitPointerLock();
-        setPhrases((o) => !o);
-      }
       if (e.key === 'Escape' && st?.held) client.actions.drop();
       if (e.key === 'l' || e.key === 'L') setLabels((v) => !v);
       if ((e.key === 'f' || e.key === 'F') && isBuilder && level.engine === 'order') client.actions.serve();
@@ -364,7 +357,7 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
       {marketWorld && isBuilder && !embedded && (
         <div className="absolute right-3 bottom-52 z-30 flex flex-col items-end gap-2 sm:top-16 sm:bottom-auto">
           <Tip label="Shopping bag"><button className={btn('white', 'sm')} aria-label="Shopping bag" onClick={() => { if (document.pointerLockElement) document.exitPointerLock(); setBagOpen(true); }}><ShoppingBag size={18} /> {world.tray.length}/6</button></Tip>
-          {nearbyShop && <button className={btn('sun', 'sm', 'max-w-56 !whitespace-normal text-right')} onClick={() => openMarket(nearbyShop.id)}><ShoppingBag size={16} className="shrink-0" />{nearbyShop.zh}<Kbd>B</Kbd></button>}
+          {nearbyShop && <button className={btn('sun', 'sm', 'max-w-56 !whitespace-normal text-right')} onClick={() => openMarket(nearbyShop.id)}><ShoppingBag size={16} className="shrink-0" />{nearbyShop.name}<Kbd>B</Kbd></button>}
         </div>
       )}
 
@@ -394,12 +387,12 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
           </div>
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
-          <Tip label={<span>Phrasebook <Kbd>Tab</Kbd></span>}>
+          <Tip label="Phrasebook">
             <button className={btn('white', 'sm', '!px-2.5')} onClick={() => setPhrases(true)} aria-label="Phrasebook">
               <BookOpen size={18} strokeWidth={3} />
             </button>
           </Tip>
-          <Tip label={<span>AI partner brain <Kbd>G</Kbd></span>}>
+          <Tip label="AI partner brain">
             <button className={btn(agentOpen ? 'grape' : 'white', 'sm', 'hidden !px-2.5 sm:inline-flex')} onClick={() => setAgentOpen((o) => !o)} aria-label="Agent panel" aria-pressed={agentOpen}>
               <BrainCircuit size={18} strokeWidth={3} />
             </button>
@@ -449,15 +442,7 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
 
       <div className="pointer-events-none absolute top-14 left-2 z-20 max-h-[45%] w-[min(24rem,calc(100%-1rem))] overflow-y-auto sm:top-16 sm:left-3 sm:max-h-[calc(100%-12rem)]">
         <div className="pointer-events-auto">
-          {cardOpen && <MissionCard st={st} pose={pose} view={view === 'overview' ? 'guide' : view} onClose={() => setCardOpen(false)} />}
-          {!cardOpen && st.mission && (
-            <button className={btn('sun', 'sm')} onClick={() => setCardOpen(true)}>
-              {missionChip(st)}
-              <span className="hidden sm:inline">
-                <Kbd>E</Kbd>
-              </span>
-            </button>
-          )}
+          <MissionCard st={st} pose={pose} view={view === 'overview' ? 'guide' : view} />
         </div>
       </div>
 
@@ -487,17 +472,16 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
             {marketWorld ? 'Deliver shopping bag' : '🔔 Serve the tray'} <Kbd>F</Kbd>
           </button>
         )}
-        {!embedded && <Lifeline hotkey={pttKey} />}
         <VoiceBar prefs={prefs} compact={embedded} pttKey={pttKey && !embedded} tts={tts} liveVoice={voice.status === 'live'} />
         {!embedded && (
           <div className="hidden text-xs font-bold text-ink/70 lg:block">
-            <Kbd>Space</Kbd> talk · <Kbd>H</Kbd> 中文求助 · <Kbd>Enter</Kbd> type · <Kbd>C</Kbd> captions · <Kbd>T</Kbd> transcript · <Kbd>1</Kbd>-<Kbd>6</Kbd> phrases · <Kbd>E</Kbd> mission · <Kbd>Tab</Kbd> phrasebook · <Kbd>G</Kbd> AI brain
+            <Kbd>Space</Kbd> talk · <Kbd>Enter</Kbd> type · <Kbd>C</Kbd> captions · <Kbd>T</Kbd> transcript · <Kbd>1</Kbd>-<Kbd>6</Kbd> phrases
           </div>
         )}
       </div>
 
       {marketWorld && st.scene && world?.kind === 'cafe' && <>
-        <Modal open={!!marketShop} onOpenChange={(open) => { if (!open) setMarketShop(null); }} title={MARKET_SHOPS.find((s) => s.id === marketShop)?.name ?? 'Shop'} description={MARKET_SHOPS.find((s) => s.id === marketShop)?.zh ?? ''}>
+        <Modal open={!!marketShop} onOpenChange={(open) => { if (!open) setMarketShop(null); }} title={MARKET_SHOPS.find((s) => s.id === marketShop)?.name ?? 'Shop'}>
           {marketShop && <MarketMenu shopId={marketShop} scene={st.scene} tray={world.tray} onBuy={(id) => client.actions.tray(id, true)} />}
         </Modal>
         <Modal open={bagOpen} onOpenChange={setBagOpen} title="Shopping bag" description={`${world.tray.length}/6`}>
@@ -508,6 +492,14 @@ export function GameView({ embedded = false, tts = true, pttKey = true, title, v
           })}</ul> : <p className="py-4 text-sm text-muted">Your shopping bag is empty.</p>}
         </Modal>
       </>}
+      {marketShop && prefs.captions && lastPartner && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-8 z-[100] flex justify-center px-4" aria-live="polite">
+          <div className="max-w-2xl rounded-2xl border-[3px] border-ink bg-white/95 px-5 py-3 text-center font-semibold shadow-[3px_3px_0_#2d3748] backdrop-blur-sm">
+            <span className="mr-2 font-display text-sm text-muted">{lastPartner.name}</span>
+            {lastPartner.text}
+          </div>
+        </div>
+      )}
       <Modal open={phrases} onOpenChange={setPhrases} title={`Phrasebook · ${level.title}`} description={`${level.tagline}. Click a phrase to send it, or better: say it out loud!`} wide>
         <div className="grid gap-4 sm:grid-cols-2">
           {level.phrases.map((g) => (
