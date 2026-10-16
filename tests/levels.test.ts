@@ -166,3 +166,51 @@ describe('agent-made levels (content/levels)', () => {
     }
   }, 60_000);
 });
+
+describe('Chinese lifeline helpers', () => {
+  it('detects Chinese, translates with the offline glossary and prices lifelines', async () => {
+    const { glossaryTranslate, hasChinese, lifelinePenalty, saidLifeline } = await import('../shared/lifeline');
+    expect(hasChinese('我想要两个苹果')).toBe(true);
+    expect(hasChinese('two apples, please')).toBe(false);
+    expect(glossaryTranslate('我要一个甜甜圈')?.toLowerCase()).toContain('doughnut');
+    expect(glossaryTranslate('在台灯的左边')?.toLowerCase()).toContain('left');
+    expect(glossaryTranslate('嗯嗯嗯')).toBeNull();
+    expect(lifelinePenalty(0)).toBe(0);
+    expect(lifelinePenalty(1)).toBe(0);
+    expect(lifelinePenalty(3)).toBe(8);
+    expect(saidLifeline('Could I have a large coffee', 'could i have a large coffee please')).toBe(true);
+    expect(saidLifeline('Could I have a large coffee', 'two doughnuts')).toBe(false);
+  });
+});
+
+describe("players' own objects (Object Studio) in other levels", () => {
+  it('sells them as the special of the day and hides them in the bedroom first', async () => {
+    const { registerKinds } = await import('../shared/catalog');
+    const { buildCafe, generateOrderMission, parseOrder } = await import('../shared/cafe');
+    const { buildBedroom, generateSeekMission } = await import('../shared/bedroom');
+    registerKinds([{ id: 'my-test01', name: 'panda mug', plural: 'panda mugs', synonyms: ['panda mug', 'panda mugs'], interest: 'everyday', emoji: '✨', model: '/generated/my-test01.glb', baseColor: 'white', footprint: 0.34, source: 'rodin' }]);
+    const cafe = buildCafe(createRng(5), 'cafe', ['my-test01']);
+    expect(cafe.scene.objects.some((o) => o.kind === 'my-test01')).toBe(true);
+    const m = generateOrderMission(cafe, 0, 'normal', createRng(6), ['my-test01'])!;
+    expect(m.order.some((l) => l.kind === 'my-test01')).toBe(true);
+    // Understood in the room that sells it, and only there.
+    expect(parseOrder('Two panda mugs, please', 'cafe', ['my-test01']).lines[0]?.kind).toBe('my-test01');
+    expect(parseOrder('Two panda mugs, please', 'cafe').lines).toHaveLength(0);
+    const room = buildBedroom(createRng(7), ['my-test01']);
+    expect(room.items.some((i) => i.kind === 'my-test01')).toBe(true);
+    expect(generateSeekMission(room, 0, 'normal', createRng(8), ['my-test01'])?.kind).toBe('my-test01');
+  });
+
+  it('keeps every quest order within the six tray slots', async () => {
+    const { buildCafe, generateOrderMission, TRAY_SLOTS } = await import('../shared/cafe');
+    for (const level of ['cafe', 'nightmarket']) {
+      for (const quest of ['mixed', 'party', 'drinks'])
+        for (const difficulty of ['easy', 'normal', 'tricky'] as const)
+          for (let seed = 1; seed <= 60; seed++) {
+            const m = generateOrderMission(buildCafe(createRng(seed), level), 0, difficulty, createRng(seed * 13), [], quest);
+            expect(m).toBeTruthy();
+            expect(m!.order.reduce((n, l) => n + l.qty, 0)).toBeLessThanOrEqual(TRAY_SLOTS);
+          }
+    }
+  });
+});

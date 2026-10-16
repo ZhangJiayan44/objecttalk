@@ -66,10 +66,12 @@ export const lineKey = (l: Pick<OrderLine, 'kind' | 'size'>) => `${l.kind}|${l.s
 export const objectKey = (o: Pick<SceneObject, 'kind' | 'size'>) => `${o.kind}|${o.size === 'regular' ? '' : o.size}`;
 
 /** Fill the display case: food on the glass shelves, drinks (small + large) on the counter. */
-export function buildCafe(rng: Rng, level = 'cafe'): CafeState {
+/** `specials`: the player's own Rodin objects (Object Studio), sold as today's special. */
+export function buildCafe(rng: Rng, level = 'cafe', specials: string[] = []): CafeState {
   const menu = kindsFor(level);
   const drinks = menu.filter((k) => k.sized);
-  const food = rng.shuffle(menu.filter((k) => !k.sized)).slice(0, 6);
+  const own = specials.map((id) => getKind(id)).filter((k): k is NonNullable<typeof k> => !!k && !k.sized).slice(0, 2);
+  const food = [...own, ...rng.shuffle(menu.filter((k) => !k.sized))].slice(0, 6);
   const objects: SceneObject[] = [];
   let n = 0;
   const add = (kind: string, size: SizeName, cell: Cell) => objects.push({ id: `c${++n}`, kind, size, color: getKind(kind)?.baseColor ?? 'white', cell, yaw: (rng.next() - 0.5) * 0.8 });
@@ -95,35 +97,43 @@ function stock(state: CafeState) {
 }
 
 /** An order the case can actually serve. Harder levels: more lines, bigger numbers, sizes. */
-export function generateOrder(state: CafeState, difficulty: Difficulty, rng: Rng): OrderLine[] {
+export function generateOrder(state: CafeState, difficulty: Difficulty, rng: Rng, first: string[] = [], quest = 'mixed'): OrderLine[] {
   const avail = stock(state);
-  const keys = rng.shuffle([...avail.keys()]);
-  const nLines = difficulty === 'easy' ? 2 : difficulty === 'normal' ? 2 + Number(rng.chance(0.4)) : 3;
+  // Today's special (a player-made object) comes first, then the rest in random order.
+  const keys = [...first.map((k) => `${k}|`).filter((k) => avail.has(k)), ...rng.shuffle([...avail.keys()].filter((k) => !first.includes(k.split('|')[0])))];
+  const nLines = quest === 'party' ? 2 : difficulty === 'easy' ? 2 : difficulty === 'normal' ? 2 + Number(rng.chance(0.4)) : 3;
   const lines: OrderLine[] = [];
   const usedKinds = new Set<string>();
   // Make sure normal/tricky orders include a sized drink, so "small or large?" matters.
-  const drinkFirst = difficulty !== 'easy' ? keys.filter((k) => k.split('|')[1]) : [];
+  const drinkFirst = difficulty !== 'easy' || quest === 'drinks' ? keys.filter((k) => k.split('|')[1]) : [];
+  let items = 0;
   for (const key of [...drinkFirst.slice(0, 1), ...keys]) {
     if (lines.length >= nLines) break;
     const [kind, size] = key.split('|');
     if (usedKinds.has(kind)) continue;
-    usedKinds.add(kind);
-    const max = Math.min(avail.get(key) ?? 0, difficulty === 'easy' ? 1 : difficulty === 'normal' ? 2 : 3);
+    // Everything must fit on the tray, leaving one slot per line still to come.
+    const room = TRAY_SLOTS - items - (nLines - lines.length - 1);
+    const cap = quest === 'party' ? (difficulty === 'easy' ? 2 : 3) : difficulty === 'easy' ? 1 : difficulty === 'normal' ? 2 : 3;
+    const max = Math.min(avail.get(key) ?? 0, cap, room);
     if (max < 1) continue;
-    lines.push({ kind, size: (size || null) as OrderLine['size'], qty: 1 + rng.int(max) });
+    usedKinds.add(kind);
+    // A party order asks for at least two of each thing it can.
+    const qty = quest === 'party' && max >= 2 ? 2 + rng.int(max - 1) : 1 + rng.int(max);
+    items += qty;
+    lines.push({ kind, size: (size || null) as OrderLine['size'], qty });
   }
   return lines;
 }
 
-export function generateOrderMission(state: CafeState, index: number, difficulty: Difficulty, rng: Rng): OrderMission | null {
-  const order = generateOrder(state, difficulty, rng);
+export function generateOrderMission(state: CafeState, index: number, difficulty: Difficulty, rng: Rng, specials: string[] = [], quest = 'mixed'): OrderMission | null {
+  const order = generateOrder(state, difficulty, rng, index === 0 ? specials : [], quest);
   if (!order.length) return null;
-  const sized = order.some((l) => l.size);
-  const many = order.some((l) => l.qty > 1);
-  const hint = sized
-    ? 'Drinks come in two sizes: say "a small …" or "a large …" before the drink.'
-    : many
-      ? 'Say the number first and add -s: "two croissants", "three doughnuts".'
+  const sizedLine = order.find((l) => l.size);
+  const manyLine = order.find((l) => l.qty > 1);
+  const hint = sizedLine
+    ? `${getKind(sizedLine.kind)?.name ?? 'That'} comes in two sizes: say "a small …" or "a large …" before it.`
+    : manyLine
+      ? `Say the number first and use the plural: "${lineText(manyLine)}".`
       : 'Start politely: "Could I have …, please?"';
   return { id: `m${index + 1}`, index, type: 'order', order, modelAnswer: orderSentence(order), hint };
 }
@@ -186,18 +196,21 @@ export interface ParsedOrder {
 }
 
 const lexicons = new Map<string, { words: string[]; kind: string; plural: boolean }[]>();
-function lexicon(level = 'cafe') {
-  const hit = lexicons.get(level);
+/** `extra`: item kinds this room also sells (a player's own objects as today's special). */
+function lexicon(level = 'cafe', extra: string[] = []) {
+  const key = `${level}|${extra.join(',')}`;
+  const hit = lexicons.get(key);
   if (hit) return hit;
   const list: { words: string[]; kind: string; plural: boolean }[] = [];
-  for (const k of kindsFor(level))
+  const specials = extra.map((id) => getKind(id)).filter((k): k is NonNullable<typeof k> => !!k);
+  for (const k of [...kindsFor(level), ...specials])
     for (const s of new Set([...k.synonyms, k.name, k.plural])) {
       const low = s.toLowerCase();
       const plural = low === k.plural.toLowerCase() || (low.endsWith('s') && low !== k.name.toLowerCase() && !/ss$/.test(low));
       list.push({ words: low.split(' '), kind: k.id, plural });
     }
   list.sort((a, b) => b.words.length - a.words.length);
-  lexicons.set(level, list);
+  lexicons.set(key, list);
   return list;
 }
 
@@ -207,7 +220,7 @@ export function resetOrderLexicon() {
 }
 
 /** Parse "two croissants and a large coffee, please" (also corrections like "no pizza", "make that three"). */
-export function parseOrder(raw: string, level = 'cafe'): ParsedOrder {
+export function parseOrder(raw: string, level = 'cafe', extra: string[] = []): ParsedOrder {
   // Keep clause breaks as "|" so a "not" in one sentence never negates the next one.
   const text = raw
     .toLowerCase()
@@ -244,7 +257,7 @@ export function parseOrder(raw: string, level = 'cafe'): ParsedOrder {
       size = SIZES[w];
       continue;
     }
-    const lex = lexicon(level).find((l) => l.words.every((x, k) => words[i + k] === x));
+    const lex = lexicon(level, extra).find((l) => l.words.every((x, k) => words[i + k] === x));
     if (lex) {
       const kind = getKind(lex.kind);
       lines.push({ kind: lex.kind, size: kind?.sized ? size : null, qty, negated, plural: lex.plural && qty === null });

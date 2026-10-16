@@ -40,11 +40,12 @@ export class TabletopEngine implements LevelEngine {
   begin(seed: number) {
     const s = this.host.settings;
     const level = levelOf(s.level);
-    // Agent-made tabletop levels bring their own Rodin objects; the study uses the player's interests.
-    const levelKinds = level.generated ? this.host.rng.shuffle(kindsFor(level.id).map((k) => k.id)) : [];
-    this.sceneState = buildScene({ seed, interests: level.generated ? [] : s.interests, difficulty: s.difficulty, kinds: [...s.customKinds, ...levelKinds], pool: level.generated ? level.id : undefined });
+    // Levels with their own Rodin objects (Pet Shop, agent-made levels) use them; the study uses the player's interests.
+    const own = level.id !== 'study';
+    const levelKinds = own ? this.host.rng.shuffle(kindsFor(level.id).map((k) => k.id)) : [];
+    this.sceneState = buildScene({ seed, interests: own ? [] : s.interests, difficulty: s.difficulty, kinds: [...s.customKinds, ...levelKinds], pool: own ? level.id : undefined });
     this.initial = structuredClone(this.sceneState);
-    this.plan = missionPlan(this.host.rng);
+    this.plan = missionPlan(this.host.rng, s.quest);
     this.records = [];
     this.heldState = null;
     this.current = null;
@@ -196,7 +197,7 @@ export class TabletopEngine implements LevelEngine {
   }
 
   report(input: ReportInput) {
-    const report = analyzeSession({ missions: this.records, messages: input.messages, durationMs: input.durationMs, missionsTotal: this.plan.length, humanRoles: input.humanRoles });
+    const report = analyzeSession({ missions: this.records, messages: input.messages, durationMs: input.durationMs, missionsTotal: this.plan.length, humanRoles: input.humanRoles, level: this.host.settings.level });
     const missions: ReplayMission[] = this.records.map((r) => ({
       index: r.mission.index,
       type: r.mission.type,

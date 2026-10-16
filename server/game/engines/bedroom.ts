@@ -33,7 +33,7 @@ export class BedroomEngine implements LevelEngine {
   }
 
   begin() {
-    this.state = buildBedroom(this.host.rng);
+    this.state = buildBedroom(this.host.rng, this.host.settings.customKinds);
     this.initial = structuredClone(this.state);
     this.pose = { ...START_POSE };
     this.opened.clear();
@@ -45,7 +45,8 @@ export class BedroomEngine implements LevelEngine {
 
   startMission(index: number) {
     if (!this.state || index >= MISSIONS) return null;
-    const m = generateSeekMission(this.state, index, this.host.settings.difficulty, this.host.rng);
+    const s = this.host.settings;
+    const m = generateSeekMission(this.state, index, s.quest === 'hidden' ? 'tricky' : s.difficulty, this.host.rng, s.customKinds);
     if (!m) return null;
     this.current = m;
     this.records.push({ mission: m, startPose: { ...this.pose }, startT: this.host.now(), endT: this.host.now(), success: false, mistakes: 0, wrongPicks: [] });

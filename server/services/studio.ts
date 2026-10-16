@@ -33,6 +33,9 @@ export interface StudioRequest {
   interest: InterestId | 'everyday';
   color: ColorName;
   prompt?: string;
+  /** Chinese name and plural from the vision model (Object Studio step 1). */
+  zh?: string;
+  plural?: string;
 }
 
 export class Studio {
@@ -90,7 +93,8 @@ export class Studio {
       const kind: ItemKind = {
         id: slug,
         name,
-        plural: name.endsWith('s') ? name : `${name}s`,
+        plural: req.plural?.trim().toLowerCase().slice(0, 40) || (name.endsWith('s') ? name : `${name}s`),
+        zh: req.zh?.trim().slice(0, 24) || undefined,
         synonyms: [...new Set([name, ...req.synonyms.map((s) => s.trim().toLowerCase()).filter(Boolean)])],
         interest: req.interest,
         emoji: '✨',

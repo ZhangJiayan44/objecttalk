@@ -88,8 +88,10 @@ export interface BedroomState {
 export const START_POSE = { x: 0.3, z: 2.7, yaw: 0 };
 export const REACH = 2.6;
 
-export function buildBedroom(rng: Rng): BedroomState {
-  const kinds = rng.shuffle(kindsFor('bedroom').map((k) => k.id)).slice(0, 8);
+/** `extra`: the player's own Rodin objects (Object Studio). They are always in the room. */
+export function buildBedroom(rng: Rng, extra: string[] = []): BedroomState {
+  const own = extra.filter((k) => getKind(k)).slice(0, 2);
+  const kinds = [...own, ...rng.shuffle(kindsFor('bedroom').map((k) => k.id).filter((k) => !own.includes(k)))].slice(0, 8);
   const spots = rng.shuffle(SPOTS.map((s) => s.id));
   return { items: kinds.map((kind, i) => ({ id: `b${i + 1}`, kind, spot: spots[i] })), found: [] };
 }
@@ -136,13 +138,19 @@ export interface SeekMission {
 }
 
 /** Choose a lost item: easy ones lie in the open, tricky ones are tucked away. */
-export function generateSeekMission(state: BedroomState, index: number, difficulty: Difficulty, rng: Rng): SeekMission | null {
+export function generateSeekMission(state: BedroomState, index: number, difficulty: Difficulty, rng: Rng, prefer: string[] = []): SeekMission | null {
   const left = state.items.filter((i) => !state.found.includes(i.id));
   if (!left.length) return null;
+  // The player's own object is the first thing to find (that is why they made it).
+  const mine = left.find((i) => prefer.includes(i.kind));
+  if (mine) return seekMissionFor(mine, index);
   const hidden = left.filter((i) => HIDDEN_SPOTS.has(i.spot));
   const open = left.filter((i) => !HIDDEN_SPOTS.has(i.spot));
   const pool = difficulty === 'easy' ? (open.length ? open : left) : difficulty === 'tricky' ? (hidden.length ? hidden : left) : rng.chance(0.6) && hidden.length ? hidden : left;
-  const item = rng.pick(pool);
+  return seekMissionFor(rng.pick(pool), index);
+}
+
+function seekMissionFor(item: BedroomItem, index: number): SeekMission {
   const spot = spotById(item.spot)!;
   const p = pronoun(item.kind);
   const modelAnswer = `Can you find ${possessive(item.kind)}? I think ${p.is === 'they are' ? "they're" : "it's"} ${spot.phrase}.`;

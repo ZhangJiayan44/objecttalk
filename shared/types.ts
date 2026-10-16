@@ -46,6 +46,8 @@ export interface ItemKind {
   plural: string;
   /** Lowercase words/phrases the NLU accepts for this kind (multi-word allowed). */
   synonyms: string[];
+  /** Simplified Chinese name(s), "/"-separated: word cards, the word book and the Chinese lifeline glossary. */
+  zh?: string;
   interest: InterestId | 'everyday';
   emoji: string;
   /** GLB url for Rodin-generated items. */

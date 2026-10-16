@@ -2,6 +2,7 @@ import { Captions, CaptionsOff, Ear, Eye, Keyboard, Mic, MicOff, ScrollText, Sen
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { levelOf } from '@shared/levels';
+import { hasChinese } from '@shared/lifeline';
 import type { ChatMessage } from '@shared/protocol';
 import { Kbd, Tip } from '@/components/ui';
 import { useGame, useGameClient } from '@/lib/game-client';
@@ -94,22 +95,33 @@ export function VoiceBar({ prefs, compact = false, pttKey = true, tts = true, li
 
   useReadAloud(chat, me, tts && prefs.voiceOut, liveVoice);
 
-  const speech = useSpeechInput((said) => client.actions.say(said, 'voice'));
+  const send = useCallback(
+    (t: string, via: 'text' | 'quick' = 'text') => {
+      const clean = t.trim();
+      if (!clean) return;
+      // Chinese never goes to the partner: it becomes a private lifeline (English back to you).
+      if (hasChinese(clean)) {
+        client.actions
+          .assist(clean)
+          .then((res) => {
+            toast.success(`🛟 Say: “${res.en}”`, { duration: 9000 });
+            speak(res.en, { rate: 0.9 });
+          })
+          .catch((err: Error) => toast.error(err.message));
+        return;
+      }
+      client.actions.say(clean, via);
+    },
+    [client],
+  );
+
+  const speech = useSpeechInput((said) => (hasChinese(said) ? send(said) : client.actions.say(said, 'voice')));
   useEffect(() => {
     if (speech.error) {
       toast.error(speech.error);
       speech.clearError();
     }
   }, [speech.error, speech]);
-
-  const send = useCallback(
-    (t: string, via: 'text' | 'quick' = 'text') => {
-      const clean = t.trim();
-      if (!clean) return;
-      client.actions.say(clean, via);
-    },
-    [client],
-  );
 
   const openTyping = useCallback(() => {
     if (document.pointerLockElement) document.exitPointerLock();

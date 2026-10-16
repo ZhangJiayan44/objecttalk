@@ -90,7 +90,7 @@ function finish(args: {
   return {
     level: args.level,
     skillNames: args.skillNames,
-    cefr: estimateCefr(input.messages.filter((m) => humans.has(m.role)).map((m) => m.text)),
+    cefr: estimateCefr(input.messages.filter((m) => humans.has(m.role) && !m.assisted).map((m) => m.text)),
     clarity,
     stars,
     missionsDone,
@@ -126,8 +126,9 @@ function pluralSlip(text: string, level: string): boolean {
   return false;
 }
 
-export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: string }): SessionReport {
+export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: string; specials?: string[] }): SessionReport {
   const level = input.level ?? 'cafe';
+  const specials = input.specials ?? [];
   const humans = new Set(input.humanRoles);
   const reviews: UtteranceReview[] = [];
   const good = new Set<string>();
@@ -150,7 +151,7 @@ export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: 
       if (!humans.has('builder')) continue;
       const lower = msg.text.toLowerCase();
       const isQ = QUESTION.test(msg.text.trim());
-      const readBack = parseOrder(msg.text, level).lines.length > 0;
+      const readBack = parseOrder(msg.text, level, specials).lines.length > 0;
       if (isQ || readBack) {
         questions++;
         if (/small or large|large or small|what size/.test(lower)) good.add('Small or large?');
@@ -171,7 +172,7 @@ export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: 
       continue;
     }
     if (!humans.has('guide')) continue;
-    const p = parseOrder(msg.text, level);
+    const p = parseOrder(msg.text, level, specials);
     const isOrder = p.lines.length > 0;
     if (!isOrder) {
       if (p.done) good.add("That's all, thanks.");
@@ -216,13 +217,13 @@ export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: 
       missionIndex: rec.mission.index,
       verdict,
       issues: uniq,
-      praise: verdict === 'clear' ? 'Clear, complete and polite. A barista’s dream!' : undefined,
+      praise: verdict === 'clear' ? 'Clear, complete and polite. Exactly what the counter needs to hear!' : undefined,
       suggestion: verdict === 'clear' ? undefined : orderSentence(order),
     });
   }
   const extraTips: string[] = [];
   if (!instructional && humans.has('guide')) extraTips.push('Say your order out loud (hold Space) so the coach can check it.');
-  if (humans.has('builder') && !baristaChecks) extraTips.push('Baristas ask: "Small or large?", "How many?", "Anything else?"');
+  if (humans.has('builder') && !baristaChecks) extraTips.push('Behind the counter, ask: "Small or large?", "How many?", "Anything else?"');
   return finish({
     level,
     skillNames: { spatial: 'Food words & numbers', perspective: 'Sizes & plurals', clarifying: humans.has('builder') ? 'Asking & confirming' : 'Polite requests', speed: 'Speed' },

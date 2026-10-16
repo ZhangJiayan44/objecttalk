@@ -8,6 +8,7 @@ import { centerRayEvents, FirstPersonRig } from './controls';
 import { Cloud, detectQuality, PostFx, Sign, SkyDome, SoftIBL } from './env';
 import { Box, INK } from './furniture';
 import { Avatar } from './models';
+import { TownLife } from './townlife';
 
 /**
  * Toy Town: streets on a 4x4 grid, Rodin buildings on the lots, a park with
@@ -359,6 +360,7 @@ function CityContents(p: CityViewProps) {
       <StreetSigns />
       <Lamps />
       <Trees />
+      <TownLife town={p.town} />
       {[
         [-60, 38, -30, 1.4],
         [10, 44, -70, 1.8],

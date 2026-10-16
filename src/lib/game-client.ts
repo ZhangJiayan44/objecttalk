@@ -53,6 +53,8 @@ export interface GameActions {
   move(pose: Pose): void;
   open(id: string, open: boolean): void;
   say(text: string, via?: Via): void;
+  /** Chinese lifeline: Chinese in, a private English line out (nothing reaches the partner). */
+  assist(zh: string): Promise<{ en: string; source: 'llm' | 'glossary'; left: number }>;
 }
 
 export interface GameClient {
@@ -177,6 +179,7 @@ export function createGameClient(opts: { persistIdentity?: boolean } = {}): Game
         }, wait);
     },
     say: (text, via = 'text') => socket.emit('chat:send', { text, via }),
+    assist: (zh) => ackToPromise<{ en: string; source: 'llm' | 'glossary'; left: number }>((ack) => socket.emit('chat:assist', { text: zh }, ack)),
   };
 
   const client: GameClient = {

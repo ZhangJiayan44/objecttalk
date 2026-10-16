@@ -4,12 +4,15 @@ import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { AVATAR_Z, cellToWorld, TABLE_Y, VIEWPOINT } from '@shared/room';
+import { getKind } from '@shared/catalog';
 import { entityLabel, freeCells } from '@shared/spatial';
+import { zhName } from '@shared/zh';
 import type { Palette } from '@shared/levels';
 import { cellKey, sameCell, type Cell, type Role, type SceneObject, type SceneState } from '@shared/types';
 import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
 import { detectQuality, PostFx, SoftIBL } from './env';
 import { StudyRoom } from './furniture';
+import { PetShopRoom, StudyDressing } from './sets';
 import { Avatar, ItemModel, LandmarkModel, Table } from './models';
 
 export type ViewMode = Role | 'overview';
@@ -47,6 +50,8 @@ export interface RoomSceneProps {
   /** Agent-made levels repaint the room. */
   palette?: Palette;
   sign?: string;
+  /** The room around the table (the table itself never moves). */
+  set?: 'study' | 'petshop';
   missionKey?: string;
   onLockChange?(locked: boolean): void;
 }
@@ -215,8 +220,9 @@ function SceneItem({
       </group>
       {label && (hovered || held) && (
         <Html position={[0, 0.5, 0]} center distanceFactor={3.2} zIndexRange={[12, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="whitespace-nowrap rounded-full border-2 border-ink bg-white px-2.5 py-0.5 font-display text-sm font-semibold text-ink shadow-[2px_2px_0_#2d3748]">
-            {entityLabel({ ...obj, landmark: false })}
+          <div className="flex flex-col items-center whitespace-nowrap rounded-2xl border-2 border-ink bg-white px-2.5 py-0.5 font-display text-ink shadow-[2px_2px_0_#2d3748]">
+            <span className="text-sm leading-tight font-semibold">{entityLabel({ ...obj, landmark: false })}</span>
+            {zhName(getKind(obj.kind)) && <span className="text-[10px] leading-tight font-bold text-ink/55">{zhName(getKind(obj.kind))}</span>}
           </div>
         </Html>
       )}
@@ -289,7 +295,7 @@ function DevProbe({ scene }: { scene: SceneState }) {
 }
 
 function SceneContents(props: RoomSceneProps) {
-  const { scene, view, heldId, target, pointer, localHover, interactive = false, onHover, onPick, onPlace, onDrop, wrong, names, labels = true, autoRotate, firstPerson, capture = false, missionKey, onLockChange, palette, sign } = props;
+  const { scene, view, heldId, target, pointer, localHover, interactive = false, onHover, onPick, onPlace, onDrop, wrong, names, labels = true, autoRotate, firstPerson, capture = false, missionKey, onLockChange, palette, sign, set = 'study' } = props;
   const fps = firstPerson && view !== 'overview';
   const quality = useMemo(detectQuality, []);
   const ghostSource = target?.itemId ? scene.objects.find((o) => o.id === target.itemId) : undefined;
@@ -314,7 +320,14 @@ function SceneContents(props: RoomSceneProps) {
       )}
       {import.meta.env.DEV && interactive && <DevProbe scene={scene} />}
       <Lights />
-      <StudyRoom palette={palette} sign={sign} />
+      {set === 'petshop' ? (
+        <PetShopRoom />
+      ) : (
+        <>
+          <StudyRoom palette={palette} sign={sign} />
+          {!palette && <StudyDressing />}
+        </>
+      )}
       <Table />
       <PostFx quality={quality} />
       {scene.landmarks.map((l) => {

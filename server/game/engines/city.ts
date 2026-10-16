@@ -41,7 +41,7 @@ export class CityEngine implements LevelEngine {
 
   startMission(index: number) {
     if (!this.town || index >= MISSIONS) return null;
-    const m = generateRouteMission(this.town, this.pose, index, this.host.rng, this.visited);
+    const m = generateRouteMission(this.town, this.pose, index, this.host.rng, this.visited, this.host.settings.quest);
     if (!m) return null;
     this.current = m;
     this.records.push({ mission: m, startPose: { ...this.pose }, startT: this.host.now(), endT: this.host.now(), success: false, mistakes: 0 });

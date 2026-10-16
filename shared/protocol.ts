@@ -3,6 +3,7 @@ import type { BedroomItem } from './bedroom';
 import type { OrderLine } from './cafe';
 import type { Pose, Town } from './city';
 import type { LevelMeta } from './levels';
+import type { Lifeline } from './lifeline';
 import type { Cell, Difficulty, InterestId, ItemKind, MissionType, Role, SceneState } from './types';
 
 /**
@@ -36,6 +37,10 @@ export interface RoomSettings {
   durationSec: number;
   /** Extra item kinds (e.g. a player's own Rodin object) to put on the table. */
   customKinds: string[];
+  /** What the round is about (shared/quests.ts); 'mixed' when unset. */
+  quest?: string;
+  /** Daily Challenge: today's fixed world + missions, the same in every room. */
+  daily?: boolean;
 }
 
 export const DEFAULT_SETTINGS: RoomSettings = {
@@ -114,6 +119,8 @@ export interface ClientRoomState {
   endsAt: number | null;
   serverNow: number;
   results: { replayId: string; report: SessionReport; coaching?: Coaching } | null;
+  /** Your own Chinese lifelines this run (private: never sent to the partner). */
+  lifelines: Lifeline[];
 }
 
 /** Optional LLM-written coaching layered on top of the rule-based report. */
@@ -256,6 +263,8 @@ export interface ClientToServer {
   /** Bedroom: open or close the toy box / wardrobe. */
   'act:open': (p: { id: string; open: boolean }) => void;
   'chat:send': (p: { text: string; via: Via }) => void;
+  /** Chinese lifeline: Chinese in, a private English sentence back (nothing is sent to the partner). */
+  'chat:assist': (p: { text: string }, ack: Ack<{ en: string; source: 'llm' | 'glossary'; left: number }>) => void;
   'rtc:signal': (p: { to: string; data: unknown }) => void;
 }
 

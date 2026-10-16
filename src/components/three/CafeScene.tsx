@@ -4,6 +4,7 @@ import { Suspense, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { CAFE_COLS, TRAY_SLOTS } from '@shared/cafe';
 import { getKind, kindsFor } from '@shared/catalog';
+import { zhName } from '@shared/zh';
 import type { Palette } from '@shared/levels';
 import type { HoverEvent } from '@shared/protocol';
 import type { Role, SceneObject, SceneState } from '@shared/types';
@@ -11,6 +12,7 @@ import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
 import { detectQuality, Dust, LightShaft, PostFx, Sign, SoftIBL, useTextTexture } from './env';
 import { Box, PendantLamp, Plant, RoomShellBox, usePatternTexture, usePlankTexture, WindowPane, INK } from './furniture';
 import { Avatar, ItemModel } from './models';
+import { CafeDressing, MarketSet, NightMarketSet } from './stalls';
 
 /**
  * Corner Cafe. The display case sits on the counter between the barista
@@ -19,9 +21,11 @@ import { Avatar, ItemModel } from './models';
  */
 
 const COUNTER_H = 0.92;
+/** Top of the counter slab: the case stands on it (sharing its plane made the base flicker). */
+const COUNTER_TOP = COUNTER_H + 0.04;
 const CASE_X = -0.5;
 const CELL = 0.56;
-const SHELF_Y = [COUNTER_H + 0.62, COUNTER_H + 0.34, COUNTER_H + 0.05];
+const SHELF_Y = [COUNTER_TOP + 0.62, COUNTER_TOP + 0.34, COUNTER_TOP + 0.05];
 const TRAY = { x: 2.3, z: 0.02 };
 
 export const casePos = (c: number, r: number): [number, number, number] => [CASE_X + (c - (CAFE_COLS - 1) / 2) * CELL, SHELF_Y[r] ?? SHELF_Y[0], 0];
@@ -49,28 +53,32 @@ export interface CafeViewProps {
   level?: string;
   palette?: Palette;
   sign?: string;
+  /** The place around the counter: a café, a farmers' market stall, or a night market. */
+  look?: 'cafe' | 'market' | 'night';
 }
 
-function GlassCase() {
+function GlassCase({ look = 'cafe' }: { look?: CafeViewProps['look'] }) {
   const w = CAFE_COLS * CELL + 0.2;
+  const trim = look === 'cafe' ? '#c98f5a' : WOOD[look][1];
   return (
-    <group position={[CASE_X, COUNTER_H, 0]}>
+    <group position={[CASE_X, COUNTER_TOP, 0]}>
       {/* base + shelves */}
       {[0.02, 0.3, 0.58].map((y, i) => (
         <mesh key={i} position={[0, y, 0]} receiveShadow castShadow={i === 0}>
           <boxGeometry args={[w, 0.04, 0.62]} />
-          <meshStandardMaterial color={i === 0 ? '#c98f5a' : '#ffffff'} roughness={0.3} transparent={i > 0} opacity={i > 0 ? 0.55 : 1} />
+          <meshStandardMaterial color={i === 0 ? trim : '#ffffff'} roughness={0.3} transparent={i > 0} opacity={i > 0 ? 0.55 : 1} />
         </mesh>
       ))}
-      {/* glass on the customer side only: the barista reaches in from the open back, like a real café case */}
+      {/* glass on the customer side only: the barista reaches in from the open back, like a real café case.
+          It ends at the posts' inner faces, so no two surfaces share a plane (z-fighting flickers). */}
       <mesh position={[0, 0.46, 0.32]}>
-        <boxGeometry args={[w, 0.9, 0.012]} />
+        <boxGeometry args={[w - 0.03, 0.9, 0.012]} />
         <meshStandardMaterial color="#e8f7ff" roughness={0.05} metalness={0.1} transparent opacity={0.12} depthWrite={false} />
       </mesh>
       {[-1, 1].map((sx) => (
         <mesh key={sx} position={[(sx * w) / 2, 0.46, 0]}>
           <boxGeometry args={[0.03, 0.9, 0.64]} />
-          <meshStandardMaterial color="#c98f5a" roughness={0.6} />
+          <meshStandardMaterial color={trim} roughness={0.6} />
         </mesh>
       ))}
       {/* warm case light */}
@@ -79,8 +87,10 @@ function GlassCase() {
   );
 }
 
-function Counter() {
-  const wood = usePlankTexture('#c48e58', '#a8733f', [3, 1]);
+const WOOD: Record<NonNullable<CafeViewProps['look']>, [string, string]> = { cafe: ['#c48e58', '#a8733f'], market: ['#7fb069', '#5e8f4c'], night: ['#b5523b', '#8e3b2a'] };
+
+function Counter({ look = 'cafe' }: { look?: CafeViewProps['look'] }) {
+  const wood = usePlankTexture(WOOD[look][0], WOOD[look][1], [3, 1]);
   return (
     <group>
       <mesh position={[0.3, COUNTER_H / 2, 0]} castShadow receiveShadow>
@@ -147,9 +157,10 @@ function Bell({ interactive, onServe, armed }: { interactive: boolean; onServe?(
   );
 }
 
-function Backbar({ level, sign }: { level: string; sign: string }) {
-  const menu = kindsFor(level);
-  const lines = ['MENU', ...menu.filter((k) => k.sized).map((k) => `${k.name}  S / L`), ...menu.filter((k) => !k.sized).slice(0, 6).map((k) => k.name)];
+/** The menu board lists what is in the case today (the menu is bigger than the case). */
+function Backbar({ level, sign, today }: { level: string; sign: string; today: string[] }) {
+  const menu = kindsFor(level).filter((k) => today.includes(k.id));
+  const lines = ['TODAY', ...menu.filter((k) => k.sized).map((k) => `${k.name}  S / L`), ...menu.filter((k) => !k.sized).slice(0, 7).map((k) => k.name)];
   const menuTex = useTextTexture(lines, { width: 512, height: 640, bg: '#2f3b36', fg: '#fdf6e3', border: '#c48e58', lineHeight: 640 / (lines.length + 1.2) });
   return (
     <group>
@@ -267,7 +278,10 @@ function CaseItem({ obj, pos, hovered, interactive, onHover, onClick, shakeKey, 
       </group>
       {hovered && (
         <Html position={[0, 0.42, 0]} center distanceFactor={2.6} zIndexRange={[12, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="whitespace-nowrap rounded-full border-2 border-ink bg-white px-2 py-0.5 font-display text-sm font-semibold text-ink shadow-[2px_2px_0_#2d3748]">{label}</div>
+          <div className="flex flex-col items-center whitespace-nowrap rounded-2xl border-2 border-ink bg-white px-2 py-0.5 font-display text-ink shadow-[2px_2px_0_#2d3748]">
+            <span className="text-sm leading-tight font-semibold">{label}</span>
+            {zhName(getKind(obj.kind)) && <span className="text-[10px] leading-tight font-bold text-ink/55">{zhName(getKind(obj.kind))}</span>}
+          </div>
         </Html>
       )}
     </group>
@@ -278,6 +292,7 @@ const labelOf = (o: SceneObject) => `${o.size === 'small' ? 'small ' : o.size ==
 
 function CafeContents(p: CafeViewProps) {
   const quality = useMemo(detectQuality, []);
+  const look = p.look ?? 'cafe';
   const floor = usePatternTexture('#f4e2cc', '#e8cfae', 'checks', [12, 10]);
   const hoverId = p.pointer?.objectId ?? null;
   const fps = p.view !== 'overview';
@@ -299,29 +314,38 @@ function CafeContents(p: CafeViewProps) {
       ) : (
         <OrbitControls makeDefault target={[0.4, 1.2, 0]} minDistance={2} maxDistance={6.5} maxPolarAngle={1.45} />
       )}
-      <hemisphereLight args={['#fff4e6', '#b98a63', 0.6]} />
-      <ambientLight intensity={0.15} />
-      <directionalLight position={[-3, 6, 7]} intensity={1.6} color="#ffeccc" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004} shadow-camera-left={-7} shadow-camera-right={7} shadow-camera-top={7} shadow-camera-bottom={-7} />
-      <SoftIBL warm="#ffd9b8" intensity={0.85} />
-      <RoomShellBox w={12} d={10} h={3.4} wall={p.palette?.wall ?? '#fbe7d0'} wallLow={p.palette?.wallLow ?? '#9b7bf2'} floorTex={floor} />
-      <Counter />
-      <GlassCase />
-      <Backbar level={p.level ?? 'cafe'} sign={p.sign ?? 'Corner Café'} />
-      <SeatingArea />
-      {/* street-side windows behind the customer */}
-      {[-3.2, 0.2, 3.6].map((x) => (
-        <group key={x} position={[x, 1.75, 4.94]} rotation-y={Math.PI}>
-          <WindowPane width={2.2} height={1.7} glow="#e7f6ff" curtains={null} light={false} />
-        </group>
-      ))}
-      <LightShaft position={[0.2, 2.6, 4.4]} rotation={[0.85, 0, 0]} width={2.2} length={4.5} opacity={0.16} />
-      <Sign lines={['OPEN']} size={[0.8, 0.32]} position={[-5.4, 2.2, 4.9]} rotation={[0, Math.PI, 0]} bg="#ff6b6b" fg="#ffffff" border="#2d3748" emissive={0.8} />
-      {[-2.4, 0.4, 2.8].map((x) => (
-        <PendantLamp key={x} position={[x, 3.4, 0]} drop={1.1} shade="#22c55e" />
-      ))}
-      <Plant position={[-5.3, 0, 4.2]} scale={1.2} />
-      <Plant position={[5.3, 0, 4.2]} scale={1.1} />
-      <Plant position={[5.2, 0, -3.8]} />
+      {look === 'night' ? (
+        <NightMarketSet sign={p.sign ?? 'Night Market'} />
+      ) : look === 'market' ? (
+        <MarketSet sign={p.sign ?? 'Market'} palette={p.palette} />
+      ) : (
+        <>
+          <hemisphereLight args={['#fff4e6', '#b98a63', 0.6]} />
+          <ambientLight intensity={0.15} />
+          <directionalLight position={[-3, 6, 7]} intensity={1.6} color="#ffeccc" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004} shadow-camera-left={-7} shadow-camera-right={7} shadow-camera-top={7} shadow-camera-bottom={-7} />
+          <SoftIBL warm="#ffd9b8" intensity={0.85} />
+          <RoomShellBox w={12} d={10} h={3.4} wall={p.palette?.wall ?? '#fbe7d0'} wallLow={p.palette?.wallLow ?? '#9b7bf2'} floorTex={floor} />
+          <Backbar level={p.level ?? 'cafe'} sign={p.sign ?? 'Corner Café'} today={[...new Set(p.scene.objects.map((o) => o.kind))].sort()} />
+          <SeatingArea />
+          {/* street-side windows behind the customer */}
+          {[-3.2, 0.2, 3.6].map((x) => (
+            <group key={x} position={[x, 1.75, 4.94]} rotation-y={Math.PI}>
+              <WindowPane width={2.2} height={1.7} glow="#e7f6ff" curtains={null} light={false} />
+            </group>
+          ))}
+          <LightShaft position={[0.2, 2.6, 4.4]} rotation={[0.85, 0, 0]} width={2.2} length={4.5} opacity={0.16} />
+          <Sign lines={['OPEN']} size={[0.8, 0.32]} position={[-5.4, 2.2, 4.9]} rotation={[0, Math.PI, 0]} bg="#ff6b6b" fg="#ffffff" border="#2d3748" emissive={0.8} />
+          {[-2.4, 0.4, 2.8].map((x) => (
+            <PendantLamp key={x} position={[x, 3.4, 0]} drop={1.1} shade="#22c55e" />
+          ))}
+          <Plant position={[-5.3, 0, 4.2]} scale={1.2} />
+          <Plant position={[5.3, 0, 4.2]} scale={1.1} />
+          <Plant position={[5.2, 0, -3.8]} />
+          <CafeDressing />
+        </>
+      )}
+      <Counter look={look} />
+      <GlassCase look={look} />
       {/* display case contents and the tray */}
       {p.scene.objects.map((o) => {
         const onTray = trayIndex.get(o.id);
@@ -368,8 +392,8 @@ function CafeContents(p: CafeViewProps) {
           <Avatar role="guide" name={p.names?.guide ?? 'Customer'} />
         </group>
       )}
-      <Dust area={[11, 3, 9]} center={[0, 1.7, 0.5]} count={180} />
-      <PostFx quality={quality} bloom={0.65} />
+      {look !== 'night' && <Dust area={[11, 3, 9]} center={[0, 1.7, 0.5]} count={180} />}
+      <PostFx quality={quality} bloom={look === 'night' ? 0.95 : 0.65} />
     </>
   );
 }
@@ -392,8 +416,8 @@ function PointerArrow({ pos }: { pos: [number, number, number] }) {
 export function CafeScene(props: CafeViewProps) {
   return (
     <Canvas className={props.className} shadows dpr={[1, 2]} events={centerRayEvents} camera={{ fov: 62, near: 0.05, far: 80, position: [0, 2, 4] }} gl={{ antialias: false, powerPreference: 'high-performance' }} onPointerMissed={() => props.interactive && props.onHover?.({ objectId: null, cell: null })}>
-      <color attach="background" args={['#f4e2cc']} />
-      <Suspense fallback={<Html center>Loading the café…</Html>}>
+      <color attach="background" args={[props.look === 'night' ? '#1c1838' : '#f4e2cc']} />
+      <Suspense fallback={<Html center>Loading…</Html>}>
         <CafeContents {...props} />
       </Suspense>
     </Canvas>

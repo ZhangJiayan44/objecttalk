@@ -9,7 +9,7 @@ import type { ItemKind, Role } from './types';
  *   walksearch - find lost things in a room (bedroom)
  */
 
-export type LevelId = 'study' | 'cafe' | 'city' | 'bedroom';
+export type LevelId = 'study' | 'pets' | 'cafe' | 'nightmarket' | 'city' | 'bedroom';
 export type EngineKind = 'tabletop' | 'order' | 'walknav' | 'walksearch';
 
 export interface RoleCopy {
@@ -18,6 +18,9 @@ export interface RoleCopy {
   sees: string;
   does: string;
 }
+
+/** Which 3D set a level is drawn in (the engine decides the rules, the look decides the place). */
+export type SceneLook = 'study' | 'petshop' | 'cafe' | 'market' | 'night';
 
 /** Room colours for an agent-made level (walls, lower wall / trim, floor, accent). */
 export interface Palette {
@@ -64,6 +67,8 @@ export interface LevelMeta {
   color: string;
   quick: Record<Role, string[]>;
   phrases: { title: string; items: [string, string][] }[];
+  /** The 3D set (defaults: study for tabletop, cafe for order levels). */
+  scene?: SceneLook;
   generated?: GeneratedInfo;
 }
 
@@ -115,6 +120,47 @@ export const LEVELS: Record<LevelId, LevelMeta & { id: LevelId }> = {
       { title: '❓ Clarify', items: CLARIFY },
     ],
   },
+  pets: {
+    id: 'pets',
+    title: 'Pet Shop',
+    tagline: 'Find & place the animals',
+    emoji: '🐶',
+    engine: 'tabletop',
+    scene: 'petshop',
+    skills: ['animal words', 'your left / my left', 'next to / between'],
+    roles: {
+      guide: { name: 'Shop owner', icon: '🧑‍🔧', sees: 'which pet a customer wants', does: 'explains which animal and where it goes' },
+      builder: { name: 'Helper', icon: '🧤', sees: 'no target', does: 'picks up and moves the animals' },
+    },
+    controls: 'stand',
+    guideView: 'stand',
+    durationSec: 90,
+    missions: 3,
+    color: 'bg-mint',
+    quick: {
+      builder: ['Which one?', 'My left or your left?', 'Is it this one?', 'The big one or the small one?', 'Got it!'],
+      guide: ['Yes, that one!', 'No, the other one.', 'Closer to you.', 'Farther from you.', 'On YOUR left.', 'On YOUR right.'],
+    },
+    phrases: [
+      {
+        title: '🐾 Animals',
+        items: [
+          ['the puppy next to the lamp', '台灯旁边的小狗'],
+          ['the small bunny / the big bunny', '小兔子 / 大兔子'],
+          ['between the turtle and the plant', '在乌龟和植物之间'],
+          ['Put the kitten in front of you.', '把小猫放在你面前。'],
+        ],
+      },
+      {
+        title: '🔄 Your partner’s view',
+        items: [
+          ['on your left / on your right', '在你的左边 / 右边'],
+          ['closer to you / farther from you', '离你近 / 远'],
+        ],
+      },
+      { title: '❓ Clarify', items: CLARIFY },
+    ],
+  },
   cafe: {
     id: 'cafe',
     title: 'Corner Café',
@@ -160,6 +206,57 @@ export const LEVELS: Record<LevelId, LevelMeta & { id: LevelId }> = {
           ['one doughnut → two doughnuts', '一个 → 两个（加 s）'],
           ['a sandwich → three sandwiches', '加 es'],
           ['a slice of pizza → two slices of pizza', '片、块的复数'],
+        ],
+      },
+    ],
+  },
+  nightmarket: {
+    id: 'nightmarket',
+    title: 'Night Market',
+    tagline: 'Order street food at a stall',
+    emoji: '🏮',
+    engine: 'order',
+    scene: 'night',
+    skills: ['a bowl of / a bag of', 'how many', 'small or large', 'street food words'],
+    roles: {
+      guide: { name: 'Customer', icon: '🙋', sees: 'what their friends want', does: 'orders for everyone, with numbers and sizes' },
+      builder: { name: 'Stall owner', icon: '🧑‍🍳', sees: 'the food stall', does: 'puts the right food on the tray' },
+    },
+    controls: 'stand',
+    guideView: 'stand',
+    durationSec: 120,
+    missions: 3,
+    color: 'bg-grape',
+    quick: {
+      builder: ['What would you like?', 'How many?', 'Small or large?', 'Anything else?', 'Here you go!'],
+      guide: ['Could I have…', 'Two of those, please.', 'A large one, please.', 'That’s all, thanks!', 'No, I didn’t order that.'],
+    },
+    phrases: [
+      {
+        title: '🏮 Ordering',
+        items: [
+          ['Could I have a bowl of noodles, please?', '请给我一碗面好吗？'],
+          ['Two skewers and a large bubble tea, please.', '两串烤串和一杯大杯奶茶。'],
+          ['A bag of chestnuts, please.', '一袋糖炒栗子。'],
+          ['That’s all, thanks!', '就这些，谢谢！'],
+        ],
+      },
+      {
+        title: '🥢 Counting street food',
+        items: [
+          ['a bowl of noodles → two bowls of noodles', '一碗面 → 两碗面'],
+          ['an ear of corn → three ears of corn', '一根玉米 → 三根玉米'],
+          ['a dumpling → six dumplings', '饺子：加 s'],
+          ['a sweet potato → two sweet potatoes', 'o 结尾加 es'],
+        ],
+      },
+      {
+        title: '🧑‍🍳 Selling',
+        items: [
+          ['What would you like?', '您想要点什么？'],
+          ['Small or large?', '小杯还是大杯？'],
+          ['How many would you like?', '要几个？'],
+          ['Here you go! Enjoy!', '给您，慢用！'],
         ],
       },
     ],
@@ -249,7 +346,7 @@ export const LEVELS: Record<LevelId, LevelMeta & { id: LevelId }> = {
   },
 };
 
-export const LEVEL_ORDER: LevelId[] = ['study', 'cafe', 'city', 'bedroom'];
+export const LEVEL_ORDER: LevelId[] = ['study', 'pets', 'cafe', 'nightmarket', 'city', 'bedroom'];
 
 /** Agent-made levels, merged in at runtime (server: data/levels, client: /api/levels). */
 const generatedLevels = new Map<string, LevelMeta>();
@@ -266,5 +363,8 @@ export const isLevel = (id: string | undefined): boolean => !!id && (id in LEVEL
 
 export const levelOf = (id: string | undefined): LevelMeta => (id && (LEVELS[id as LevelId] ?? generatedLevels.get(id))) || LEVELS.study;
 
-/** Which item-kind pool a level draws from. */
-export const kindPoolOf = (level: LevelMeta): string => (level.generated ? level.id : level.engine === 'order' ? 'cafe' : level.id);
+/** Which item-kind pool a level draws from (every level has its own: kinds list it in `levels`). */
+export const kindPoolOf = (level: LevelMeta): string => level.id;
+
+/** The 3D set a level is drawn in. */
+export const sceneOf = (level: LevelMeta): SceneLook => level.scene ?? (level.engine === 'order' ? (level.generated ? 'market' : 'cafe') : 'study');

@@ -1,4 +1,5 @@
 import { getKind, kindsFor } from '../../../shared/catalog';
+import { levelOf } from '../../../shared/levels';
 import { joinList, lineKey, lineText, objectKey, parseOrder, sizeWord, trayStatus, type CafeState, type OrderLine, type OrderMission } from '../../../shared/cafe';
 import type { ChatMessage, FxEvent, HoverEvent } from '../../../shared/protocol';
 import type { Toolkit } from '../../agent/harness';
@@ -18,6 +19,8 @@ import { BaseBot, dialogAct, isBackchannel, NUMBER_WORDS } from './common';
 
 export interface CafeCtx {
   level: string;
+  /** Extra kinds sold in this room (the players' own objects). */
+  specials: string[];
   state(): CafeState | null;
   mission(): OrderMission | null;
   hover(e: HoverEvent): void;
@@ -60,7 +63,8 @@ class AiBarista extends BaseBot {
     this.asking = null;
     this.serving = false;
     this.confirmed = '';
-    this.later(m.index === 0 ? 1000 : 1400, () => this.sayOne(m.index === 0 ? ["Hi, welcome to the Corner Café! What can I get you?", "Hello! What would you like today?"] : ['Next, please! What can I get you?', 'Hi there! What would you like?', "Hello! What can I get for you today?"]));
+    const shop = levelOf(this.ctx.level).title;
+    this.later(m.index === 0 ? 1000 : 1400, () => this.sayOne(m.index === 0 ? [`Hi, welcome to the ${shop}! What can I get you?`, 'Hello! What would you like today?'] : ['Next, please! What can I get you?', 'Hi there! What would you like?', 'Hello! What can I get for you today?']));
   }
 
   onChat(msg: ChatMessage) {
@@ -77,7 +81,7 @@ class AiBarista extends BaseBot {
     const started = Date.now();
     const st = this.ctx.state();
     if (!st) return;
-    const p = parseOrder(text, this.ctx.level);
+    const p = parseOrder(text, this.ctx.level, this.ctx.specials);
     const steps = [{ tool: 'parse_order', args: text, result: JSON.stringify({ lines: p.lines, done: p.done, correction: p.correction }) }];
     const replies: string[] = [];
     const lower = text.toLowerCase();
@@ -218,7 +222,7 @@ class AiBarista extends BaseBot {
     };
     const kindIds = kindsFor(this.ctx.level).map((k) => k.id);
     return {
-      persona: `You are the barista. You cannot see the customer's order card: listen to what they ask for. Drinks come in small or large, so ask if they don't say. If a plural has no number ("croissants"), ask how many. Add exactly what they asked for to the tray with add_to_tray, read the order back, ask "Anything else?", and when they say that's all, serve.
+      persona: `You run the counter at the ${levelOf(this.ctx.level).title} (you are the ${levelOf(this.ctx.level).roles.builder.name.toLowerCase()}). You cannot see the customer's order card: listen to what they ask for. Some things come in small or large (${kindsFor(this.ctx.level).filter((k) => k.sized).map((k) => k.name).join(', ') || 'none here'}), so ask if they don't say. If a plural has no number ("croissants"), ask how many. Add exactly what they asked for to the tray with add_to_tray, read the order back, ask "Anything else?", and when they say that's all, serve.
 Menu item ids: ${kindIds.join(', ')}.`,
       observe: () => {
         const st = this.ctx.state();
@@ -356,7 +360,7 @@ class AiCustomer extends BaseBot {
       this.traceRules(text, steps, line, started);
     };
     const sized = m.order.find((l) => l.size);
-    const mentionedKinds = parseOrder(text, this.ctx.level).lines.map((l) => l.kind);
+    const mentionedKinds = parseOrder(text, this.ctx.level, this.ctx.specials).lines.map((l) => l.kind);
     // The barista's greeting is our cue to order.
     if (this.opening && (dialogAct(text) === 'greet' || /\b(what (?:can i get|would you like|can i do)|can i help|next,? please|ready to order)\b/.test(lower))) {
       const line = this.opening;
@@ -393,7 +397,7 @@ class AiCustomer extends BaseBot {
       return reply(this.describeProblems(status));
     }
     // The barista reads the order back: compare with the card.
-    const readBack = parseOrder(text, this.ctx.level);
+    const readBack = parseOrder(text, this.ctx.level, this.ctx.specials);
     if (readBack.lines.length) {
       const wrong = readBack.lines.filter((l) => {
         const want = m.order.find((o) => o.kind === l.kind);
@@ -487,7 +491,7 @@ class AiCustomer extends BaseBot {
       vetSay: (text) => {
         const m = this.ctx.mission();
         if (!m) return null;
-        const p = parseOrder(text, this.ctx.level);
+        const p = parseOrder(text, this.ctx.level, this.ctx.specials);
         const bad = p.lines.filter((l) => !l.negated && !m.order.some((o) => o.kind === l.kind));
         if (bad.length && !/\b(didn'?t|not|no)\b/i.test(text)) return `${menuName(bad[0].kind, 1)} is not on your order card.`;
         return null;

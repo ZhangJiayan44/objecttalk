@@ -1,6 +1,9 @@
 import { nanoid } from 'nanoid';
 import type { Server, Socket } from 'socket.io';
+import { getKind } from '../../shared/catalog';
 import { isLevel, levelOf } from '../../shared/levels';
+import { dailySeed, questsFor } from '../../shared/quests';
+import { glossaryTranslate, hasChinese, lifelinePenalty, MAX_LIFELINES, saidLifeline, type Lifeline } from '../../shared/lifeline';
 import { createRng, randomSeed, type Rng } from '../../shared/rng';
 import {
   DEFAULT_SETTINGS,
@@ -20,6 +23,7 @@ import {
   type Via,
 } from '../../shared/protocol';
 import { otherRole, ROLES, type Cell, type Role } from '../../shared/types';
+import type { SessionReport } from '../../shared/analysis';
 import { BedroomEngine } from './engines/bedroom';
 import { CafeEngine } from './engines/cafe';
 import { CityEngine } from './engines/city';
@@ -74,6 +78,10 @@ export class Room {
   private chat: ChatMessage[] = [];
   private events: ReplayEvent[] = [];
   private traces: AgentTrace[] = [];
+  /** Chinese lifelines per player id: private to that player, scored and taught after the game. */
+  private lifelines = new Map<string, Lifeline[]>();
+  /** Chat message ids the player said with a lifeline's help (not counted for the CEFR estimate). */
+  private assisted = new Set<string>();
   private results: ClientRoomState['results'] = null;
   private bots = new Map<string, Bot>();
 
@@ -180,7 +188,14 @@ export class Room {
     if (patch.level && patch.level !== this.settings.level && patch.durationSec === undefined) next.durationSec = levelOf(next.level).durationSec;
     next.durationSec = Math.min(240, Math.max(45, Math.round(next.durationSec)));
     next.interests = next.interests.slice(0, 5);
-    next.customKinds = next.customKinds.slice(0, 2);
+    // Only real item kinds (a player's own Object Studio objects), at most two.
+    next.customKinds = (Array.isArray(next.customKinds) ? next.customKinds : []).filter((k) => typeof k === 'string' && !!getKind(k)).slice(0, 2);
+    if (!['easy', 'normal', 'tricky'].includes(next.difficulty)) next.difficulty = this.settings.difficulty;
+    if (next.aiRole !== 'guide' && next.aiRole !== 'builder') next.aiRole = this.settings.aiRole;
+    // A quest must exist for the level's engine (switching levels resets it).
+    const engine = levelOf(next.level).engine;
+    if (!questsFor(engine).some((q) => q.id === next.quest)) next.quest = 'mixed';
+    next.daily = !!next.daily;
     if (!['duo', 'ai', 'sim'].includes(next.mode)) next.mode = 'duo';
     this.settings = next;
     if (next.mode === 'ai' && p.role === next.aiRole) p.role = otherRole(next.aiRole);
@@ -289,7 +304,8 @@ export class Room {
   }
 
   private begin() {
-    const seed = randomSeed();
+    // The Daily Challenge plays today's world: same seed for everyone, so scores compare.
+    const seed = this.settings.daily ? dailySeed(this.settings.level) : randomSeed();
     this.rng = createRng(seed);
     this.engine = createEngine(levelOf(this.settings.level).engine, this.host());
     this.engine.begin(seed);
@@ -297,6 +313,8 @@ export class Room {
     this.mistakes = 0;
     this.events = [];
     this.traces = [];
+    this.lifelines.clear();
+    this.assisted.clear();
     this.results = null;
     this.chat = this.chat.filter((m) => m.via === 'system').slice(-5);
     this.phase = 'playing';
@@ -375,8 +393,9 @@ export class Room {
     this.fx({ type: reason === 'complete' ? 'complete' : 'timeup', message: reason === 'complete' ? 'All missions complete!' : "Time's up!" });
 
     const humanRoles = this.settings.mode === 'sim' ? [] : this.humans.map((h) => h.role).filter((r): r is Role => !!r);
-    const messages = this.chat.filter((m) => m.role && m.t >= 0).map((m) => ({ id: m.id, t: m.t, role: m.role as Role, text: m.text }));
+    const messages = this.chat.filter((m) => m.role && m.t >= 0).map((m) => ({ id: m.id, t: m.t, role: m.role as Role, text: m.text, ...(this.assisted.has(m.id) ? { assisted: true } : {}) }));
     const { report, missions, records, extras } = this.engine.report({ messages, durationMs, humanRoles });
+    this.applyLifelines(report);
     const replay: Replay = {
       id: nanoid(12),
       createdAt: Date.now(),
@@ -486,6 +505,12 @@ export class Room {
     const clean = text.replace(/\s+/g, ' ').trim().slice(0, MAX_CHAT);
     if (!p || !clean) return;
     this.touch();
+    // The partner must hear English: Chinese goes through the private lifeline instead (chat:assist).
+    if (!p.isAI && this.phase === 'playing' && hasChinese(clean)) return;
+    const mine = this.lifelines.get(p.id);
+    const pending = mine?.filter((l) => !l.used && saidLifeline(l.en, clean)) ?? [];
+    for (const l of pending) l.used = true;
+    if (pending.length) this.emitState(p);
     const msg: ChatMessage = {
       id: nanoid(8),
       t: this.startedAt && this.phase === 'playing' ? this.now() : -1,
@@ -498,12 +523,52 @@ export class Room {
     };
     this.chat.push(msg);
     if (this.chat.length > 400) this.chat.shift();
+    if (pending.length) this.assisted.add(msg.id);
     this.io.to(this.code).emit('chat', msg);
     if (this.phase !== 'playing') return;
     // Partners hear a line after it has been spoken: roughly speech time for an AI voice,
     // a short beat for humans. This also keeps two AI partners (sim mode) from talking over each other.
     const delay = p.isAI ? Math.min(2600, 600 + clean.length * 22) : 200;
     for (const [id, b] of this.bots) if (msg.playerId !== id) this.later(delay, () => this.phase === 'playing' && b.onChat(msg));
+  }
+
+  /**
+   * Chinese lifeline: the player is stuck and says it in Chinese. They get an English line back
+   * privately (LLM, or the offline glossary) and must say it themselves; the partner never sees
+   * the Chinese. Each lifeline after the first costs a few points, and the report teaches them.
+   */
+  async assist(playerId: string, zh: string, translate: (zh: string, context: string) => Promise<string | null>): Promise<{ en: string; source: 'llm' | 'glossary'; left: number } | { error: string }> {
+    const p = this.players.get(playerId);
+    const clean = zh.replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (!p || p.isAI || p.spectator || !p.role) return { error: 'Only players can ask for help.' };
+    if (this.phase !== 'playing') return { error: 'The lifeline works during a round.' };
+    if (!hasChinese(clean)) return { error: 'Type or say it in Chinese (中文) and I will give you the English.' };
+    const mine = this.lifelines.get(p.id) ?? [];
+    if (mine.length >= MAX_LIFELINES) return { error: 'No lifelines left this round: try simple words!' };
+    this.touch();
+    const level = levelOf(this.settings.level);
+    const things = this.engine?.scene()?.objects.map((o) => o.kind) ?? [];
+    const context = `${level.title} (${level.tagline}). The player is the ${level.roles[p.role].name}. Things here: ${[...new Set(things)].slice(0, 16).join(', ') || 'see the level'}.`;
+    const llm = await translate(clean, context).catch(() => null);
+    const en = llm ?? glossaryTranslate(clean);
+    if (!en) return { error: 'Sorry, I could not translate that. Try a shorter phrase.' };
+    if (this.phase !== 'playing') return { error: 'The round is over.' };
+    const entry: Lifeline = { t: this.now(), zh: clean, en, source: llm ? 'llm' : 'glossary', used: false };
+    this.lifelines.set(p.id, [...mine, entry]);
+    this.emitState(p);
+    return { en, source: entry.source, left: MAX_LIFELINES - mine.length - 1 };
+  }
+
+  /** Fold the human players' lifelines into the report: a small score cost and a "borrowed words" list. */
+  private applyLifelines(report: SessionReport) {
+    const all = [...this.lifelines.entries()].flatMap(([id, list]) => list.map((l) => ({ ...l, role: this.players.get(id)?.role ?? null })));
+    if (!all.length) return;
+    report.lifelines = all.map(({ role, ...l }) => ({ ...l, role }));
+    const cost = lifelinePenalty(all.length);
+    if (!cost) return;
+    report.lifelinePenalty = cost;
+    report.clarity = Math.max(0, report.clarity - cost);
+    if (report.stars === 3 && report.clarity < 75) report.stars = 2;
   }
 
   private trace(role: Role, t: Omit<AgentTrace, 'id' | 't' | 'role'>) {
@@ -547,6 +612,7 @@ export class Room {
       endsAt: this.endsAt,
       serverNow: Date.now(),
       results: this.results,
+      lifelines: this.lifelines.get(p.id) ?? [],
     };
   }
 

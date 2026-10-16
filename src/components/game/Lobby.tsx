@@ -6,8 +6,9 @@ import { allKinds, INTERESTS, kindsFor } from '@shared/catalog';
 import { generatedLevelList, LEVEL_ORDER, LEVELS, levelOf, type LevelMeta } from '@shared/levels';
 import type { Mode, ServerInfo } from '@shared/protocol';
 import type { Difficulty, InterestId, Role } from '@shared/types';
+import { questsFor, today } from '@shared/quests';
 import { btn } from '@/components/ui';
-import { fetchInfo, loadItems, loadLevels, shareUrl } from '@/lib/api';
+import { fetchInfo, loadItems, loadLevels, myObjectIds, shareUrl } from '@/lib/api';
 import { useGame, useGameClient } from '@/lib/game-client';
 
 const DIFFS: Record<string, { id: Difficulty; label: string; desc: string; color: string }[]> = {
@@ -46,8 +47,8 @@ function LevelCard({ level, active, disabled, onPick }: { level: LevelMeta; acti
       <div className="flex items-center gap-2">
         <span className="text-3xl">{level.emoji}</span>
         <div className="min-w-0">
-          <div className="truncate font-display text-lg leading-tight font-semibold">{level.title}</div>
-          <div className="truncate text-xs font-bold text-ink/70">{level.tagline}</div>
+          <div className="font-display text-lg leading-tight font-semibold">{level.title}</div>
+          <div className="text-xs leading-snug font-bold text-ink/70">{level.tagline}</div>
         </div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1">
@@ -91,7 +92,11 @@ export function Lobby() {
   const sim = s.mode === 'sim';
   const ready = !!seat('guide') && !!seat('builder');
   const joinUrl = shareUrl(info, `/join/${st.code}`);
-  const myObjects = allKinds().filter((k) => k.id.startsWith('my-'));
+  // Objects made from this player's photos (Object Studio); other players' objects stay theirs.
+  const mine = myObjectIds();
+  const myObjects = allKinds().filter((k) => k.id.startsWith('my-') && (mine.includes(k.id) || s.customKinds.includes(k.id)));
+  const usesMine = level.id === 'study' || level.engine === 'walksearch' || level.engine === 'order';
+  const MINE_HOW: Record<string, string> = { tabletop: 'on the desk', walksearch: 'hidden in the room: find it first', order: 'on the menu as today’s special' };
   const generated = generatedLevelList();
 
   const toggleInterest = (id: InterestId) => {
@@ -134,7 +139,7 @@ export function Lobby() {
         </div>
 
         <h2 className="mb-2 text-xl font-bold">Where are you?</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {LEVEL_ORDER.map((id) => (
             <LevelCard key={id} level={LEVELS[id]} active={s.level === id} disabled={!host} onPick={() => client.actions.updateSettings({ level: id })} />
           ))}
@@ -144,7 +149,7 @@ export function Lobby() {
             <h3 className="mt-4 mb-2 flex items-center gap-1.5 text-base font-bold">
               <Sparkles size={16} strokeWidth={3} /> Made by the Scene Agent (Hyper3D Rodin)
             </h3>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {generated.map((l) => (
                 <LevelCard key={l.id} level={l} active={s.level === l.id} disabled={!host} onPick={() => client.actions.updateSettings({ level: l.id })} />
               ))}
@@ -205,22 +210,23 @@ export function Lobby() {
                 );
               })}
             </div>
-            {myObjects.length > 0 && (
-              <div className="mt-4">
-                <h3 className="mb-2 font-bold">✨ My objects (from Object Studio)</h3>
-                <div className="flex flex-wrap gap-2">
-                  {myObjects.map((k) => {
-                    const on = s.customKinds.includes(k.id);
-                    return (
-                      <button key={k.id} disabled={!host} onClick={() => client.actions.updateSettings({ customKinds: on ? s.customKinds.filter((x) => x !== k.id) : [...s.customKinds, k.id].slice(-2) })} className={`clay-chip ${on ? 'bg-mint' : 'bg-white'}`}>
-                        {k.ref && <img src={k.ref} alt="" className="h-6 w-6 rounded object-cover" />} {k.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </>
+        )}
+        {usesMine && myObjects.length > 0 && (
+          <div className="mt-5">
+            <h3 className="mb-1 font-bold">✨ My objects (from my photos)</h3>
+            <p className="mb-2 text-sm text-muted">Pick up to 2: they will be {MINE_HOW[level.engine] ?? 'in the scene'}.</p>
+            <div className="flex flex-wrap gap-2">
+              {myObjects.map((k) => {
+                const on = s.customKinds.includes(k.id);
+                return (
+                  <button key={k.id} disabled={!host} onClick={() => client.actions.updateSettings({ customKinds: on ? s.customKinds.filter((x) => x !== k.id) : [...s.customKinds, k.id].slice(-2) })} className={`clay-chip ${on ? 'bg-mint' : 'bg-white'}`}>
+                    {k.ref && <img src={k.ref} alt="" className="h-6 w-6 rounded object-cover" />} {k.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         <h2 className="mt-7 mb-2 text-xl font-bold">Difficulty</h2>
@@ -232,6 +238,28 @@ export function Lobby() {
             </button>
           ))}
         </div>
+
+        <h2 className="mt-7 mb-2 text-xl font-bold">Quest</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {questsFor(level.engine).map((q) => {
+            const on = (s.quest ?? 'mixed') === q.id;
+            return (
+              <button key={q.id} disabled={!host} onClick={() => client.actions.updateSettings({ quest: q.id })} className={`clay-sm p-3 text-left ${on ? 'bg-lavender' : 'bg-white'} disabled:cursor-default`} aria-pressed={on}>
+                <div className="font-display text-lg font-semibold">
+                  {q.emoji} {q.title}
+                </div>
+                <div className="text-sm font-semibold opacity-80">{q.text}</div>
+              </button>
+            );
+          })}
+        </div>
+        <label className={`clay-sm mt-3 flex cursor-pointer items-center gap-3 p-3 ${s.daily ? 'bg-sun' : 'bg-white'} ${host ? '' : 'cursor-default'}`}>
+          <input type="checkbox" className="h-5 w-5 accent-ink" checked={!!s.daily} disabled={!host} onChange={(e) => client.actions.updateSettings({ daily: e.target.checked })} />
+          <span>
+            <span className="block font-display text-lg font-semibold">📅 Daily Challenge · {today()}</span>
+            <span className="text-sm font-semibold opacity-80">Everyone plays the same {level.title} today. Compare your score with friends and classmates.</span>
+          </span>
+        </label>
 
         <div className="mt-7 flex flex-wrap items-center gap-4">
           {host ? (

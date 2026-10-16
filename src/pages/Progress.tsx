@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router';
 import { SkillBars } from '@/components/game/Results';
+import { WordBook } from '@/components/game/WordBook';
+import { levelOf } from '@shared/levels';
 import { btn, Footer, Navbar } from '@/components/ui';
 import { ScoreBars } from '@/components/ui/charts';
 import { getSessions, type SessionSummary } from '@/lib/profile';
@@ -75,17 +77,23 @@ export default function Progress() {
             <SkillBars skills={skills} />
           </div>
         </div>
+        <div className="mt-6">
+          <WordBook />
+        </div>
         <div className="clay-card mt-6 overflow-x-auto p-6">
           <h2 className="mb-3 text-xl font-bold">History</h2>
           <table className="w-full min-w-[34rem] text-left text-sm">
             <thead>
               <tr className="border-b-2 border-line text-muted">
                 <th className="py-2">Date</th>
+                <th>Place</th>
                 <th>Role</th>
                 <th>Partner</th>
                 <th>Clarity</th>
                 <th>Missions</th>
                 <th>Mistakes</th>
+                <th>CEFR</th>
+                <th>🛟</th>
                 <th />
               </tr>
             </thead>
@@ -93,6 +101,7 @@ export default function Progress() {
               {[...sessions].reverse().map((s, i) => (
                 <tr key={s.replayId || i} className="border-b border-line font-semibold">
                   <td className="py-2">{new Date(s.at).toLocaleString()}</td>
+                  <td>{s.level ? `${levelOf(s.level).emoji} ${levelOf(s.level).title}` : '—'}</td>
                   <td>{s.role === 'guide' ? '🧭 Guide' : '🛠️ Builder'}</td>
                   <td>{s.partner === 'ai' ? '🤖 AI' : '👫 Friend'}</td>
                   <td>{s.clarity}</td>
@@ -100,6 +109,8 @@ export default function Progress() {
                     {s.missionsDone}/{s.missionsTotal}
                   </td>
                   <td>{s.mistakes}</td>
+                  <td>{s.cefr ?? '—'}</td>
+                  <td>{s.lifelines ?? 0}</td>
                   <td>{s.replayId && <Link to={`/replay/${s.replayId}`} className="font-bold text-grape underline">Replay</Link>}</td>
                 </tr>
               ))}

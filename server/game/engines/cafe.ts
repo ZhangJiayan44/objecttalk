@@ -28,7 +28,7 @@ export class CafeEngine implements LevelEngine {
   }
 
   begin() {
-    this.state = buildCafe(this.host.rng, this.pool);
+    this.state = buildCafe(this.host.rng, this.pool, this.host.settings.customKinds);
     this.initial = structuredClone(this.state);
     this.current = null;
     this.records = [];
@@ -37,7 +37,7 @@ export class CafeEngine implements LevelEngine {
 
   startMission(index: number) {
     if (!this.state || index >= MISSIONS) return null;
-    const m = generateOrderMission(this.state, index, this.host.settings.difficulty, this.host.rng);
+    const m = generateOrderMission(this.state, index, this.host.settings.difficulty, this.host.rng, this.host.settings.customKinds, this.host.settings.quest);
     if (!m) return null;
     this.current = m;
     this.state = { ...this.state, tray: [] };
@@ -66,7 +66,7 @@ export class CafeEngine implements LevelEngine {
       brief:
         view === 'guide'
           ? 'You are the customer. Order everything on your card: numbers, sizes and all. Say "That\'s all" when you are done.'
-          : 'You are the barista. Listen to the order, ask about sizes and numbers, put the food on the tray, then serve it.',
+          : `You are the ${levelOf(this.host.settings.level).roles.builder.name.toLowerCase()}. Listen to the order, ask about sizes and numbers, put everything on the tray, then serve it.`,
     };
     if (view !== 'guide') return base;
     return { ...base, order: m.order, modelAnswer: m.modelAnswer, hint: m.hint };
@@ -137,6 +137,7 @@ export class CafeEngine implements LevelEngine {
   createBot(io: BotIO) {
     return createCafeBot(io, {
       level: this.pool,
+      specials: this.host.settings.customKinds,
       state: () => this.state,
       mission: () => this.current,
       hover: (e) => {
@@ -148,7 +149,7 @@ export class CafeEngine implements LevelEngine {
   }
 
   report(input: ReportInput) {
-    const report = analyzeCafe({ records: this.records, messages: input.messages, durationMs: input.durationMs, missionsTotal: MISSIONS, humanRoles: input.humanRoles, level: this.pool });
+    const report = analyzeCafe({ records: this.records, messages: input.messages, durationMs: input.durationMs, missionsTotal: MISSIONS, humanRoles: input.humanRoles, level: this.pool, specials: this.host.settings.customKinds });
     const missions: ReplayMission[] = this.records.map((r) => ({
       index: r.mission.index,
       type: 'order',
