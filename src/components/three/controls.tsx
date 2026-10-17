@@ -49,7 +49,8 @@ export interface WalkOptions {
   speed: number;
   run: number;
   eye: number;
-  collide(p: { x: number; z: number }): { x: number; z: number };
+  groundHeight?(p: { x: number; z: number }): number;
+  collide(p: { x: number; z: number }, previous?: { x: number; z: number }): { x: number; z: number };
   onPose?(pose: Pose): void;
 }
 
@@ -211,12 +212,12 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
         const speed = k.has('ShiftLeft') || k.has('ShiftRight') ? walk.run : walk.speed;
         const f = { x: -Math.sin(l.yaw), z: -Math.cos(l.yaw) };
         const r = { x: Math.cos(l.yaw), z: -Math.sin(l.yaw) };
-        const next = walk.collide({ x: pos.current.x + (f.x * fx + r.x * sx) * speed * dt, z: pos.current.z + (f.z * fx + r.z * sx) * speed * dt });
+        const next = walk.collide({ x: pos.current.x + (f.x * fx + r.x * sx) * speed * dt, z: pos.current.z + (f.z * fx + r.z * sx) * speed * dt }, pos.current);
         moved = Math.hypot(next.x - pos.current.x, next.z - pos.current.z) > 1e-4;
         pos.current = next;
         bob.current += dt * speed * 2.2;
       }
-      camera.position.set(pos.current.x, walk.eye + (moved ? Math.sin(bob.current) * 0.035 : 0), pos.current.z);
+      camera.position.set(pos.current.x, (walk.groundHeight?.(pos.current) ?? 0) + walk.eye + (moved ? Math.sin(bob.current) * 0.035 : 0), pos.current.z);
       const pose = { x: +pos.current.x.toFixed(2), z: +pos.current.z.toFixed(2), yaw: +wrap(l.yaw).toFixed(2) };
       const key = `${pose.x},${pose.z},${pose.yaw}`;
       if (key !== lastSent.current) {

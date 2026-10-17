@@ -53,7 +53,7 @@ class MarketPartner extends BaseBot {
     this.nextHintAt = 0;
     this.later(1000, () => {
       if (this.io.role === 'guide') this.respond('[event] new shopping list');
-      else this.say('I am at the entrance gate. Which shop should I go to, and what should I buy?');
+      else if (!this.ticket.length) this.say('Which shop first?');
     });
     if (!this.walking && this.io.role === 'builder') { this.walking = true; this.tick(); }
   }
@@ -88,9 +88,9 @@ class MarketPartner extends BaseBot {
       if (l.negated) { this.ticket = this.ticket.filter((x) => x.kind !== l.kind); continue; }
       if (getKind(l.kind)?.sized && !l.size) { this.say('Small or large? Please say the item and size together.'); continue; }
       if (l.qty === null && l.plural) { this.say('How many? Please say the number and item together.'); continue; }
-      const st = this.ctx.state();
-      const already = st?.tray.filter((id) => { const o = st.scene.objects.find((x) => x.id === id); return o && objectKey(o) === `${l.kind}|${l.size ?? ''}`; }).length ?? 0;
-      const line = { kind: l.kind, size: l.size, qty: Math.min(6, already + (l.qty ?? 1)) };
+      // Repeated route hints restate the requested total, rather than adding another order.
+      const existing = this.ticket.find((x) => x.kind === l.kind && x.size === l.size);
+      const line = existing ?? { kind: l.kind, size: l.size, qty: Math.min(6, l.qty ?? 1) };
       this.ticket = [...this.ticket.filter((x) => x.kind !== l.kind), line];
     }
     if (parsed.lines.length) { this.returning = false; this.path = []; }
@@ -114,7 +114,7 @@ class MarketPartner extends BaseBot {
             if (obj) {
               this.ctx.tray(obj.id, true);
               const got = this.ctx.state()!;
-              if (!trayStatus(got, this.ticket).missing.length) this.say(`I bought ${lineText(line)}. What should I do next?`);
+              if (!trayStatus(got, this.ticket).missing.length) this.say(`Bought ${lineText(line)}. Next shop?`);
             }
             this.path = [];
           } else if (!this.path.length) this.path = marketRoute(pose, shopApproach(shop));
@@ -125,13 +125,14 @@ class MarketPartner extends BaseBot {
         const next = this.path[0];
         if (next) {
           const dx = next.x - pose.x, dz = next.z - pose.z, distance = Math.hypot(dx, dz);
-          const step = Math.min(0.52, distance);
+          const step = Math.min(0.7, distance);
           this.ctx.move({ x: pose.x + dx / (distance || 1) * step, z: pose.z + dz / (distance || 1) * step, yaw: Math.atan2(-dx, -dz) });
-          if (distance < 0.6) this.path.shift();
+          const moved = this.ctx.pose();
+          if (Math.hypot(next.x - moved.x, next.z - moved.z) < 0.00001) this.path.shift();
         }
       }
     }
-    this.later(100, () => this.tick());
+    this.later(100, () => this.tick(), false);
   }
 
   onPose() {

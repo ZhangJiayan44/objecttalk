@@ -53,7 +53,7 @@ export class CafeEngine implements LevelEngine {
       const shops = new Set(m.order.map((l) => shopForKind(l.kind).id));
       if (shops.size < 2 || !m.order.some((l) => Math.abs(shopForKind(l.kind).x) > 6)) {
         const candidate = this.host.rng.pick(this.state.scene.objects.filter((o) => Math.abs(shopForKind(o.kind).x) > 6 && !m.order.some((l) => l.kind === o.kind)));
-        m.order[m.order.length - 1] = { kind: candidate.kind, size: null, qty: this.host.settings.quest === 'party' ? 2 : 1 };
+        m.order[m.order.length - 1] = { kind: candidate.kind, size: candidate.size === 'regular' ? null : candidate.size, qty: this.host.settings.quest === 'party' ? 2 : 1 };
       }
       m.modelAnswer = m.order.map(shoppingInstruction).join(' ') + ' Then bring the shopping bag back to the entrance gate.';
       m.hint = 'Give one shop and item at a time. Use your partner’s heading for left and right. Only you can see this list.';
