@@ -1,8 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { MARKET_BACKDROP_BUILDINGS, MARKET_GARDENS } from '@shared/nightmarket-layout';
+import { MARKET_BACKDROP_BUILDINGS, MARKET_DECOR_PLOTS, MARKET_GARDENS } from '@shared/nightmarket-layout';
 import { Box } from '../furniture';
-import { Sign } from '../env';
 import { Prop } from '../props';
 import { LanternString } from '../stalls';
 
@@ -33,7 +32,72 @@ export function CourtyardGardens() {
       </group>))}
       <Prop name="rose" position={[0, 0.35, 0]} size={0.65} word={false} alive={false} />
     </>}
-    <Sign lines={g.style === 'pond' ? ['荷香池院', 'Lotus courtyard'] : ['听竹小院', 'Bamboo garden']} position={[0, 0.7, g.d / 2 - 0.03]} size={[1.4, 0.35]} bg="#5f7666" fg="#f9e4bd" border="#b09b78" />
+  </group>)}</group>;
+}
+
+function BambooPlanter({ x, z }: { x: number; z: number }) {
+  return <group position={[x, 0, z]}>
+    <Box size={[0.9, 0.5, 0.85]} position={[0, 0.25, 0]} color="#9a9c8b" radius={0.08} />
+    <Box size={[0.73, 0.04, 0.68]} position={[0, 0.52, 0]} color="#66745c" radius={0.04} />
+    {[-0.23, 0, 0.23].map((stem, i) => <group key={stem} position={[stem, 0.5, (i % 2) * 0.2 - 0.1]}>
+      <mesh position={[0, 0.8, 0]} castShadow><cylinderGeometry args={[0.035, 0.05, 1.6, 6]} /><meshStandardMaterial color="#829775" roughness={0.9} /></mesh>
+      {[0.7, 1.1, 1.45].map((y, n) => <mesh key={y} position={[(n % 2 ? -1 : 1) * 0.15, y, 0]} rotation-z={n % 2 ? -0.4 : 0.4} scale={[0.28, 0.05, 0.12]}><sphereGeometry args={[1, 7, 4]} /><meshStandardMaterial color="#78946f" roughness={0.95} /></mesh>)}
+    </group>)}
+  </group>;
+}
+
+function SupplyCrate({ x, z, height = 0.55 }: { x: number; z: number; height?: number }) {
+  return <group position={[x, 0, z]}>
+    <Box size={[0.9, height, 0.75]} position={[0, height / 2, 0]} color="#ac895f" radius={0.025} />
+    {[-1, 1].map((side) => <Box key={side} size={[0.1, height + 0.025, 0.79]} position={[side * 0.3, height / 2, 0]} color="#765c47" radius={0.01} />)}
+    <Box size={[0.94, 0.055, 0.79]} position={[0, height, 0]} color="#c4a67d" radius={0.01} />
+  </group>;
+}
+
+/** No signs or vocabulary hit targets: these are scenery beside the navigable lanes. */
+export function MarketPocketScenery() {
+  return <group name="market-pocket-scenery">{MARKET_DECOR_PLOTS.map((p) => <group key={p.id} name={p.id} position={[p.x, 0, p.z]}>
+    <Box size={[p.w, 0.1, p.d]} position={[0, 0.02, 0]} color={p.style === 'supplies' || p.style === 'pottery' ? '#aaa08b' : '#879476'} radius={0.09} />
+    {p.style === 'tea' && <>
+      <Box size={[2.2, 0.13, 0.65]} position={[0, 0.48, 0.4]} color="#a88968" radius={0.04} />
+      {[-0.85, 0.85].map((x) => <Box key={x} size={[0.18, 0.44, 0.52]} position={[x, 0.24, 0.4]} color="#725b4d" radius={0.02} />)}
+      <Box size={[2.25, 0.5, 0.1]} position={[0, 0.88, 0.7]} color="#8b7759" radius={0.03} />
+      <BambooPlanter x={-1.35} z={-1.3} />
+      <BambooPlanter x={1.35} z={-1.3} />
+      <mesh position={[0, 0.55, -0.8]} castShadow><cylinderGeometry args={[0.65, 0.65, 0.12, 16]} /><meshStandardMaterial color="#c1a17a" roughness={0.8} /></mesh>
+      <Box size={[0.24, 0.5, 0.24]} position={[0, 0.25, -0.8]} color="#7a6551" radius={0.03} />
+      <Prop name="lantern" position={[0, 0.63, -0.8]} size={0.35} word={false} alive={false} />
+    </>}
+    {p.style === 'supplies' && <>
+      {[-1.7, 1.7].map((x) => <group key={x}>
+        <Box size={[0.14, 2.5, 0.14]} position={[x, 1.3, -1.8]} color="#7d624e" radius={0.02} />
+        <BambooPlanter x={x} z={1.6} />
+      </group>)}
+      <Box size={[3.8, 0.12, 2.3]} position={[0, 2.5, -1]} rotation={[-0.1, 0, 0]} color="#7f9684" radius={0.04} />
+      {[-1.3, 0, 1.3].map((x, i) => <SupplyCrate key={x} x={x} z={-1} height={i === 1 ? 1.1 : 0.6} />)}
+      <group position={[-1.1, 0, 0.7]}>
+        <Box size={[1.7, 0.14, 0.9]} position={[0, 0.6, 0]} color="#b89b72" radius={0.025} />
+        {[-0.55, 0.55].map((x) => <mesh key={x} position={[x, 0.35, 0]} rotation-x={Math.PI / 2} castShadow><cylinderGeometry args={[0.28, 0.28, 0.13, 12]} /><meshStandardMaterial color="#6c5846" roughness={0.95} /></mesh>)}
+        <Box size={[0.1, 0.1, 1.5]} position={[0.6, 0.65, 0.8]} color="#8d7253" radius={0.015} />
+      </group>
+    </>}
+    {p.style === 'flowers' && <>
+      <Box size={[3.5, 0.4, 1.05]} position={[0, 0.25, -0.65]} color="#9c9e88" radius={0.08} />
+      {[-1.1, 0, 1.1].map((x, i) => <Prop key={x} name={i % 2 ? 'tulip' : 'rose'} position={[x, 0.46, -0.65]} size={0.75} word={false} alive={false} />)}
+      <Box size={[2.9, 0.16, 0.5]} position={[0, 0.48, 0.6]} color="#a88b67" radius={0.04} />
+      {[-1.05, 1.05].map((x) => <Box key={x} size={[0.2, 0.4, 0.45]} position={[x, 0.24, 0.6]} color="#7b6956" radius={0.02} />)}
+    </>}
+    {p.style === 'bamboo' && <>
+      {[-1.25, 1.25].flatMap((x) => [-2, 0, 2].map((z) => <BambooPlanter key={`${x}:${z}`} x={x} z={z} />))}
+      {[[-0.3, -1.1], [0.4, 1.2]].map(([x, z], i) => <mesh key={i} position={[x, 0.35, z]} scale={[0.55, 0.45, 0.65]} castShadow><icosahedronGeometry args={[1, 1]} /><meshStandardMaterial color="#959b88" roughness={1} /></mesh>)}
+    </>}
+    {p.style === 'pottery' && <>
+      <SupplyCrate x={-0.8} z={-0.55} height={0.9} />
+      {[0, 0.85].map((x, i) => <mesh key={x} position={[x, 0.55, -0.55]} castShadow><cylinderGeometry args={[0.23, 0.3, i ? 0.8 : 1, 12]} /><meshStandardMaterial color={i ? '#7f9b8a' : '#c5ac88'} roughness={0.7} /></mesh>)}
+      <Box size={[2.4, 0.1, 0.55]} position={[0, 0.5, 0.7]} color="#b59a76" radius={0.025} />
+      {[-0.9, 0.9].map((x) => <Box key={x} size={[0.1, 0.45, 0.45]} position={[x, 0.26, 0.7]} color="#81694f" radius={0.015} />)}
+      {[-0.7, 0, 0.7].map((x, i) => <mesh key={x} position={[x, 0.68, 0.7]} castShadow><cylinderGeometry args={[0.15, 0.11, 0.25, 10]} /><meshStandardMaterial color={i % 2 ? '#81988b' : '#d0b796'} roughness={0.65} /></mesh>)}
+    </>}
   </group>)}</group>;
 }
 

@@ -18,7 +18,8 @@ import { Prop } from './props';
 import { LanternString, Steam } from './stalls';
 import { MARKET_GROUND_PAVING, type MarketRect } from '@shared/nightmarket-layout';
 import { Roof, MarketDecks, MarketStairs, SkywalkRails } from './nightmarket/structure';
-import { CourtyardGardens, NightMarketBackdrop } from './nightmarket/Scenery';
+import { MarketPerson, MerchantQuarter } from './nightmarket/MerchantQuarter';
+import { CourtyardGardens, MarketPocketScenery, NightMarketBackdrop } from './nightmarket/Scenery';
 
 interface Props {
   scene: SceneState;
@@ -34,40 +35,6 @@ interface Props {
   onServe?(): void;
   onLockChange?(locked: boolean): void;
   shopperName?: string;
-}
-
-function MarketPerson({ shop }: { shop: MarketShop }) {
-  const ref = useRef<THREE.Group>(null);
-  useFrame(({ clock }) => { if (ref.current) ref.current.rotation.z = Math.sin(clock.elapsedTime * 1.4 + shop.x) * 0.018; });
-  return <group position={[0, 0, 0.05]} ref={ref}>
-    <group position={[0, 0, 0]}>
-      <mesh castShadow position={[0, 0.72, 0]}>
-        <capsuleGeometry args={[0.28, 0.72, 6, 12]} />
-        <meshStandardMaterial color={shop.color} roughness={0.82} />
-      </mesh>
-      <mesh castShadow position={[0, 1.36, 0]}>
-        <sphereGeometry args={[0.27, 16, 12]} />
-        <meshStandardMaterial color="#f3c9a8" roughness={0.8} />
-      </mesh>
-      <mesh castShadow position={[0, 1.57, 0]} rotation={[0, 0, 0.04]}>
-        <coneGeometry args={[0.3, 0.18, 12]} />
-        <meshStandardMaterial color="#59494a" roughness={0.9} />
-      </mesh>
-      <mesh position={[-0.095, 1.38, 0.24]}>
-        <sphereGeometry args={[0.034, 8, 8]} />
-        <meshStandardMaterial color="#403b3c" roughness={0.7} />
-      </mesh>
-      <mesh position={[0.095, 1.38, 0.24]}>
-        <sphereGeometry args={[0.034, 8, 8]} />
-        <meshStandardMaterial color="#403b3c" roughness={0.7} />
-      </mesh>
-      <mesh castShadow position={[0, 0.84, 0.28]}>
-        <boxGeometry args={[0.34, 0.38, 0.035]} />
-        <meshStandardMaterial color="#f5e8d0" roughness={0.95} />
-      </mesh>
-    </group>
-    <Sign lines={[shop.owner]} position={[0, 2.02, 0.08]} size={[1.8, 0.32]} bg="#fff2d6" fg="#433b43" border={shop.color} />
-  </group>;
 }
 
 function Shop({ shop, scene, interactive, onShop }: { shop: MarketShop; scene: SceneState; interactive: boolean; onShop?(id: string): void }) {
@@ -147,9 +114,9 @@ function TieredDistrict() {
   return <group>
     <CourtyardGardens />
     <SkywalkRails />
+    <Sign lines={['PASTRIES ←    DESSERTS ↑']} position={[7, MARKET_UPPER_HEIGHT + 1.8, -15.6]} size={[3.4, 0.65]} bg="#6c7865" fg="#f6dfb3" border="#ad926b" />
     <Sign lines={['桥下通街', 'UNDERPASS']} position={[-8, 3.1, -5.2]} size={[2.3, 0.5]} bg="#526e66" fg="#f9e3b6" border="#ad926b" />
-    <Sign lines={['云廊 · 池院环桥', 'COURTYARD SKYWALK']} position={[-2, MARKET_UPPER_HEIGHT + 1.7, -5.3]} size={[3, 0.6]} bg="#6c7865" fg="#f6dfb3" border="#ad926b" />
-    <Sign lines={['玉露楼 · 二楼', 'UPPER TEA GALLERY →']} position={[8, 2.4, -1.2]} size={[3, 0.65]} bg="#58776b" fg="#f9e3b6" border="#ad926b" />
+    <Sign lines={['TEA / PASTRIES / DESSERTS']} position={[8, 2.4, -1.2]} size={[3.4, 0.75]} bg="#58776b" fg="#f9e3b6" border="#ad926b" />
     <Sign lines={['荷池院 ←', 'POND COURTYARD']} position={[-7.5, 2.5, -1]} size={[2.5, 0.6]} bg="#6d655c" fg="#f6dfb3" border="#ad926b" />
     <Sign lines={['竹里巷 · BAMBOO LANE']} position={[-12.8, 2.4, -13.8]} size={[3.2, 0.5]} bg="#6c7865" fg="#f6dfb3" border="#ad926b" />
     {MARKET_PATHS.filter((p) => p.level !== 1).map((path) => {
@@ -178,6 +145,8 @@ function StreetSet({ overview }: { overview: boolean }) {
       {[-3.3, 3.3].map((x) => <Box key={x} size={[0.08, 4.5, 0.08]} position={[x, 2.25, z]} color="#745851" radius={0.01} />)}
     </group>)}
     <TieredDistrict />
+    <MarketPocketScenery />
+    <MerchantQuarter />
     {/* The main street terminates at a little pavilion. */}
     <group position={[0, 0, -33]}>
       {[-2, 2].flatMap((x) => [-1, 1].map((z) => <Box key={`${x}${z}`} size={[0.22, 3.4, 0.22]} position={[x, 1.7, z]} color="#a44f4a" radius={0.03} />))}

@@ -20,6 +20,15 @@ export const MARKET_GARDENS = [
   { id: 'bamboo-courtyard', x: -4.65, z: 1.35, w: 2.5, d: 4.4, style: 'bamboo' },
 ] as const;
 
+/** Furnished pockets occupy blocked land, with a clearance from the playable streets. */
+export const MARKET_DECOR_PLOTS = [
+  { id: 'west-tea-court', x: -15.8, z: -0.2, w: 4.5, d: 5, style: 'tea' },
+  { id: 'east-supply-yard', x: 17, z: 5.3, w: 6, d: 6, style: 'supplies' },
+  { id: 'entrance-flower-court', x: -7.5, z: 17, w: 4.2, d: 3, style: 'flowers' },
+  { id: 'north-bamboo-grove', x: 12.8, z: -24, w: 4.2, d: 6.2, style: 'bamboo' },
+  { id: 'pottery-preparation', x: 2, z: -27, w: 3, d: 3, style: 'pottery' },
+] as const;
+
 export const MARKET_STAIR = { from: MARKET_NODES[11], to: MARKET_NODES[12], width: 2.8, steps: 24 };
 const run = MARKET_STAIR.to.x - MARKET_STAIR.from.x;
 const stairOpening: MarketRect = { x: (MARKET_STAIR.from.x + MARKET_STAIR.to.x) / 2, z: MARKET_STAIR.from.z, w: run, d: MARKET_STAIR.width };
@@ -72,7 +81,11 @@ export function partitionMarketRects(rects: readonly MarketRect[], cutouts: read
 const upperRoads = MARKET_ROADS.filter((r) => r.level === 2);
 export const MARKET_GROUND_PAVING = partitionMarketRects(MARKET_ROADS.filter((r) => r.level === 0));
 export const MARKET_SHOP_PLATFORMS = MARKET_SHOPS.filter((s) => s.elevation).map((s) => shopRect(s, { x: 0, z: -0.1, w: 4.5, d: 4 }));
-export const MARKET_DECKS = partitionMarketRects([...upperRoads, ...MARKET_SHOP_PLATFORMS], [stairOpening]);
+export const MARKET_MERCHANT_PLATFORMS: MarketRect[] = [
+  { x: 19.5, z: -16.5, w: 4.4, d: 1.7 },
+  ...[-3.3, 1.8].map((x) => ({ x, z: -17.1, w: 3.8, d: 3 })),
+];
+export const MARKET_DECKS = partitionMarketRects([...upperRoads, ...MARKET_SHOP_PLATFORMS, ...MARKET_MERCHANT_PLATFORMS], [stairOpening]);
 
 /** Piers stay outside street clearances and ground-floor eaves, including at crossing junctions. */
 export const MARKET_PIERS: { x: number; z: number }[] = [];
@@ -90,6 +103,9 @@ for (const road of upperRoads) {
 }
 for (const shop of MARKET_SHOPS.filter((s) => s.elevation)) for (const x of [-1.96, 1.96]) for (const z of [-1.7, 1.55]) {
   const p = shopRect(shop, { x, z, w: 0, d: 0 }); addPier(p.x, p.z);
+}
+for (const platform of MARKET_MERCHANT_PLATFORMS) for (const x of [-1, 1]) for (const z of [-1, 1]) {
+  addPier(platform.x + x * (platform.w / 2 - 0.3), platform.z + z * (platform.d / 2 - 0.3));
 }
 
 /** Continuous board spacing across every bridge junction, without duplicate plank faces. */

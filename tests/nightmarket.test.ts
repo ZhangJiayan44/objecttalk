@@ -51,7 +51,7 @@ describe('walkable night market', () => {
       }
       expect(collideMarket(shopApproach(shop))).toEqual(shopApproach(shop));
     }
-    expect(MARKET_SHOPS.filter((s) => s.elevation)).toHaveLength(2);
+    expect(MARKET_SHOPS.filter((s) => s.elevation)).toHaveLength(3);
   });
 
   it('routes between every shop without crossing a building', () => {

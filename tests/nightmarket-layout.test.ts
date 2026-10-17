@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MARKET_ROADS, MARKET_SHOPS, MARKET_UPPER_HEIGHT, marketStep } from '../shared/nightmarket';
-import { MARKET_BACKDROP_BUILDINGS, MARKET_DECK_BOARDS, MARKET_DECK_RAILS, MARKET_DECKS, MARKET_GARDENS, MARKET_PIERS, MARKET_RAIL_POSTS, MARKET_STAIR, MARKET_STEPS, insideRect, overlapArea, shopRoofBounds } from '../shared/nightmarket-layout';
+import { MARKET_BACKDROP_BUILDINGS, MARKET_DECOR_PLOTS, MARKET_DECK_BOARDS, MARKET_DECK_RAILS, MARKET_DECKS, MARKET_GARDENS, MARKET_MERCHANT_PLATFORMS, MARKET_PIERS, MARKET_RAIL_POSTS, MARKET_STAIR, MARKET_STEPS, insideRect, overlapArea, shopRoofBounds } from '../shared/nightmarket-layout';
 
 describe('night-market architecture', () => {
   it('keeps neighboring shop eaves apart on the same floor', () => {
@@ -47,10 +47,33 @@ describe('night-market architecture', () => {
     for (const bed of MARKET_GARDENS) for (const road of MARKET_ROADS.filter((r) => r.level === 0)) expect(overlapArea(bed, road)).toBe(0);
     const west = { x: -8, z: garden.z, y: 0, yaw: 0 };
     expect(marketStep(west, { x: garden.x, z: garden.z, yaw: 0 }, 8).x).toBeLessThan(-6.3);
-    const upper = { x: -8, z: -7, y: MARKET_UPPER_HEIGHT, yaw: 0 };
+    const upper = { x: -8, z: -14, y: MARKET_UPPER_HEIGHT, yaw: 0 };
     const crossed = marketStep(upper, { ...upper, x: -3 }, 5);
     expect(crossed.x).toBeCloseTo(-3);
     expect(crossed.y).toBe(MARKET_UPPER_HEIGHT);
+  });
+
+  it('fills blocked pockets without covering streets, gardens, or shop roofs', () => {
+    for (const plot of MARKET_DECOR_PLOTS) {
+      for (const road of MARKET_ROADS) expect(overlapArea(plot, road), `${plot.id} / ${road.name}`).toBe(0);
+      for (const garden of MARKET_GARDENS) expect(overlapArea(plot, garden), plot.id).toBe(0);
+      for (const shop of MARKET_SHOPS) expect(overlapArea(plot, shopRoofBounds(shop)), `${plot.id} / ${shop.id}`).toBe(0);
+      for (const pier of MARKET_PIERS) expect(insideRect(pier, plot, 0.25), plot.id).toBe(false);
+    }
+    for (let i = 0; i < MARKET_DECOR_PLOTS.length; i++) for (let j = i + 1; j < MARKET_DECOR_PLOTS.length; j++) expect(overlapArea(MARKET_DECOR_PLOTS[i], MARKET_DECOR_PLOTS[j])).toBe(0);
+  });
+
+  it('joins craft frontages and tea seating to the bridge without a rail across their access', () => {
+    for (const platform of MARKET_MERCHANT_PLATFORMS) {
+      expect(MARKET_DECKS.some((deck) => insideRect(platform, deck)), `missing platform at ${platform.x}`).toBe(true);
+      expect(MARKET_DECKS.some((deck) => insideRect({ x: platform.x, z: -15.65 }, deck))).toBe(true);
+      for (const { from, to } of MARKET_DECK_RAILS) {
+        // The frontage centerline crosses the rear edge of the east-west gallery.
+        if (Math.abs(from[2] - to[2]) > 0.00001) continue;
+        const crossesAccess = Math.min(from[0], to[0]) < platform.x && Math.max(from[0], to[0]) > platform.x && from[2] > -16 && from[2] < -15;
+        expect(crossesAccess, `rail across frontage at ${platform.x}`).toBe(false);
+      }
+    }
   });
 
   it('keeps structural piers and the unreachable town clear of every pedestrian lane', () => {
