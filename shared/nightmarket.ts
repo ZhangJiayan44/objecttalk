@@ -27,7 +27,7 @@ export const MARKET_SHOPS: MarketShop[] = [
   { id: 'tea', name: 'Jade Tea Shop', zh: '玉露茶铺', owner: 'Aunt Lin', x: 19, z: -8, yaw: -Math.PI / 2, color: '#5caa9a', temporary: false, kinds: ['bubble-tea', 'soy-milk'], elevation: MARKET_UPPER_HEIGHT },
   { id: 'grill', name: 'Lucky Skewer Stall', zh: '如意烤串', owner: 'Master Wu', x: -11, z: -7, yaw: Math.PI / 2, color: '#d28a45', temporary: true, kinds: ['skewer', 'chicken-leg'] },
   { id: 'roast', name: 'Chestnut Cart', zh: '栗香小摊', owner: 'Granny Zhou', x: 5, z: 2, yaw: Math.PI / 2, color: '#b88a58', temporary: true, kinds: ['chestnut', 'sweet-potato'] },
-  { id: 'sweets', name: 'Peach Blossom Sweets', zh: '桃花点心', owner: 'Sister Tao', x: -7, z: 9, yaw: Math.PI, color: '#d38b9d', temporary: false, kinds: ['mooncake'] },
+  { id: 'sweets', name: 'Peach Blossom Sweets', zh: '桃花点心', owner: 'Sister Tao', x: -11, z: -10, yaw: Math.PI / 2, color: '#d38b9d', temporary: false, kinds: ['mooncake'], elevation: MARKET_UPPER_HEIGHT },
   { id: 'pantry', name: 'Lantern General Store', zh: '灯下杂货', owner: 'Mr Sun', x: 5, z: -9, yaw: -Math.PI / 2, color: '#698ba8', temporary: false, kinds: ['tea-egg'] },
   { id: 'dumplings', name: 'Bamboo Dumpling House', zh: '竹里饺子铺', owner: 'Aunt Xu', x: -10, z: -19, yaw: -Math.PI / 2, color: '#799681', temporary: false, kinds: ['dumpling'] },
   { id: 'corn', name: 'Golden Corn Cart', zh: '金穗炭炉', owner: 'Uncle He', x: -3, z: -26, yaw: 0, color: '#c5a162', temporary: true, kinds: ['corn'] },
@@ -54,7 +54,8 @@ export const MARKET_NODES: Point[] = [
   { x: -8, z: -12 }, { x: -13, z: -12 }, { x: -13, z: -23 },
   { x: -3, z: -23 }, { x: 8, z: 6 }, { x: 8, z: -3 },
   { x: 16, z: -3, y: MARKET_UPPER_HEIGHT }, { x: 16, z: -14, y: MARKET_UPPER_HEIGHT }, { x: 7, z: -14, y: MARKET_UPPER_HEIGHT }, { x: 7, z: -22, y: MARKET_UPPER_HEIGHT },
-  { x: -8, z: -14, y: MARKET_UPPER_HEIGHT }, { x: -8, z: -7, y: MARKET_UPPER_HEIGHT }, { x: 7, z: -7, y: MARKET_UPPER_HEIGHT },
+  { x: -8, z: -14, y: MARKET_UPPER_HEIGHT }, { x: -8, z: -7, y: MARKET_UPPER_HEIGHT },
+  { x: 20, z: -14, y: MARKET_UPPER_HEIGHT },
 ];
 export const MARKET_PATHS = [
   { a: 0, b: 1, width: 6.6, name: 'entrance street', level: 0 },
@@ -73,10 +74,9 @@ export const MARKET_PATHS = [
   { a: 12, b: 13, width: 3.4, name: 'upper tea gallery', level: 2 },
   { a: 13, b: 14, width: 3.4, name: 'upper bridge', level: 2 },
   { a: 14, b: 15, width: 3.4, name: 'Osmanthus balcony', level: 2 },
-  { a: 14, b: 16, width: 3.4, name: 'courtyard skybridge', level: 2 },
-  { a: 16, b: 17, width: 3.4, name: 'west lookout', level: 2 },
-  { a: 17, b: 18, width: 3.4, name: 'rooftop crossing', level: 2 },
-  { a: 18, b: 14, width: 3.4, name: 'lantern skywalk', level: 2 },
+  { a: 14, b: 16, width: 3.4, name: 'pastry shop bridge', level: 2 },
+  { a: 16, b: 17, width: 3.4, name: 'Peach Blossom arcade', level: 2 },
+  { a: 13, b: 18, width: 3.4, name: 'tea house terrace', level: 2 },
 ];
 export const MARKET_ROADS = MARKET_PATHS.map((path) => {
   const a = MARKET_NODES[path.a], b = MARKET_NODES[path.b];

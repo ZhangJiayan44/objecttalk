@@ -143,7 +143,11 @@ function TimberBeam({ from, to, width = 0.16, color = '#806049' }: { from: [numb
 const deckParts = (road: typeof MARKET_ROADS[number]) => road.a === 12
   ? [{ x: 16, z: -10.05, w: 3.4, d: 11.3 }, { x: 16.85, z: -2.85, w: 1.7, d: 3.1 }]
   : [road];
-const upperDecks = MARKET_ROADS.filter((r) => r.level === 2).flatMap(deckParts);
+const upperDecks = [
+  ...MARKET_ROADS.filter((r) => r.level === 2).flatMap(deckParts),
+  { x: 19.5, z: -16.5, w: 4.4, d: 1.7 },
+  ...[-3.3, 1.8].map((x) => ({ x, z: -17.1, w: 3.8, d: 3 })),
+];
 const belowHeight = MARKET_UPPER_HEIGHT - 0.35;
 
 function BridgeSupports({ road }: { road: typeof MARKET_ROADS[number] }) {
@@ -309,9 +313,14 @@ function SkywalkRails() {
       for (let i = 0; i <= count; i++) {
         const [x, , z] = point(i + 0.5);
         const internal = upperDecks.some((other, j) => j !== deckIndex && Math.abs(x + edge.outward[0] * 0.04 - other.x) < other.w / 2 && Math.abs(z + edge.outward[1] * 0.04 - other.z) < other.d / 2);
-        const entrance = (Math.abs(x - 16) < 0.1 && z > -4.4 && z < -1.5)
-          || (Math.abs(x - 17.7) < 0.1 && z > -10.5 && z < -5.5)
-          || (z < -23.5 && x > 5.2 && x < 8.8);
+        const shopEntrance = MARKET_SHOPS.some((shop) => {
+          if (!shop.elevation) return false;
+          const dx = x - shop.x, dz = z - shop.z;
+          const across = dx * Math.cos(shop.yaw) - dz * Math.sin(shop.yaw);
+          const front = dx * Math.sin(shop.yaw) + dz * Math.cos(shop.yaw);
+          return Math.abs(across) < 1.8 && front > 0.9 && front < 2.6;
+        });
+        const entrance = shopEntrance || (Math.abs(x - 16) < 0.1 && z > -4.4 && z < -1.5);
         const draw = i < count && !internal && !entrance;
         if (draw && start < 0) start = i;
         if (!draw && start >= 0) { runs.push({ from: point(start), to: point(i) }); start = -1; }
@@ -331,8 +340,8 @@ function TieredDistrict() {
     <Prop name="pineTree" position={[-4.8, 0, -9.8]} size={2.4} word={false} />
     <SkywalkRails />
     <Sign lines={['桥下通街', 'UNDERPASS']} position={[-8, 3.1, -5.2]} size={[2.3, 0.5]} bg="#526e66" fg="#f9e3b6" border="#ad926b" />
-    <Sign lines={['云廊 · 池院环桥', 'COURTYARD SKYWALK']} position={[-2, MARKET_UPPER_HEIGHT + 1.7, -5.3]} size={[3, 0.6]} bg="#6c7865" fg="#f6dfb3" border="#ad926b" />
-    <Sign lines={['玉露楼 · 二楼', 'UPPER TEA GALLERY →']} position={[8, 2.4, -1.2]} size={[3, 0.65]} bg="#58776b" fg="#f9e3b6" border="#ad926b" />
+    <Sign lines={['茶楼 · 点心 · 桂花甜品', 'TEA / PASTRIES / DESSERTS']} position={[8, 2.4, -1.2]} size={[3.4, 0.75]} bg="#58776b" fg="#f9e3b6" border="#ad926b" />
+    <Sign lines={['桃花点心 ←    桂香甜品 ↑', 'PASTRIES ←    DESSERTS ↑']} position={[7, MARKET_UPPER_HEIGHT + 1.8, -15.6]} size={[3.4, 0.65]} bg="#6c7865" fg="#f6dfb3" border="#ad926b" />
     <Sign lines={['荷池院 ←', 'POND COURTYARD']} position={[-7.5, 2.5, -1]} size={[2.5, 0.6]} bg="#6d655c" fg="#f6dfb3" border="#ad926b" />
     <Sign lines={['竹里巷 · BAMBOO LANE']} position={[-12.8, 2.4, -13.8]} size={[3.2, 0.5]} bg="#6c7865" fg="#f6dfb3" border="#ad926b" />
     {MARKET_PATHS.filter((p) => p.level !== 1).map((path) => {
@@ -340,6 +349,91 @@ function TieredDistrict() {
       const y = path.level === 2 ? MARKET_UPPER_HEIGHT + 3.2 : 4.4;
       return <LanternString key={path.name} from={[a.x, y, a.z]} to={[b.x, y, b.z]} count={Math.max(3, Math.floor(Math.hypot(b.x - a.x, b.z - a.z) / 2))} sag={0.25} color={path.level === 2 ? '#dac48a' : '#d49c6e'} />;
     })}
+  </group>;
+}
+
+function TeaTable({ position, color = '#719185' }: { position: [number, number, number]; color?: string }) {
+  return <group position={position}>
+    <Box size={[1.25, 0.12, 0.7]} position={[0, 0.78, 0]} color="#ba9870" radius={0.035} />
+    {[-0.46, 0.46].map((x) => <Box key={x} size={[0.09, 0.72, 0.48]} position={[x, 0.36, 0]} color="#765b4d" radius={0.015} />)}
+    <Box size={[1.4, 0.12, 0.38]} position={[0, 0.42, -0.68]} color={color} radius={0.03} />
+    {[-0.5, 0.5].map((x) => <Box key={x} size={[0.1, 0.4, 0.32]} position={[x, 0.2, -0.68]} color="#765b4d" radius={0.015} />)}
+    <mesh position={[0.12, 0.9, 0]}><cylinderGeometry args={[0.14, 0.11, 0.12, 12]} /><meshStandardMaterial color="#e1e3cf" roughness={0.45} /></mesh>
+    <mesh position={[0.12, 0.98, 0]}><coneGeometry args={[0.16, 0.06, 12]} /><meshStandardMaterial color="#bdcbb6" /></mesh>
+    {[-0.3, 0.4].map((x) => <mesh key={x} position={[x, 0.87, 0.18]}><cylinderGeometry args={[0.07, 0.045, 0.09, 12]} /><meshStandardMaterial color="#eee4d2" roughness={0.5} /></mesh>)}
+  </group>;
+}
+
+function CraftFrontage({ x, craft }: { x: number; craft: 'lanterns' | 'fans' }) {
+  const lanterns = craft === 'lanterns';
+  const color = lanterns ? '#bc795a' : '#7d9790';
+  return <group position={[x, MARKET_UPPER_HEIGHT, -17]}>
+    <Box size={[3.8, 0.22, 3]} position={[0, -0.11, -0.1]} color="#947855" radius={0.025} />
+    {[-1.55, 1.55].map((px) => <group key={px}>
+      <Box size={[0.22, MARKET_UPPER_HEIGHT, 0.22]} position={[px, -MARKET_UPPER_HEIGHT / 2, -1.2]} color="#795b4a" radius={0.02} />
+      <Box size={[0.5, 0.3, 0.5]} position={[px, -MARKET_UPPER_HEIGHT + 0.15, -1.2]} color="#949487" radius={0.025} />
+      <Box size={[0.14, 2.7, 0.14]} position={[px, 1.35, 0.8]} color="#795b4a" radius={0.02} />
+      <TimberBeam from={[px, -1.2, -1.2]} to={[px * 0.5, -0.2, -1.2]} width={0.12} />
+    </group>)}
+    <Box size={[3.5, 2.6, 0.14]} position={[0, 1.3, -1.45]} color="#d5c2a0" radius={0.025} />
+    <Roof width={4} depth={3.1} y={2.7} color={color} />
+    <MarketPerson shop={{ ...MARKET_SHOPS[0], owner: lanterns ? 'Master Lu' : 'Madam Shen', color }} />
+    <Box size={[3.15, 0.13, 0.75]} position={[0, 0.95, 1]} color="#bd9b70" radius={0.025} />
+    <Box size={[3, 0.65, 0.08]} position={[0, 0.58, 1.33]} color={color} radius={0.02} />
+    <Sign lines={[lanterns ? '灯彩作坊' : '绢扇铺', lanterns ? 'LANTERN MAKER' : 'SILK & FANS']} position={[0, 2.35, 1.05]} size={[2.9, 0.65]} bg="#5e5047" fg="#ffe3ad" border={color} />
+    {[-1, 0, 1].map((i) => lanterns
+      ? <Prop key={i} name="lantern" position={[i, 1.75, -0.9]} size={0.35} word={false} />
+      : <group key={i} position={[i * 0.85, 1.08, 1]}>
+        <mesh position={[0, 0.15, 0]}><circleGeometry args={[0.33, 16, 0, Math.PI]} /><meshStandardMaterial color={['#b78e9a', '#e5d7b2', '#94aba1'][i + 1]} side={THREE.DoubleSide} roughness={0.9} /></mesh>
+        <Box size={[0.035, 0.3, 0.035]} position={[0, 0.05, 0.01]} color="#8e7055" radius={0.005} />
+      </group>)}
+    {!lanterns && [-0.85, 0.85].map((px) => <Box key={px} size={[0.5, 1.25, 0.035]} position={[px, 1.7, -1.34]} color={px < 0 ? '#b78e9a' : '#94aba1'} radius={0.01} />)}
+  </group>;
+}
+
+/** Trading frontages and seating occupy bays beside the clear circulation strip. */
+function MerchantQuarter() {
+  const h = MARKET_UPPER_HEIGHT;
+  return <group>
+    <CraftFrontage x={-3.3} craft="lanterns" />
+    <CraftFrontage x={1.8} craft="fans" />
+    {/* Each covered arcade belongs to a shop; the connecting bridges stay open. */}
+    {[{ x: 16, z: -8, yaw: Math.PI / 2, color: '#6d9084', length: 7 }, { x: -8, z: -10.5, yaw: Math.PI / 2, color: '#9a7078', length: 6 }].map((bay) => <group key={bay.x} position={[bay.x, h, bay.z]} rotation-y={bay.yaw}>
+      <Roof width={bay.length} depth={3.5} y={2.7} color={bay.color} />
+      {[-1, 1].flatMap((side) => [-1, 1].map((end) => <group key={`${side}${end}`} position={[end * (bay.length / 2 - 0.3), 0, side * 1.35 - 0.6]}>
+        <Box size={[0.14, 2.85, 0.14]} position={[0, 1.425, 0]} color="#815c50" radius={0.02} />
+        <TimberBeam from={[0, 2.15, 0]} to={[-end * 0.6, 2.7, 0]} width={0.1} />
+      </group>))}
+    </group>)}
+    {/* The tea house has a side terrace, with seating recessed off the walking line. */}
+    <group position={[19.5, h, -16.5]}>
+      <Box size={[4.4, 0.22, 1.7]} position={[0, -0.11, 0]} color="#a48a68" radius={0.025} />
+      {[-1, 1].map((x) => <TeaTable key={x} position={[x, 0, 0.2]} />)}
+      {[-1.9, 1.9].map((x) => <group key={x}>
+        <Box size={[0.22, h, 0.22]} position={[x, -h / 2, -0.55]} color="#75594c" radius={0.02} />
+        <Box size={[0.5, 0.3, 0.5]} position={[x, -h + 0.15, -0.55]} color="#96998a" radius={0.04} />
+        <TimberBeam from={[x, -1.4, -0.55]} to={[x * 0.55, -0.22, -0.55]} />
+      </group>)}
+      <Sign lines={['玉露茶座', 'JADE TEA TERRACE']} position={[0, 1.6, -0.8]} size={[2.5, 0.55]} bg="#567d70" fg="#ffe2ae" border="#b19368" />
+    </group>
+    {/* A low service yard fills the former pastry-shop plot beside Peach Lane. */}
+    <group position={[-7, 0, 9]} rotation-y={Math.PI}>
+      <TeaTable position={[-0.85, 0, 0]} color="#b78e91" />
+      <TeaTable position={[0.85, 0, 0]} color="#b78e91" />
+      <Box size={[4.2, 0.55, 0.26]} position={[0, 0.275, -1.15]} color="#a0a18d" radius={0.04} />
+      <Prop name="pineTree" position={[-2.3, 0, -0.7]} size={1.8} word={false} />
+    </group>
+    {/* Baskets, shutters and shelves give the stalls a preparation side. */}
+    {MARKET_SHOPS.filter((shop) => !shop.temporary).map((shop) => <group key={shop.id} position={[shop.x, shop.elevation ?? 0, shop.z]} rotation-y={shop.yaw}>
+      <Box size={[1.2, 0.9, 0.5]} position={[-1.25, 0.45, -1.48]} color="#8d7557" radius={0.025} />
+      {[0.32, 0.65, 0.98].map((y) => <Box key={y} size={[1.3, 0.055, 0.58]} position={[-1.25, y, -1.48]} color="#c5ab7d" radius={0.015} />)}
+      {[0, 1, 2].map((i) => <mesh key={i} position={[-1.65 + i * 0.38, 0.8, -1.45]}>
+        <cylinderGeometry args={[0.13, 0.16, 0.22, 12]} /><meshStandardMaterial color={i % 2 ? '#bac3ab' : '#c9a77a'} roughness={0.85} />
+      </mesh>)}
+      <Box size={[0.65, 1.5, 0.06]} position={[1.65, 0.9, -1.8]} color="#98755b" radius={0.015} />
+    </group>)}
+    <Sign lines={['桃花点心 · 楼上', 'PASTRIES UPSTAIRS →']} position={[-8.8, 2.2, -5]} size={[2.8, 0.6]} bg="#926e79" fg="#ffe6bd" border="#b89a70" />
+    <Sign lines={['玉露茶楼', 'TEA HOUSE']} position={[17.8, 4, -5.8]} rotation={[0, -Math.PI / 2, 0]} size={[1.25, 1.3]} bg="#52796d" fg="#ffe3ae" border="#b89a70" />
   </group>;
 }
 
@@ -360,6 +454,7 @@ function StreetSet({ overview }: { overview: boolean }) {
       {[-3.3, 3.3].map((x) => <Box key={x} size={[0.08, 4.5, 0.08]} position={[x, 2.25, z]} color="#745851" radius={0.01} />)}
     </group>)}
     <TieredDistrict />
+    <MerchantQuarter />
     {/* Timber infill creates visible blocks between the two cross lanes. */}
     {[-15].map((x) => <group key={x} position={[x, 0, 1]}>
       <Box size={[5.2, 2.8, 5.6]} position={[0, 1.4, -0.5]} color="#d1c2ae" radius={0.04} />
