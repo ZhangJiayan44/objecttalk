@@ -43,6 +43,23 @@ Play with a friend, a parent, or an AI teammate. At the end of a round, review t
 
 <img src="public/readme/night-market.jpg" width="100%" alt="The two-level night market with shops, stairs, lanterns and craft arcades" />
 
+These screenshots show the running game, with the player's mission, voice controls, and 3D view.
+
+<table>
+  <tr>
+    <td width="50%"><img src="public/readme/game-study.jpg" alt="Cozy Study gameplay with a desk full of 3D objects" /><br /><b>Cozy Study</b><br />Describe an object and guide your teammate's next move.</td>
+    <td width="50%"><img src="public/readme/game-cafe.jpg" alt="Corner Café gameplay with food, drinks and an order tray" /><br /><b>Corner Café</b><br />Listen to an order, choose quantities and sizes, then serve.</td>
+  </tr>
+  <tr>
+    <td><img src="public/readme/game-city.jpg" alt="Toy Town street view with a navigation mission" /><br /><b>Toy Town</b><br />Use streets and landmarks to guide a walk through town.</td>
+    <td><img src="public/readme/game-nightmarket.jpg" alt="Night Market gameplay with lantern streets and a shopping mission" /><br /><b>Night Market</b><br />Find the shop, talk to its owner, and bring the shopping bag back.</td>
+  </tr>
+  <tr>
+    <td><img src="public/readme/game-bedroom.jpg" alt="Messy Bedroom gameplay with furniture and a lost-object mission" /><br /><b>Messy Bedroom</b><br />Ask where to look and search around furniture and containers.</td>
+    <td><img src="public/readme/game-music-room.jpg" alt="The agent-generated Music Room with playable 3D instruments" /><br /><b>Music Room</b><br />Play with instruments in a level made by the Scene Agent.</td>
+  </tr>
+</table>
+
 ## A complete practice loop
 
 - **Different views, one shared task.** The acting player cannot see the answer.
@@ -52,6 +69,28 @@ Play with a friend, a parent, or an AI teammate. At the end of a round, review t
 - **Feedback you can inspect.** Replays, suggested expressions, vocabulary review, and an estimated speaking level.
 - **Your objects, in the game.** Object Studio can identify a photo and generate a playable 3D object with Hyper3D Rodin.
 - **More worlds from a scene brief.** Scene Agent plans, generates, validates, and publishes compatible levels.
+
+## From room to review
+
+<table>
+  <tr>
+    <td width="50%"><img src="public/readme/lobby.jpg" alt="Room lobby with world selection, player roles, difficulty and an invite code" /><br /><b>Choose your shared task</b><br />Pick a world, choose your seat, and invite a friend or an AI teammate.</td>
+    <td width="50%"><img src="public/readme/studio.jpg" alt="Object Studio photo-to-3D interface and object library" /><br /><b>Bring your own objects</b><br />Object Studio connects photo identification, 3D generation, and playable objects.</td>
+  </tr>
+  <tr>
+    <td><img src="public/readme/results.jpg" alt="A completed game's results with clarity, skills, coaching and a replay link" /><br /><b>Review a completed round</b><br />See the report, practise clearer expressions, and replay what happened.</td>
+    <td><img src="public/readme/progress.jpg" alt="Personal progress after a completed game, including scores and history" /><br /><b>Come back to your own progress</b><br />Your saved rounds, skill scores, and word book stay in this browser.</td>
+  </tr>
+</table>
+
+## Your progress, without an account
+
+Your chosen name, completed-game summaries, and word book are saved in your browser. Return to the **same site in the same browser** to continue without signing in. A new browser or private window starts with **zero games and no scores**. Clearing the site's browser data removes these local records. Shared rooms and shareable replays are managed by the game server.
+
+<details>
+  <summary>What a new player sees before their first game</summary>
+  <img src="public/readme/progress-empty.jpg" width="100%" alt="A new browser's progress page showing zero games, no scores and an invitation to play" />
+</details>
 
 ## Watch or present
 
