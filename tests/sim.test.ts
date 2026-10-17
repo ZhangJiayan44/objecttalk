@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Room, type GameSocket } from '../server/game/room';
 import type { ClientRoomState, Replay } from '../shared/protocol';
+import * as rng from '../shared/rng';
 
 /**
  * AI vs AI: both seats are bots (sim mode). With fake timers a whole round
@@ -25,9 +26,10 @@ async function simulate(level: string, difficulty: 'easy' | 'normal' | 'tricky' 
   const room = new Room('SIMU', fakeIo(log), { saveReplay: async (r) => void saved.push(r) });
   const states: ClientRoomState[] = [];
   const host = room.addPlayer({ name: 'Watcher', viewAs }, fakeSocket(states));
-  room.updateSettings(host.id, { level, mode: 'sim', difficulty, durationSec: 240, ...extra });
+  const durationSec = level === 'nightmarket' ? 300 : 240;
+  room.updateSettings(host.id, { level, mode: 'sim', difficulty, durationSec, ...extra });
   expect(room.start(host.id)).toBeNull();
-  for (let i = 0; i < 260 && room.phase !== 'results'; i++) await vi.advanceTimersByTimeAsync(1000);
+  for (let i = 0; i < durationSec + 20 && room.phase !== 'results'; i++) await vi.advanceTimersByTimeAsync(1000);
   await vi.advanceTimersByTimeAsync(50);
   const chat = log.filter((e) => e.event === 'chat').map((e) => e.payload as { name: string; text: string });
   // Only one human is in the room, so every state on the wire is the watcher's.
@@ -37,12 +39,19 @@ async function simulate(level: string, difficulty: 'easy' | 'normal' | 'tricky' 
 
 beforeEach(() => {
   vi.useFakeTimers();
+  vi.spyOn(rng, 'randomSeed').mockReturnValue(42);
 });
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe('AI vs AI simulation (rule brains)', () => {
+  it.each([1, 7, 42, 137, 512, 1337, 2026, 20261017])('finishes the expanded market within its five-minute round (seed %i)', async seed => {
+    vi.mocked(rng.randomSeed).mockReturnValue(seed);
+    const { saved } = await simulate('nightmarket', 'tricky');
+    expect(saved[0].report.missionsDone).toBe(saved[0].report.missionsTotal);
+  });
   for (const level of ['study', 'pets', 'cafe', 'nightmarket', 'city', 'bedroom']) {
     it(`finishes the ${level} level`, async () => {
       const { saved, chat } = await simulate(level);

@@ -47,12 +47,12 @@ const RADIUS = 0.35;
 
 /** Does the straight segment a->b stay clear of solid furniture? */
 export function segmentClear(a: { x: number; z: number }, b: { x: number; z: number }) {
-  const n = Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 0.15);
+  const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 0.15));
   for (let k = 1; k <= n; k++) {
     const x = a.x + ((b.x - a.x) * k) / n;
     const z = a.z + ((b.z - a.z) * k) / n;
     if (Math.abs(x) > ROOM_W / 2 - RADIUS || Math.abs(z) > ROOM_D / 2 - RADIUS) return false;
-    for (const f of FURNITURE) if (f.solid && Math.abs(x - f.x) < f.w / 2 + RADIUS - 0.02 && Math.abs(z - f.z) < f.d / 2 + RADIUS - 0.02) return false;
+    for (const f of FURNITURE) if (f.solid && Math.abs(x - f.x) < f.w / 2 + RADIUS + 0.02 && Math.abs(z - f.z) < f.d / 2 + RADIUS + 0.02) return false;
   }
   return true;
 }
@@ -398,7 +398,9 @@ class AiSeeker extends BaseBot {
     const dx = next.x - pose.x;
     const dz = next.z - pose.z;
     const d = Math.hypot(dx, dz);
-    if (d < 0.25) {
+    // Reach the waypoint before turning: cutting a corner can hit furniture even
+    // when the two planned segments are clear.
+    if (d < 0.01) {
       this.route.shift();
       if (!this.route.length) this.arrive();
       return;
