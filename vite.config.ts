@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, writeFileSync, copyFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync, copyFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
@@ -29,10 +29,9 @@ function shippedLevels(): Plugin {
 }
 
 /**
- * `npm run build:pages` (mode "pages"): a static build for GitHub Pages. There is no backend,
- * so the real server code (rooms, engines, AI partners, coach) is bundled and runs in the
- * page; Node-only modules are swapped for browser stand-ins and the agent-made levels are
- * baked in. 404.html is a copy of index.html so deep links (/objecttalk/room/ABCD) work.
+ * GitHub Pages serves the frontend with an optional public Node backend. Without one,
+ * browser shims let the game server run in the page. Known pages have static entrances;
+ * 404.html provides the application shell for dynamic room and replay links.
  */
 function pagesBuild(): Plugin {
   const shims: Record<string, string> = {
@@ -52,6 +51,11 @@ function pagesBuild(): Plugin {
     closeBundle() {
       const out = here('./dist/pages');
       copyFileSync(path.join(out, 'index.html'), path.join(out, '404.html'));
+      for (const route of ['play', 'demo', 'pitch', 'studio', 'progress', 'settings']) {
+        const directory = path.join(out, route);
+        mkdirSync(directory, { recursive: true });
+        copyFileSync(path.join(out, 'index.html'), path.join(directory, 'index.html'));
+      }
       writeFileSync(path.join(out, '.nojekyll'), '');
     },
   };
