@@ -49,9 +49,27 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
 
   const app = express();
   app.disable('x-powered-by');
+  app.use((req, res, next) => {
+    const origin = req.get('Origin');
+    if (origin && config.allowedOrigins.length && !config.allowedOrigins.includes(origin)) {
+      res.status(403).json({ error: 'This frontend origin is not allowed.' });
+      return;
+    }
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.vary('Origin');
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') { res.sendStatus(204); return; }
+    next();
+  });
   app.use(express.json({ limit: '1mb' }));
   const server = createServer(app);
-  const io = new Server<ClientToServer, ServerToClient>(server, { cors: { origin: true }, pingInterval: 10_000 });
+  const io = new Server<ClientToServer, ServerToClient>(server, {
+    cors: { origin: config.allowedOrigins.length ? config.allowedOrigins : true },
+    pingInterval: 10_000,
+  });
 
   const serveClient = existsSync(path.join(config.clientDir, 'index.html'));
   const rooms = new RoomManager(io, {

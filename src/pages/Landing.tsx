@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { buildScene } from '@shared/missions';
 import { Bar, btn, Footer, Navbar } from '@/components/ui';
 import { ScoreBars } from '@/components/ui/charts';
+import { openDemoFullscreen } from '@/lib/demo-fullscreen';
 
 const RoomScene = lazy(() => import('@/components/three/RoomScene').then((m) => ({ default: m.RoomScene })));
 const Showcase = lazy(() => import('@/components/three/Showcase').then((m) => ({ default: m.Showcase })));
@@ -351,11 +352,11 @@ export default function Landing() {
             <Link to="/play" className={btn('primary', 'lg')}>
               Start playing free <ArrowRight size={20} strokeWidth={3} />
             </Link>
-            <Link to="/demo" className={btn('white', 'lg')}>
-              Watch the duo demo
+            <Link to="/demo" onClick={openDemoFullscreen} className={btn('white', 'lg')}>
+              Watch demo
             </Link>
           </div>
-          <p className="relative mt-5 text-sm font-bold">No account · Works on phones · Open source (MIT)</p>
+          <p className="relative mt-5 text-sm font-bold">No account · Works on phones</p>
         </div>
       </section>
 

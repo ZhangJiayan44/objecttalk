@@ -1,6 +1,7 @@
 import { Html, Line, OrbitControls, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { SceneCanvas as Canvas } from './performance';
+import { PresentationCamera, type PresentationShot } from './presentation';
 import { Suspense, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { AVENUES, BLOCK, collide, EXTENT, LOT, lotCenter, nodePos, NODES, parseNode, PLACE_DEFS, planRoute, ROAD_W, SIDEWALK, STREETS, type Place, type Pose, type Town } from '@shared/city';
@@ -238,11 +239,12 @@ function Trees() {
 }
 
 /** Smoothly follows the live pose of the walker (for the navigator and spectators). */
-function WalkerMarker({ pose, name, big }: { pose: Pose; name: string; big: boolean }) {
+function WalkerMarker({ pose, name, big, scripted = false }: { pose: Pose; name: string; big: boolean; scripted?: boolean }) {
   const ref = useRef<THREE.Group>(null);
   useFrame((_, dt) => {
     const g = ref.current;
     if (!g) return;
+    if (scripted) { g.position.set(pose.x, 0.17, pose.z); g.rotation.y = pose.yaw; return; }
     g.position.x = THREE.MathUtils.damp(g.position.x, pose.x, 8, dt);
     g.position.z = THREE.MathUtils.damp(g.position.z, pose.z, 8, dt);
     const d = Math.atan2(Math.sin(pose.yaw - g.rotation.y), Math.cos(pose.yaw - g.rotation.y));
@@ -301,6 +303,7 @@ function Beacon({ place }: { place: Place }) {
 }
 
 export interface CityViewProps {
+  presentation?: PresentationShot;
   town: Town;
   /** The walker's pose: local prediction for the walker, server/stream for everyone else. */
   pose: Pose;
@@ -329,7 +332,7 @@ function CityContents(p: CityViewProps) {
   const startPose = useRef(p.pose);
   return (
     <>
-      {walker && p.interactive ? (
+      {p.presentation ? <PresentationCamera shot={p.presentation} /> : walker && p.interactive ? (
         <FirstPersonRig
           position={[startPose.current.x, 1.65, startPose.current.z]}
           yaw={startPose.current.yaw}
@@ -370,7 +373,7 @@ function CityContents(p: CityViewProps) {
       ].map(([x, y, z, s], i) => (
         <Cloud key={i} position={[x, y, z]} scale={s} speed={0.6 + i * 0.15} />
       ))}
-      {!walker && <WalkerMarker pose={p.pose} name={p.walkerName ?? 'Walker'} big={p.view === 'guide'} />}
+      {!walker && <WalkerMarker pose={p.pose} name={p.walkerName ?? 'Walker'} big={p.view === 'guide'} scripted={!!p.presentation} />}
       {!walker && dest && <Beacon place={dest} />}
       {route && <Line points={route} color="#ffb703" lineWidth={5} dashed dashSize={2} gapSize={1.2} />}
       {!walker && (
@@ -378,7 +381,7 @@ function CityContents(p: CityViewProps) {
           <div className="rounded-full border-2 border-ink bg-white px-3 py-1 font-display text-lg font-bold shadow-[2px_2px_0_#2d3748]">N ↑</div>
         </Html>
       )}
-      <PostFx ao={false} bloom={0.4} vignette={0.3} />
+      <PostFx ao={false} bloom={0.4} vignette={0.3} antialias={!!p.presentation} />
     </>
   );
 }
@@ -398,7 +401,7 @@ function FollowCamera({ pose }: { pose: Pose }) {
 
 export function CityScene(props: CityViewProps) {
   return (
-    <Canvas className={props.className} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 600, position: [0, 92, 66] }} gl={{ antialias: false, powerPreference: 'high-performance' }}>
+    <Canvas className={props.className} frameloop={props.presentation ? 'demand' : undefined} resize={props.presentation ? { offsetSize: true } : undefined} renderQuality={props.presentation?.quality} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 600, position: [0, 92, 66] }} gl={{ antialias: false, powerPreference: 'high-performance' }}>
       <Suspense fallback={<Html center>Building the town…</Html>}>
         <CityContents {...props} />
       </Suspense>

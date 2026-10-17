@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { INTERESTS } from '@shared/catalog';
 import { ItemModel } from './models';
+import { PresentationClock } from './presentation';
 
 /** Turntable of the five Rodin-generated objects (landing page + Object Studio). */
 
@@ -73,11 +74,11 @@ function InterestLabel({ interest }: { interest: (typeof INTERESTS)[number] }) {
   );
 }
 
-export function Showcase({ kinds = INTERESTS.map((i) => i.kind), labels = true, className }: { kinds?: string[]; labels?: boolean; className?: string }) {
+export function Showcase({ kinds = INTERESTS.map((i) => i.kind), labels = true, className, presentationTime, onPresentationReady }: { kinds?: string[]; labels?: boolean; className?: string; presentationTime?: number; onPresentationReady?: () => void }) {
   const gap = 0.95;
   const single = kinds.length === 1;
   return (
-    <Canvas className={className} dpr={[1, 2]} camera={{ fov: 38, position: [0, 1.2, 4] }} gl={{ alpha: true, antialias: true }} shadows>
+    <Canvas frameloop={presentationTime !== undefined ? 'demand' : undefined} resize={presentationTime !== undefined ? { offsetSize: true } : undefined} className={className} dpr={[1, 2]} camera={{ fov: 38, position: [0, 1.2, 4] }} gl={{ alpha: true, antialias: true }} shadows>
       {!single && <Fit count={kinds.length} gap={gap} />}
       <ambientLight intensity={0.6} />
       <directionalLight position={[2, 5, 4]} intensity={1.4} castShadow shadow-mapSize={[1024, 1024]} />
@@ -93,6 +94,7 @@ export function Showcase({ kinds = INTERESTS.map((i) => i.kind), labels = true, 
           </Html>
         }
       >
+        {presentationTime !== undefined && <PresentationClock time={presentationTime} onReady={onPresentationReady} />}
         {single ? <ObjectPreview kind={kinds[0]} /> : kinds.map((kind, i) => {
           const x = (i - (kinds.length - 1) / 2) * gap;
           const interest = INTERESTS.find((it) => it.kind === kind);

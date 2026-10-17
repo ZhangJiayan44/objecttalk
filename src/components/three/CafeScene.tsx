@@ -1,6 +1,7 @@
 import { Html, OrbitControls } from '@react-three/drei';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { SceneCanvas as Canvas } from './performance';
+import { PresentationCamera, type PresentationShot } from './presentation';
 import { Suspense, useRef } from 'react';
 import * as THREE from 'three';
 import { CAFE_COLS, TRAY_SLOTS } from '@shared/cafe';
@@ -34,6 +35,7 @@ export const casePos = (c: number, r: number): [number, number, number] => [CASE
 export const trayPos = (k: number): [number, number, number] => [TRAY.x + ((k % 3) - 1) * 0.27, COUNTER_H + 0.06, TRAY.z + (Math.floor(k / 3) - 0.5) * 0.24];
 
 export interface CafeViewProps {
+  presentation?: PresentationShot;
   scene: SceneState;
   tray: string[];
   view: Role | 'overview';
@@ -240,7 +242,7 @@ function SeatingArea() {
   );
 }
 
-function CaseItem({ obj, pos, hovered, interactive, onHover, onClick, shakeKey, label, showLabel }: { obj: SceneObject; pos: [number, number, number]; hovered: boolean; interactive: boolean; onHover?(e: HoverEvent): void; onClick?(): void; shakeKey: number; label: string; showLabel: boolean }) {
+function CaseItem({ obj, pos, hovered, interactive, onHover, onClick, shakeKey, label, showLabel, scriptTime }: { obj: SceneObject; pos: [number, number, number]; hovered: boolean; interactive: boolean; onHover?(e: HoverEvent): void; onClick?(): void; shakeKey: number; label: string; showLabel: boolean; scriptTime?: number }) {
   const ref = useRef<THREE.Group>(null);
   const shakeUntil = useRef(0);
   const lastShake = useRef(0);
@@ -251,9 +253,12 @@ function CaseItem({ obj, pos, hovered, interactive, onHover, onClick, shakeKey, 
   useFrame((_, dt) => {
     const g = ref.current;
     if (!g) return;
-    g.position.x = THREE.MathUtils.damp(g.position.x, pos[0], 10, dt);
-    g.position.y = THREE.MathUtils.damp(g.position.y, pos[1] + (hovered ? 0.03 : 0), 10, dt);
-    g.position.z = THREE.MathUtils.damp(g.position.z, pos[2], 10, dt);
+    if (scriptTime !== undefined) g.position.set(pos[0], pos[1] + (hovered ? 0.03 : 0), pos[2]);
+    else {
+      g.position.x = THREE.MathUtils.damp(g.position.x, pos[0], 10, dt);
+      g.position.y = THREE.MathUtils.damp(g.position.y, pos[1] + (hovered ? 0.03 : 0), 10, dt);
+      g.position.z = THREE.MathUtils.damp(g.position.z, pos[2], 10, dt);
+    }
     g.rotation.z = performance.now() < shakeUntil.current ? Math.sin(performance.now() * 0.06) * 0.15 : 0;
   });
   const handlers = interactive
@@ -302,7 +307,7 @@ function CafeContents(p: CafeViewProps) {
   const walking = (p.walk ?? true) && (p.capture ?? p.interactive);
   return (
     <>
-      {fps ? (
+      {p.presentation ? <PresentationCamera shot={p.presentation} /> : fps ? (
         <FirstPersonRig
           position={p.view === 'builder' ? [0.6, 1.66, -1.4] : [-0.2, 1.6, 1.85]}
           yaw={p.view === 'builder' ? Math.PI : 0}
@@ -356,7 +361,12 @@ function CafeContents(p: CafeViewProps) {
       {/* display case contents and the tray */}
       {p.scene.objects.map((o) => {
         const onTray = trayIndex.get(o.id);
-        const pos = onTray !== undefined ? trayPos(onTray) : casePos(o.cell.c, o.cell.r);
+        let pos = onTray !== undefined ? trayPos(onTray) : casePos(o.cell.c, o.cell.r);
+        const scriptProgress = p.presentation?.objectProgressById?.[o.id] ?? p.presentation?.objectProgress;
+        if (onTray !== undefined && scriptProgress !== undefined) {
+          const start = casePos(o.cell.c, o.cell.r);
+          pos = start.map((value, index) => THREE.MathUtils.lerp(value, pos[index], scriptProgress)) as [number, number, number];
+        }
         return (
           <CaseItem
             key={o.id}
@@ -369,6 +379,7 @@ function CafeContents(p: CafeViewProps) {
             shakeKey={p.shakeId?.id === o.id ? p.shakeId.key : 0}
             label={`${labelOf(o)}${onTray !== undefined ? ' (on the tray: click to take it back)' : ''}`}
             showLabel={p.view !== 'guide'}
+            scriptTime={p.presentation?.time}
           />
         );
       })}
@@ -400,7 +411,7 @@ function CafeContents(p: CafeViewProps) {
           <Avatar role="guide" name={p.names?.guide ?? 'Customer'} />
         </group>
       )}
-      <PostFx bloom={look === 'night' ? 0.95 : 0.65} />
+      <PostFx bloom={look === 'night' ? 0.95 : 0.65} antialias={!!p.presentation} />
     </>
   );
 }
@@ -422,7 +433,7 @@ function PointerArrow({ pos }: { pos: [number, number, number] }) {
 
 export function CafeScene(props: CafeViewProps) {
   return (
-    <Canvas className={props.className} events={centerRayEvents} camera={{ fov: 62, near: 0.05, far: 80, position: [0, 2, 4] }} gl={{ antialias: false, powerPreference: 'high-performance' }} onPointerMissed={() => props.interactive && props.onHover?.({ objectId: null, cell: null })}>
+    <Canvas className={props.className} frameloop={props.presentation ? 'demand' : undefined} resize={props.presentation ? { offsetSize: true } : undefined} renderQuality={props.presentation?.quality} events={centerRayEvents} camera={{ fov: 62, near: 0.05, far: 80, position: [0, 2, 4] }} gl={{ antialias: false, powerPreference: 'high-performance' }} onPointerMissed={() => props.interactive && props.onHover?.({ objectId: null, cell: null })}>
       <color attach="background" args={[props.look === 'night' ? '#1c1838' : '#f4e2cc']} />
       <Suspense fallback={<Html center>Loading…</Html>}>
         <CafeContents {...props} />

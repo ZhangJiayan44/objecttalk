@@ -17,15 +17,13 @@
     "hackathon"
   ],
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/wangzh12023/ObjectTalk-Game.git"
-  },
   "type": "module",
   "engines": {
     "node": ">=20.11"
   },
   "scripts": {
+    "dev:pitch": "vite --port 5176 --strictPort --open /pitch",
+    "pitch:video": "node scripts/pitch-video.mjs",
     "dev": "concurrently -k -n server,web -c magenta,cyan \"npm:dev:server\" \"npm:dev:web\"",
     "dev:web": "vite",
     "dev:server": "tsx watch --clear-screen=false server/index.ts",
@@ -39,7 +37,8 @@
     "test:watch": "vitest",
     "agent": "tsx agent/cli.ts",
     "check": "npm run typecheck && npm run test && npm run build",
-    "assets:optimize": "tsx scripts/optimize-models.ts"
+    "assets:optimize": "tsx scripts/optimize-models.ts",
+    "build:web": "vite build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.129.0",
@@ -94,6 +93,10 @@
     "typescript": "5.9.3",
     "vite": "7.3.6",
     "vitest": "3.2.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wangzh12023/ObjectTalk-Game.git"
   },
   "homepage": "https://wangzh12023.github.io/ObjectTalk-Game/",
   "bugs": {

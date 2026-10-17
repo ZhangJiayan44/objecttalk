@@ -8,6 +8,7 @@ import { defineConfig, type Plugin } from 'vite';
 
 const backend = process.env.BACKEND_URL ?? 'http://localhost:8787';
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
+const deployment = JSON.parse(readFileSync(here('./deployment.config.json'), 'utf8')) as { backendUrl?: string };
 
 const levelsId = 'virtual:objecttalk-levels';
 
@@ -60,10 +61,16 @@ function pagesBuild(): Plugin {
 // same Wi-Fi can use the microphone (browsers only allow mic access on HTTPS or localhost).
 export default defineConfig(({ mode }) => {
   const pages = mode === 'pages';
+  const publicBackend = process.env.VITE_BACKEND_URL ?? (mode === 'development' || mode === 'https' ? '' : deployment.backendUrl || '');
+  const inPageServer = pages && !publicBackend;
   return {
-    base: pages ? (process.env.PAGES_BASE ?? '/objecttalk/') : '/',
+    base: pages ? (process.env.PAGES_BASE ?? '/ObjectTalk-Game/') : '/',
     // Decided at build time, so the normal build drops the in-page server entirely (and vice versa).
-    define: { 'import.meta.env.VITE_STATIC': JSON.stringify(pages ? '1' : '') },
+    define: {
+      'import.meta.env.VITE_STATIC': JSON.stringify(inPageServer ? '1' : ''),
+      'import.meta.env.VITE_BACKEND_URL': JSON.stringify(publicBackend),
+      'import.meta.env.VITE_ASSET_VERSION': JSON.stringify(process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || ''),
+    },
     plugins: [...(pages ? [pagesBuild()] : []), shippedLevels(), react(), tailwindcss(), ...(mode === 'https' ? [basicSsl()] : [])],
     optimizeDeps: {
       include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
@@ -74,7 +81,7 @@ export default defineConfig(({ mode }) => {
         '@': here('./src'),
         '@shared': here('./shared'),
         // The in-page server exists only in the static build (Rollup bundles even dead dynamic imports).
-        '@static-server': here(pages ? './src/static/server.ts' : './src/static/none.ts'),
+        '@static-server': here(inPageServer ? './src/static/server.ts' : './src/static/none.ts'),
       },
     },
     server: {

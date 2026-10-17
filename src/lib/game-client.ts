@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { createStore, useStore, type StoreApi } from 'zustand';
+import { backendOrigin } from './backend';
 import type {
   Ack,
   AgentTrace,
@@ -71,7 +72,7 @@ const staticServer = import.meta.env.VITE_STATIC ? import('@static-server') : nu
 
 export function createGameClient(opts: { persistIdentity?: boolean } = {}): GameClient {
   const persist = opts.persistIdentity ?? true;
-  const socket: Socket<ServerToClient, ClientToServer> = staticServer ? lazySocket(staticServer) : io({ transports: ['websocket', 'polling'], reconnectionDelayMax: 3000 });
+  const socket: Socket<ServerToClient, ClientToServer> = staticServer ? lazySocket(staticServer) : io(backendOrigin || undefined, { transports: ['websocket', 'polling'], reconnectionDelayMax: 3000 });
   const store = createStore<GameState>(() => ({ connected: false, state: null, chat: [], remoteHover: null, remotePose: null, traces: [], fx: [], clockOffset: 0, error: null }));
   let session: { code: string; name: string; playerId: string; spectate?: boolean; viewAs?: Role | null } | null = null;
   let fxKey = 0;

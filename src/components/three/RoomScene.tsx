@@ -1,6 +1,7 @@
 import { Html, OrbitControls } from '@react-three/drei';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { SceneCanvas as Canvas } from './performance';
+import { PresentationCamera, type PresentationShot } from './presentation';
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -25,6 +26,7 @@ export interface Pointer {
 }
 
 export interface RoomSceneProps {
+  presentation?: PresentationShot;
   scene: SceneState;
   view: ViewMode;
   heldId?: string | null;
@@ -168,6 +170,8 @@ function SceneItem({
   onDrop,
   shakeKey,
   label,
+  scriptTime,
+  scriptLift,
 }: {
   obj: SceneObject;
   held: boolean;
@@ -179,6 +183,8 @@ function SceneItem({
   onDrop?: () => void;
   shakeKey: number;
   label: boolean;
+  scriptTime?: number;
+  scriptLift?: number;
 }) {
   const ref = useRef<THREE.Group>(null);
   const shakeUntil = useRef(0);
@@ -190,10 +196,13 @@ function SceneItem({
   useFrame(({ clock }, dt) => {
     const g = ref.current;
     if (!g) return;
-    const lift = held ? 0.3 + Math.sin(clock.elapsedTime * 3.2) * 0.025 : hovered ? 0.04 : 0;
-    g.position.x = damp(g.position.x, tx, 12, dt);
-    g.position.z = damp(g.position.z, tz, 12, dt);
-    g.position.y = damp(g.position.y, TABLE_Y + lift, 10, dt);
+    const lift = scriptLift ?? (held ? 0.3 + Math.sin(clock.elapsedTime * 3.2) * 0.025 : hovered ? 0.04 : 0);
+    if (scriptTime !== undefined) g.position.set(tx, TABLE_Y + lift, tz);
+    else {
+      g.position.x = damp(g.position.x, tx, 12, dt);
+      g.position.z = damp(g.position.z, tz, 12, dt);
+      g.position.y = damp(g.position.y, TABLE_Y + lift, 10, dt);
+    }
     const shaking = performance.now() < shakeUntil.current;
     g.rotation.z = shaking ? Math.sin(performance.now() * 0.06) * 0.18 : damp(g.rotation.z, 0, 10, dt);
   });
@@ -307,7 +316,7 @@ function SceneContents(props: RoomSceneProps) {
   const hoverCell = interactive ? (localHover?.cell ?? null) : (pointer?.cell ?? null);
   return (
     <>
-      {fps ? (
+      {props.presentation ? <PresentationCamera shot={props.presentation} /> : fps ? (
         <FirstPersonRig
           position={[0, 1.72, view === 'guide' ? -2.3 : 2.3]}
           yaw={view === 'guide' ? Math.PI : 0}
@@ -337,7 +346,7 @@ function SceneContents(props: RoomSceneProps) {
         </>
       )}
       <Table />
-      <PostFx />
+      <PostFx antialias={!!props.presentation} />
       {scene.landmarks.map((l) => {
         const [x, y, z] = cellToWorld(l.cell);
         return (
@@ -359,6 +368,8 @@ function SceneContents(props: RoomSceneProps) {
           onDrop={onDrop}
           shakeKey={wrong?.objectId === o.id ? wrong.key : 0}
           label={labels && view !== 'guide'}
+          scriptTime={props.presentation?.time}
+          scriptLift={props.presentation?.objectId === o.id ? props.presentation.objectLift : undefined}
         />
       ))}
       {interactive && heldId && <Slots scene={scene} heldId={heldId} hoverCell={hoverCell} onHover={onHover} onPlace={onPlace} />}
@@ -411,6 +422,8 @@ export function RoomScene(props: RoomSceneProps) {
   return (
     <Canvas
       className={props.className}
+      frameloop={props.presentation ? 'demand' : undefined} resize={props.presentation ? { offsetSize: true } : undefined}
+      renderQuality={props.presentation?.quality}
       events={centerRayEvents}
       camera={{ fov: props.firstPerson ? 62 : 45, near: 0.05, far: 80, position: [0, 3, 4] }}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}

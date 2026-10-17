@@ -6,6 +6,7 @@ import { DECOR_MODELS } from '@shared/catalog';
 import type { Palette } from '@shared/levels';
 import { asset } from '@/lib/asset';
 import { LightShaft, Sign, useTextTexture } from './env';
+import { readPresentationTime } from './presentation';
 
 /**
  * Furniture kit: rounded, chunky pieces in the clay style, shared by the
@@ -285,8 +286,11 @@ export function Armchair({ position, rotation = 0, color = '#9b7bf2' }: { positi
 
 export function Globe({ position }: { position: [number, number, number] }) {
   const ref = useRef<THREE.Mesh>(null);
-  useFrame((_, dt) => {
-    if (ref.current) ref.current.rotation.y += dt * 0.3;
+  useFrame(({ clock }, dt) => {
+    if (!ref.current) return;
+    const scripted = readPresentationTime(clock);
+    if (scripted !== undefined) ref.current.rotation.y = scripted * 0.3;
+    else ref.current.rotation.y += dt * 0.3;
   });
   return (
     <group position={position}>

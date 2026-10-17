@@ -1,7 +1,8 @@
 import { Html, OrbitControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { SceneCanvas as Canvas } from './performance';
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { PresentationCamera, type PresentationShot } from './presentation';
+import { memo, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import * as THREE from 'three';
 import { getKind } from '@shared/catalog';
@@ -22,6 +23,7 @@ import { MarketPerson, MerchantQuarter } from './nightmarket/MerchantQuarter';
 import { CourtyardGardens, MarketPocketScenery, NightMarketBackdrop } from './nightmarket/Scenery';
 
 interface Props {
+  presentation?: PresentationShot;
   scene: SceneState;
   tray: string[];
   pose: Pose;
@@ -37,7 +39,7 @@ interface Props {
   shopperName?: string;
 }
 
-function Shop({ shop, scene, interactive, onShop }: { shop: MarketShop; scene: SceneState; interactive: boolean; onShop?(id: string): void }) {
+const Shop = memo(function Shop({ shop, scene, interactive, onShop }: { shop: MarketShop; scene: SceneState; interactive: boolean; onShop?(id: string): void }) {
   const { camera } = useThree();
   const [hover, setHover] = useState(false);
   const items = scene.objects.filter((o) => shopForKind(o.kind).id === shop.id).filter((o, i, all) => all.findIndex((x) => x.kind === o.kind && x.size === o.size) === i);
@@ -80,7 +82,7 @@ function Shop({ shop, scene, interactive, onShop }: { shop: MarketShop; scene: S
     <LanternString from={[-1.6, 2.8, 1.65]} to={[1.6, 2.8, 1.65]} count={3} sag={0.08} color={shop.color} />
     {(shop.id === 'noodles' || shop.id === 'grill') && <Steam position={[0.8, 1.1, 0.6]} />}
   </group>;
-}
+});
 
 function PavedRoad({ road }: { road: MarketRect }) {
   const paving = useMemo(() => {
@@ -127,7 +129,7 @@ function TieredDistrict() {
   </group>;
 }
 
-function StreetSet({ overview }: { overview: boolean }) {
+const StreetSet = memo(function StreetSet({ overview }: { overview: boolean }) {
   return <>
     <SkyDome top="#293246" bottom="#85787b" radius={180} />
     <fog attach="fog" args={['#6e686d', overview ? 85 : 48, overview ? 175 : 130]} />
@@ -167,7 +169,7 @@ function StreetSet({ overview }: { overview: boolean }) {
     <Prop name="pineTree" position={[-17.5, 0, -15]} size={5} word={false} />
     <Prop name="pineTree" position={[15.8, 0, 13]} size={4.6} word={false} />
   </>;
-}
+});
 
 function Follow({ pose }: { pose: Pose }) {
   useFrame(({ camera }) => { camera.position.set(pose.x, marketHeight(pose) + 1.65, pose.z); camera.rotation.set(-0.08, pose.yaw, 0, 'YXZ'); });
@@ -190,7 +192,7 @@ function Contents(p: Props) {
     return () => window.removeEventListener('keydown', key);
   }, [p.interactive, p.onShop]);
   return <>
-    {walker && p.interactive ? <FirstPersonRig position={[start.current.x, marketHeight(start.current) + 1.65, start.current.z]} yaw={start.current.yaw} pitch={-0.06} pitchMax={0.8} capture={p.capture && !p.paused} onLockChange={p.onLockChange} walk={{ speed: p.paused ? 0 : 4.5, run: p.paused ? 0 : 7, eye: 1.65, groundHeight: marketHeight, collide: collideMarket, onPose: p.onMove }} />
+    {p.presentation ? <PresentationCamera shot={p.presentation} /> : walker && p.interactive ? <FirstPersonRig position={[start.current.x, marketHeight(start.current) + 1.65, start.current.z]} yaw={start.current.yaw} pitch={-0.06} pitchMax={0.8} capture={p.capture && !p.paused} onLockChange={p.onLockChange} walk={{ speed: p.paused ? 0 : 4.5, run: p.paused ? 0 : 7, eye: 1.65, groundHeight: marketHeight, collide: collideMarket, onPose: p.onMove }} />
       : walker ? <Follow pose={p.pose} /> : <OrbitControls target={[0, 0, -6]} minDistance={18} maxDistance={75} maxPolarAngle={1.15} />}
     <StreetSet overview={!walker} />
     {MARKET_SHOPS.map((shop) => <group key={shop.id}>
@@ -204,12 +206,12 @@ function Contents(p: Props) {
       </mesh>
       <Sign lines={['集合处 · Meeting Point']} position={[0, 0.12, 1.8]} rotation={[-Math.PI / 2, 0, 0]} size={[3.8, 0.6]} bg="#5b6f66" fg="#ffe3a2" border="#c4a767" />
     </group>
-    <PostFx ao={true} bloom={0.12} vignette={0.1} />
+    <PostFx ao={true} bloom={0.12} vignette={0.1} antialias={!!p.presentation} />
   </>;
 }
 
 export function NightMarketScene(props: Props) {
-  return <Canvas className={props.className} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 240, position: props.view === 'builder' ? [MARKET_START.x, 1.65, MARKET_START.z] : [36, 42, 42] }} gl={{ antialias: false, powerPreference: 'high-performance' }}>
+  return <Canvas className={props.className} frameloop={props.presentation ? 'demand' : undefined} resize={props.presentation ? { offsetSize: true } : undefined} renderQuality={props.presentation?.quality} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 240, position: props.view === 'builder' ? [MARKET_START.x, 1.65, MARKET_START.z] : [36, 42, 42] }} gl={{ antialias: false, powerPreference: 'high-performance' }}>
     <Suspense fallback={<Html center>Opening the night market...</Html>}><Contents {...props} /></Suspense>
   </Canvas>;
 }

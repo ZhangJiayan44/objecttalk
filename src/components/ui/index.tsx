@@ -3,6 +3,7 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import { Menu, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { asset } from '@/lib/asset';
+import { openDemoFullscreen } from '@/lib/demo-fullscreen';
 import { Link, NavLink } from 'react-router';
 
 /** Claymorphism UI primitives (styled Radix + Tailwind). */
@@ -115,7 +116,8 @@ const LINKS = [
   { to: '/studio', label: 'Object Studio' },
   { to: '/progress', label: 'My progress' },
   { to: '/settings', label: 'Settings' },
-  { to: '/demo', label: 'Duo demo' },
+  { to: '/demo', label: 'Demo' },
+  { to: '/pitch', label: 'Pitch' },
 ];
 
 /** GitHub Pages build: the game runs in this tab, so say what needs the full server. */
@@ -123,7 +125,7 @@ export function StaticNotice() {
   if (!import.meta.env.VITE_STATIC) return null;
   return (
     <div className="mx-auto mb-2 max-w-6xl rounded-2xl border-2 border-ink bg-sun px-3 py-1 text-center text-xs font-bold text-ink shadow-[2px_2px_0_#2d3748]">
-      Browser demo on GitHub Pages: play with the AI partner or watch AI vs AI. Friend mode across devices, the LLM agent and live Rodin
+      Browser demo on GitHub Pages: play with the AI partner, watch the demo film or view the pitch. Friend mode across devices, the LLM agent and live Rodin
       generation need the full server (<code className="rounded bg-white/70 px-1">npm start</code>).
     </div>
   );
@@ -139,20 +141,20 @@ export function Navbar() {
           <Link to="/" aria-label="ObjectTalk home">
             <Logo />
           </Link>
-          <div className="hidden items-center gap-6 md:flex">
+          <div className="hidden items-center gap-6 xl:flex">
             {LINKS.map((l) =>
               l.to.startsWith('/#') ? (
-                <a key={l.to} href={l.to} className="text-sm font-bold text-muted transition-colors hover:text-ink">
+                <a key={l.to} href={asset(l.to)} className="text-sm font-bold text-muted transition-colors hover:text-ink">
                   {l.label}
                 </a>
               ) : (
-                <NavLink key={l.to} to={l.to} className={({ isActive }) => `text-sm font-bold transition-colors hover:text-ink ${isActive ? 'text-ink' : 'text-muted'}`}>
+                <NavLink key={l.to} to={l.to} onClick={l.to === '/demo' ? openDemoFullscreen : undefined} className={({ isActive }) => `text-sm font-bold transition-colors hover:text-ink ${isActive ? 'text-ink' : 'text-muted'}`}>
                   {l.label}
                 </NavLink>
               ),
             )}
           </div>
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-3 xl:flex">
             <Link to="/play?join=1" className="px-3 py-2 text-sm font-bold text-ink hover:text-cta">
               Join a room
             </Link>
@@ -160,16 +162,16 @@ export function Navbar() {
               Play now
             </Link>
           </div>
-          <button className={btn('secondary', 'sm', 'md:hidden !px-2')} aria-label="Toggle menu" onClick={() => setOpen((o) => !o)}>
+          <button className={btn('secondary', 'sm', 'xl:hidden !px-2')} aria-label="Toggle menu" onClick={() => setOpen((o) => !o)}>
             {open ? <X size={20} strokeWidth={3} /> : <Menu size={20} strokeWidth={3} />}
           </button>
         </div>
         {open && (
-          <div className="mt-3 flex flex-col gap-2 border-t-2 border-line pt-3 md:hidden">
+          <div className="mt-3 flex flex-col gap-2 border-t-2 border-line pt-3 xl:hidden">
             {LINKS.map((l) => (
-              <a key={l.to} href={l.to} onClick={() => setOpen(false)} className="rounded-xl px-2 py-2 font-bold text-ink hover:bg-cream">
+              <Link key={l.to} to={l.to} onClick={(e) => { setOpen(false); if (l.to === '/demo') openDemoFullscreen(e); }} className="rounded-xl px-2 py-2 font-bold text-ink hover:bg-cream">
                 {l.label}
-              </a>
+              </Link>
             ))}
             <Link to="/play" className={btn('primary', 'md', 'mt-1')}>
               Play now
@@ -201,8 +203,14 @@ export function Footer() {
             </li>
             <li>
               <Link to="/demo" className="hover:text-ink">
-                Split-screen demo
+                Watch demo
               </Link>
+            </li>
+            <li>
+              <Link to="/pitch" className="hover:text-ink">Pitch presentation</Link>
+            </li>
+            <li>
+              <a href={asset('/demo/ObjectTalk-launch-film-53s-1080p60.mp4')} download className="hover:text-ink">Download demo film</a>
             </li>
             <li>
               <Link to="/progress" className="hover:text-ink">
@@ -219,11 +227,7 @@ export function Footer() {
                 Object Studio (Rodin)
               </Link>
             </li>
-            <li>
-              <a href="https://github.com/wangzh12023/objecttalk" className="hover:text-ink">
-                Source on GitHub
-              </a>
-            </li>
+            <li><a href="https://github.com/wangzh12023/ObjectTalk-Game" className="hover:text-ink">Source on GitHub</a></li>
             <li>
               <a href="https://hyper3d.ai" className="hover:text-ink">
                 3D by Hyper3D Rodin
@@ -232,7 +236,7 @@ export function Footer() {
           </ul>
         </div>
       </div>
-      <p className="mx-auto mt-8 max-w-6xl text-sm text-muted">© 2026 ObjectTalk team · MIT License · 3D items generated with Hyper3D Rodin Gen-2.5 · Reference art: Microsoft Fluent Emoji (MIT)</p>
+      <p className="mx-auto mt-8 max-w-6xl text-sm text-muted">© 2026 ObjectTalk team. MIT License. · 3D items generated with Hyper3D Rodin Gen-2.5 · Reference art: Microsoft Fluent Emoji</p>
     </footer>
   );
 }

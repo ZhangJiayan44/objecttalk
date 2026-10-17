@@ -1,7 +1,7 @@
 name: Pages
 
-# Static build of ObjectTalk for GitHub Pages: the game server runs in the browser
-# (solo with the AI partner, AI vs AI, replays, coach). See docs/DEPLOY.md.
+# Deploy the frontend to GitHub Pages. deployment.config.json selects the public
+# Node backend; an explicitly empty VITE_BACKEND_URL enables offline solo mode.
 on:
   push:
     branches: [main]

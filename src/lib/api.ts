@@ -1,5 +1,6 @@
 import { registerKinds } from '@shared/catalog';
 import { registerLevels } from '@shared/levels';
+import { backendUrl } from './backend';
 import type { ItemsResponse, LevelsResponse, Replay, ServerInfo } from '@shared/protocol';
 
 /** Thin REST helpers for the ObjectTalk server. */
@@ -24,7 +25,7 @@ async function staticJson(url: string): Promise<unknown> {
 
 async function getJson<T>(url: string): Promise<T> {
   if (import.meta.env.VITE_STATIC) return (await staticJson(url)) as T;
-  const res = await fetch(url);
+  const res = await fetch(backendUrl(url));
   if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? `HTTP ${res.status}`);
   return (await res.json()) as T;
 }
@@ -85,7 +86,7 @@ export interface StudioJobStatus {
 
 export async function submitStudioJob(form: FormData): Promise<string> {
   if (import.meta.env.VITE_STATIC) throw new Error('Live Rodin generation needs the full server with RODIN_API_KEY (npm start).');
-  const res = await fetch('/api/studio/generate', { method: 'POST', body: form });
+  const res = await fetch(backendUrl('/api/studio/generate'), { method: 'POST', body: form });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
   return body.jobId as string;
@@ -98,12 +99,12 @@ export function shareUrl(info: ServerInfo | null, pathname: string): string {
   const here = window.location;
   if (import.meta.env.VITE_STATIC) return `${here.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}${pathname}`;
   const isLocal = /^(localhost|127\.|\[::1\])/.test(here.hostname);
-  if (info?.publicUrl) return `${info.publicUrl.replace(/\/$/, '')}${pathname}`;
+  if (info?.publicUrl && isLocal) return `${info.publicUrl.replace(/\/$/, '')}${pathname}`;
   if (isLocal && info?.lanUrls[0]) {
     const lan = new URL(info.lanUrls[0]);
     return `${here.protocol}//${lan.hostname}:${here.port || lan.port}${pathname}`;
   }
-  return `${here.origin}${pathname}`;
+  return `${here.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}${pathname}`;
 }
 
 /** What the vision model saw in a studio photo (null when no LLM is configured). */
@@ -122,7 +123,7 @@ export async function identifyStudioPhoto(file: File): Promise<IdentifiedObject 
   if (import.meta.env.VITE_STATIC) return null;
   const form = new FormData();
   form.append('image', file);
-  const res = await fetch('/api/studio/identify', { method: 'POST', body: form });
+  const res = await fetch(backendUrl('/api/studio/identify'), { method: 'POST', body: form });
   const body = (await res.json().catch(() => ({}))) as { identified?: IdentifiedObject | null; error?: string };
   if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
   return body.identified ?? null;

@@ -102,7 +102,7 @@ export default function Play() {
         </div>
 
         <p className="mt-10 text-center text-sm font-semibold text-muted">
-          Presenting on one screen? Try the <Link to="/demo" className="text-grape underline">split-screen duo demo</Link> or open the <Link to="/studio" className="text-grape underline">Object Studio</Link>.
+          Presenting on one screen? Watch the <Link to="/demo" className="text-grape underline">demo film</Link>, view the <Link to="/pitch" className="text-grape underline">pitch</Link> or open the <Link to="/studio" className="text-grape underline">Object Studio</Link>.
         </p>
       </main>
     </div>

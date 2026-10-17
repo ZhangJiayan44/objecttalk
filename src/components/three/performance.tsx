@@ -7,22 +7,23 @@ const QualityContext = createContext<{ mode: GraphicsMode; quality: RenderQualit
 const initialQuality = (mode: GraphicsMode) => initialRenderQuality(mode, window.matchMedia('(pointer: coarse)').matches, navigator.hardwareConcurrency ?? 8);
 
 /** Keep DPR controlled by Canvas so movement/state updates cannot reset adaptation. */
-export function SceneCanvas(props: Omit<ComponentProps<typeof Canvas>, 'dpr' | 'shadows'>) {
-  const [mode, setMode] = useState(readGraphicsMode);
+export function SceneCanvas({ renderQuality, ...props }: Omit<ComponentProps<typeof Canvas>, 'dpr' | 'shadows'> & { renderQuality?: GraphicsMode }) {
+  const [mode, setMode] = useState<GraphicsMode>(() => renderQuality ?? readGraphicsMode());
   const [quality, setQuality] = useState(() => initialQuality(mode));
   useEffect(() => {
     const update = () => {
-      const next = readGraphicsMode();
+      const next = renderQuality ?? readGraphicsMode();
       setMode(next);
       setQuality(initialQuality(next));
     };
+    update();
     window.addEventListener(GRAPHICS_EVENT, update);
     window.addEventListener('storage', update);
     return () => {
       window.removeEventListener(GRAPHICS_EVENT, update);
       window.removeEventListener('storage', update);
     };
-  }, []);
+  }, [renderQuality]);
   const profile = RENDER_PROFILES[quality];
   const value = useMemo(() => ({ mode, quality, setQuality }), [mode, quality]);
   return <QualityContext.Provider value={value}><Canvas {...props} dpr={Math.min(window.devicePixelRatio || 1, profile.dpr)} shadows={profile.shadows ? 'percentage' : false} /></QualityContext.Provider>;

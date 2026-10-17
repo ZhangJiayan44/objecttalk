@@ -2,9 +2,10 @@ import { Environment, Lightformer } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
-import { useMemo, useRef } from 'react';
+import { memo, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useRenderQuality } from './performance';
+import { readPresentationTime } from './presentation';
 
 /**
  * Atmosphere kit shared by every level: post-processing (ambient occlusion,
@@ -17,7 +18,7 @@ import { useRenderQuality } from './performance';
  * Bloom only catches real light sources (lamps, neon, screens: emissive above 1.0
  * in linear HDR), never sunlit walls, so the picture stays crisp instead of hazy.
  */
-export function PostFx({ bloom = 0.4, vignette = 0.38, ao = true }: { bloom?: number; vignette?: number; ao?: boolean }) {
+export function PostFx({ bloom = 0.4, vignette = 0.38, ao = true, antialias = false }: { bloom?: number; vignette?: number; ao?: boolean; antialias?: boolean }) {
   const quality = useRenderQuality();
   if (quality === 'off') return null;
   if (quality === 'low')
@@ -26,6 +27,7 @@ export function PostFx({ bloom = 0.4, vignette = 0.38, ao = true }: { bloom?: nu
         <Bloom mipmapBlur intensity={bloom * 0.8} luminanceThreshold={1.1} luminanceSmoothing={0.08} />
         <Vignette eskil={false} offset={0.28} darkness={vignette} />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        {antialias ? <SMAA /> : <></>}
       </EffectComposer>
     );
   return (
@@ -40,7 +42,7 @@ export function PostFx({ bloom = 0.4, vignette = 0.38, ao = true }: { bloom?: nu
 }
 
 /** Image-based lighting from a few soft panels, so PBR Rodin models look rich without an HDR download. */
-export function SoftIBL({ warm = '#ffe0c8', cool = '#d6ecff', intensity = 1 }: { warm?: string; cool?: string; intensity?: number }) {
+export const SoftIBL = memo(function SoftIBL({ warm = '#ffe0c8', cool = '#d6ecff', intensity = 1 }: { warm?: string; cool?: string; intensity?: number }) {
   return (
     <Environment resolution={128} frames={1}>
       <Lightformer intensity={2 * intensity} position={[0, 6, 0]} rotation-x={Math.PI / 2} scale={[12, 12, 1]} />
@@ -49,7 +51,7 @@ export function SoftIBL({ warm = '#ffe0c8', cool = '#d6ecff', intensity = 1 }: {
       <Lightformer intensity={0.7 * intensity} position={[0, 1, 7]} scale={[10, 2, 1]} color="#fff6e0" />
     </Environment>
   );
-}
+});
 
 let shaftTex: THREE.Texture | null = null;
 function shaftTexture() {
@@ -149,8 +151,13 @@ export function Sign({ lines, size = [1.6, 0.5], position, rotation, bg = '#ffff
 export function Cloud({ position, scale = 1, speed = 0.4 }: { position: [number, number, number]; scale?: number; speed?: number }) {
   const ref = useRef<THREE.Group>(null);
   const puffs = useMemo(() => Array.from({ length: 6 }, (_, i) => ({ x: (i - 2.5) * 1.6 + Math.random(), y: Math.random() * 0.9, z: (Math.random() - 0.5) * 1.6, r: 1.3 + Math.random() * 1.1 })), []);
-  useFrame((_, dt) => {
+  useFrame(({ clock }, dt) => {
     if (!ref.current) return;
+    const scripted = readPresentationTime(clock);
+    if (scripted !== undefined) {
+      ref.current.position.x = ((position[0] + scripted * speed + 140) % 280 + 280) % 280 - 140;
+      return;
+    }
     ref.current.position.x += dt * speed;
     if (ref.current.position.x > 140) ref.current.position.x = -140;
   });

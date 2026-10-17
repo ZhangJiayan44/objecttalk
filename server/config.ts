@@ -3,7 +3,8 @@ import path from 'node:path';
 
 // Load a local .env when present (Node >= 20.12). Real deployments use real env vars.
 // Tests stay deterministic and offline: they never read the developer's .env (vitest sets VITEST).
-if (existsSync('.env') && !process.env.VITEST) process.loadEnvFile('.env');
+const envFile = process.env.OBJECTTALK_ENV_FILE || '.env';
+if (existsSync(envFile) && !process.env.VITEST) process.loadEnvFile(envFile);
 
 function parseIce(raw: string | undefined) {
   if (!raw) return null;
@@ -48,6 +49,7 @@ function modelList(raw: string | undefined, openaiDefaults: string[]): string[] 
 }
 
 export const config = {
+  allowedOrigins: (process.env.ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean),
   port: Number(process.env.PORT ?? 8787),
   host: process.env.HOST ?? '0.0.0.0',
   /** Public base URL used in QR codes when deployed (e.g. https://objecttalk.example.com). */

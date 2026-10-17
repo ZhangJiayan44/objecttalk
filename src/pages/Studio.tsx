@@ -377,7 +377,6 @@ export default function Studio() {
               </Suspense>
             </div>
             <p className="mt-3 text-sm text-muted">Players can call it: {preview.synonyms.join(', ')}</p>
-            {preview.rodin && <p className="mt-1 text-sm text-muted">Reference: {preview.rodin.reference}</p>}
           </>
         )}
       </Modal>
