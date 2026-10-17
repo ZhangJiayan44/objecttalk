@@ -17,10 +17,13 @@ describe('prepend-only explanatory opening', () => {
     expect(programChapterAt(OPENING_DURATION).id).toBe('intro');
     expect(programChapterAt(PROGRAM_DURATION).id).toBe('outro');
   });
-  it('restarts the approved soundtrack at the original film boundary', () => {
+  it('keeps music continuous across the opening boundary and throughout all 53 seconds', () => {
     expect(audioTimeAt(OPENING_DURATION - .1)).toBeCloseTo(OPENING_DURATION - .1, 8);
-    expect(audioTimeAt(OPENING_DURATION)).toBe(0);
-    expect(audioTimeAt(OPENING_DURATION + 28.3)).toBeCloseTo(28.3, 8);
-    expect(audioTimeAt(PROGRAM_DURATION)).toBe(48);
+    expect(audioTimeAt(OPENING_DURATION)).toBe(OPENING_DURATION);
+    expect(audioTimeAt(OPENING_DURATION + .1) - audioTimeAt(OPENING_DURATION - .1)).toBeCloseTo(.2, 8);
+    expect(audioTimeAt(OPENING_DURATION + 28.3)).toBeCloseTo(OPENING_DURATION + 28.3, 8);
+    expect(audioTimeAt(PROGRAM_DURATION)).toBe(53);
+    expect(audioTimeAt(-10)).toBe(0);
+    expect(audioTimeAt(PROGRAM_DURATION + 10)).toBe(PROGRAM_DURATION);
   });
 });

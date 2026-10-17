@@ -86,7 +86,7 @@
 
 完整保留 **53 秒 1080p60 产品影片**和**十页英文路演页面**。演示可切换真实 3D 场景，支持方向键翻页、全屏播放与影片结束后自动进入下一页。
 
-[打开路演](https://objecttalk-demo.vercel.app/pitch) · [下载影片](https://objecttalk-demo.vercel.app/demo/ObjectTalk-launch-film-53s-1080p60.mp4)
+[打开路演](https://objecttalk-demo.vercel.app/pitch) · [下载影片](https://objecttalk-demo.vercel.app/demo/ObjectTalk-launch-film-53s-1080p60.mp4?v=845ae0dc3541)
 
 ## 本地运行
 

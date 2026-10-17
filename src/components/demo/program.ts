@@ -9,5 +9,6 @@ export const PROGRAM_CHAPTERS = [
 ] as const;
 export const clampProgram = (t: number) => Math.max(0, Math.min(PROGRAM_DURATION, Number.isFinite(t) ? t : 0));
 export const contentTimeAt = (t: number) => Math.max(0, Math.min(FILM_DURATION, t - OPENING_DURATION));
-export const audioTimeAt = (t: number) => t < OPENING_DURATION ? t : contentTimeAt(t);
+// Music follows the whole 53-second program, including its five-second opening.
+export const audioTimeAt = clampProgram;
 export const programChapterAt = (t: number) => PROGRAM_CHAPTERS.find(c => clampProgram(t) < c.end) ?? PROGRAM_CHAPTERS[PROGRAM_CHAPTERS.length - 1];

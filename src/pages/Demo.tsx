@@ -2,6 +2,7 @@ import { EyeOff, Maximize, Pause, Play, RotateCcw, Volume2, VolumeX } from 'luci
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { PROGRAM_CHAPTERS as CHAPTERS, PROGRAM_DURATION as FILM_DURATION, programChapterAt as chapterAt, clampProgram as clampTime, OPENING_DURATION, contentTimeAt, audioTimeAt } from '@/components/demo/program';
 import { asset } from '@/lib/asset';
+import { DEMO_SOUNDTRACK } from '@/components/demo/media';
 import { DemoClockContext, DemoPrewarmTimeContext, DemoQualityContext, warmNativeScenes } from '@/components/demo/NativeDemoScene';
 import { ChapterContent, FilmLogo } from '@/components/demo/FilmScenes';
 import { Opening } from '@/components/demo/Opening';
@@ -115,8 +116,6 @@ export default function Demo() {
           // slide starts; never freeze a half-completed transition.
           next = currentChapter.end - 0.0001;
         }
-        if (clock.current.time < OPENING_DURATION && next >= OPENING_DURATION && audio.current)
-          audio.current.currentTime = audioTimeAt(next);
         clock.current.time = next;
         contentClock.current.time = contentTimeAt(next);
         const interval = 1000 / (quality === 'off' ? 30 : 60);
@@ -145,13 +144,13 @@ export default function Demo() {
   useEffect(() => {
     if (!audio.current) return;
     audio.current.muted = muted;
-    if (playing && ready && !muted) {
-      audio.current.currentTime = audioTimeAt(time);
+    if (playing && ready && prepared && !muted) {
+      audio.current.currentTime = audioTimeAt(clock.current.time);
       void audio.current.play().catch(() => setMuted(true));
     } else audio.current.pause();
     // RAF is authoritative; resync audio only when transport changes or the user seeks.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, muted, ready]);
+  }, [playing, muted, ready, prepared]);
   useEffect(() => {
     if (capture)
       window.__objectTalkDemo = {
@@ -217,7 +216,7 @@ export default function Demo() {
         onPointerMove={showControls}
         onPointerDown={showControls}
       >
-        <audio ref={audio} src={asset('/demo/score.mp3')} preload="auto" />
+        <audio ref={audio} src={asset(DEMO_SOUNDTRACK)} preload="auto" />
         <div
           ref={stage}
           className="film-stage"

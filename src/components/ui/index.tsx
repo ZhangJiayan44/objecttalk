@@ -3,6 +3,7 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import { Menu, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { asset } from '@/lib/asset';
+import { DEMO_FILM } from '@/components/demo/media';
 import { openDemoFullscreen } from '@/lib/demo-fullscreen';
 import { Link, NavLink } from 'react-router';
 
@@ -210,7 +211,7 @@ export function Footer() {
               <Link to="/pitch" className="hover:text-ink">Pitch presentation</Link>
             </li>
             <li>
-              <a href={asset('/demo/ObjectTalk-launch-film-53s-1080p60.mp4')} download className="hover:text-ink">Download demo film</a>
+              <a href={asset(DEMO_FILM)} download className="hover:text-ink">Download demo film</a>
             </li>
             <li>
               <Link to="/progress" className="hover:text-ink">
