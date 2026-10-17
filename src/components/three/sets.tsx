@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { Dust, LightShaft, Sign, useTextTexture } from './env';
+import { LightShaft, Sign, useTextTexture } from './env';
 import { Box, INK, PendantLamp, Plant, RoomShellBox, usePatternTexture, usePlankTexture, WindowPane } from './furniture';
 import { Prop } from './props';
 
@@ -200,7 +200,6 @@ export function PetShopRoom() {
       <Prop name="cactus" position={[5.3, 0, -4.3]} size={0.7} />
       <Prop name="sunflower" position={[-5.3, 0, 4.4]} size={0.8} />
       <PendantLamp position={[0, 3.4, 0]} drop={1.0} shade="#3fbf7f" />
-      <Dust area={[11, 3, 9]} center={[0, 1.7, 0]} count={160} />
     </group>
   );
 }

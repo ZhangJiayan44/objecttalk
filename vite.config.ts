@@ -65,7 +65,11 @@ export default defineConfig(({ mode }) => {
     // Decided at build time, so the normal build drops the in-page server entirely (and vice versa).
     define: { 'import.meta.env.VITE_STATIC': JSON.stringify(pages ? '1' : '') },
     plugins: [...(pages ? [pagesBuild()] : []), shippedLevels(), react(), tailwindcss(), ...(mode === 'https' ? [basicSsl()] : [])],
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
+    },
     resolve: {
+      dedupe: ['react', 'react-dom'],
       alias: {
         '@': here('./src'),
         '@shared': here('./shared'),

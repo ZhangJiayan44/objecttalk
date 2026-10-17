@@ -18,11 +18,9 @@
 
 [快速开始](#-快速开始) · [关卡](#-关卡) · [操作](#-操作) · [AI 搭档](#-ai-搭档agent) · [Scene Agent](#-scene-agent一句话生成整个关卡) · [技术架构](docs/ARCHITECTURE.md) · [Rodin 四级](docs/RODIN.md) · [English](README.md)
 
-<img src="docs/review/heikesong3-overview.png" alt="ZhangJiayan44 的灯火夜市：楼上市街、商户廊道与茶座" width="100%" />
+<img src="docs/images/city-walker.jpg" alt="Toy Town：问路者以第一人称在 3D 街道上行走" width="100%" />
 
 </div>
-
-此版本由 [ZhangJiayan44](https://github.com/ZhangJiayan44) 维护。主分支采用 heikesong3 商户街区版夜市：九家可购物商铺、三家楼上食铺、有顶廊道、茶楼侧边茶座，以及灯彩作坊和绢扇铺街景；桥下保留地面通街，池院上方留空。早期布局保存在独立分支。保留原贡献者署名及 MIT 许可证。
 
 ## 💡 为什么做这个
 
@@ -37,7 +35,7 @@ AI 陪聊什么都能听懂，所以你**没有理由说清楚**。ObjectTalk �
 
 ## 🚀 快速开始
 
-**浏览器直接玩：** https://zhangjiayan44.github.io/objecttalk/ （选择 **Night Market** 查看本版本夜市。GitHub Pages 静态版支持和 AI 搭档单人练习及 AI 对 AI 演示；双设备对战、LLM Agent 和实时 Rodin 生成需要启动完整服务器，详见 [docs/DEPLOY.md](docs/DEPLOY.md)。）
+**浏览器直接玩：** https://zhangjiayan44.github.io/objecttalk/ （GitHub Pages 静态版：和 AI 搭档单人练习、AI 对 AI 演示都在浏览器里运行；双设备对战、LLM Agent 和实时 Rodin 生成需要按下文启动完整服务器，详见 [docs/DEPLOY.md](docs/DEPLOY.md)。）
 
 ```bash
 git clone https://github.com/ZhangJiayan44/objecttalk.git
@@ -54,6 +52,7 @@ npm run dev            # 打开 http://localhost:5173
 |---|---|---|---|---|
 | 📚 | **Cozy Study 书房** | 🧭 Guide 看得到金色目标 | 🛠️ Builder 在桌上拿取、摆放 | next to / between / on YOUR left / closer to you |
 | ☕ | **Corner Café 咖啡馆** | 🙋 顾客拿着点单卡 | 🧑‍🍳 店员从展柜取餐放到托盘 | Could I have two croissants and a large coffee? · Small or large? |
+| 🏮 | **Night Market 夜市** | 🧭 搭档看地图和秘密购物清单 | 🛍️ 购物者走访九家地面与楼上商铺采购，再回入口交付 | Take the stairs to Peach Blossom Sweets · two bowls of noodles · a large bubble tea |
 | 🏙️ | **Toy Town 小镇问路** | 🗺️ 导航员看地图 | 🚶 问路者 **WASD 在街道上行走** | Excuse me, how do I get to…? · Turn left at the bank |
 | 🛏️ | **Messy Bedroom 卧室寻物** | 🤔 主人记得东西放在哪 | 🔦 寻找者在房间里走动、打开箱子 | under the bed · on top of the wardrobe · inside the toy box |
 | 🎸 | **Music Room 音乐教室** ✨ | 🎼 乐队队长 | 🧰 搬运工 | 乐器词汇 + 视角（Scene Agent 生成） |
@@ -64,35 +63,27 @@ Tricky 下 AI 搭档会故意犯典型错误（说 “go north”、从自己的
 
 ## 🎮 操作
 
-### 灯火夜市：结伴采购
-
-夜市采用不对称巷道、池院与楼上市街布局，共有九家可购物商铺：月来面馆、玉露茶铺、如意烤串、栗香小摊、桃花点心、灯下杂货、竹里饺子铺、金穗炭炉与桂香甜品。其中玉露茶铺、桃花点心和桂香甜品位于二楼，沿东侧楼梯、有顶商户廊道与跨巷桥到达。茶楼侧边设茶座，商铺有备货架；灯彩作坊和绢扇铺为街景陈设，不参与采购任务。老板采用抽象化的程序几何人物与轻微待机摆动。
-
-- **Shopping partner / guide** 看俯视街区与私有购物清单，通过英语告知店名、物品、数量和杯型，例如 “Go to Moon Noodle House and buy two bowls of noodles.”
-- **Shopper / builder** 看第一人称街景，WASD 行走、Shift 跑；走到老板柜台点击，或按 **B** 打开店铺菜单，选购小杯/大杯或食物。右侧购物袋可退回误买的物品。
-- 清单始终不会发送给 shopper；每份清单至少跨两家店并包含支巷店铺。买齐后回入口牌坊的集合圈，按 **F** 或点击交货按钮提交。库存、距离、碰撞与交货条件由服务器校验。
-- 支持双人、AI 指挥、玩家指挥 AI、AI 对 AI、移动端摇杆及采购路线回放。每局三份清单，默认 300 秒；无 API key 时规则 partner 仍可使用，配置 LLM 后 guide 可调用接地路线工具。
-
-布局与采购规则：`shared/nightmarket.ts`；3D 场景及商店菜单：`src/components/three/NightMarketScene.tsx`；对话 partner：`server/game/bots/nightmarket.ts`。桥面和桥下道路分别记录高度，同一平面位置可以分层通行。
-
-点击一次 3D 画面即可锁定鼠标，**像 CS 一样**：移动鼠标就是转头，准星就是指针，点击即交互，`Esc` 释放鼠标。
+点击一次 3D 画面即可锁定鼠标：移动鼠标转头，用中心圆点指向物品，点击交互，`Esc` 释放鼠标。
+游戏中麦克风默认开启，直接说话即可自动发送，按 `M` 或点击麦克风静音。底部保留麦克风、打字、字幕和操作面板入口，其他功能及快捷键收进操作面板。
 
 | 按键 | | 按键 | |
 |---|---|---|---|
-| `W` `A` `S` `D` / 方向键 | 行走（小镇、卧室），`Shift` 跑 | `Space`（按住） | 说话（语音转文字） |
+| `W` `A` `S` `D` / 方向键 | 行走（基础书房除外），`Shift` 跑 | `M` | 麦克风开启 / 静音 |
 | 鼠标左键 | 拿起 · 放下 · 放上托盘 · 打开 | `Enter` | 改为打字 |
-| `F` | 上餐（咖啡馆） | `1`–`6` | 当前角色的快捷短语 |
-| `C` | 字幕开关（**默认关闭**） | `T` | 完整对话记录 |
-| `L` | 物品标签 | 点击物品 | 听发音并保存单词 |
+| `F` | 上餐（咖啡馆） | Controls 按钮 | 展开功能与快捷键面板 |
+| `E` | 显示 / 隐藏任务卡 | `C` | 字幕开关（**默认关闭**） |
+| `Tab` | 短语手册（含中文释义） | `T` | 完整对话记录 |
+| `G` | 查看 AI 搭档的推理过程 | `L` | 物品标签 |
 
 **语音优先**：读对方的文字不是口语练习，所以默认不显示字幕，只**听**对方说（AI 语音 / 朋友的语音转写），
 可以点 👂 再听一遍、点 👁 只看这一句，或按 `C` 打开字幕。手机上支持拖动转视角和虚拟摇杆。
 
 ## 🔁 学习闭环（本轮新增）
 
-- **新关卡**：🐶 **宠物店**（描述和摆放小动物）、🏮 **夜市**（a bowl of noodles、a bag of chestnuts、a large bubble tea）；咖啡馆菜单扩到 19 道；水果集市有了自己的露天集市场景；小镇街上有车流、公园有小狗和风筝。
+- **新关卡**：🐶 **宠物店**（描述和摆放小动物）、🏮 **夜市**（走访九家地面与楼上商铺，练习问路、楼层、量词和采购）；咖啡馆菜单扩到 19 道；水果集市有了自己的露天集市场景；小镇街边停放可碰撞的车辆，公园有小狗和风筝。
+- **🛟 中文求助**：卡住时按 <kbd>H</kbd>，用中文打字或说话，系统私下给出英文并朗读，你再**自己说出来**。队友永远看不到中文；每局第一次免费，之后每次 −4 分；求助句不计入 CEFR 估计。
 - **📝 借来的词**：赛后列出每句借来的英文，并标出你有没有说出来，同时存进单词本。
-- **👆 词卡**：准星对准场景里任何道具（新增 73 个 Rodin 模型），显示英文名，点一下朗读并收藏。
+- **👆 词卡**：准星对准场景里任何道具（新增 73 个 Rodin 模型），显示中英文名，点一下朗读并收藏。
 - **📒 单词本**：在 `/progress` 页面翻卡复习，借得越多的越靠前。
 - **📷 把自己的东西放进游戏**：拍照 → Qwen3.6 识别并教你这个词 → Rodin 生成期间跟读例句 → 生成后可以藏进卧室、放上书桌，或成为咖啡馆今日特供。
 - **🎯 任务与每日挑战**：每关 2–3 种任务主题，可在大厅选择；📅 每日挑战让同一天所有房间的世界和任务相同，同学之间可以比分。
@@ -124,7 +115,7 @@ Music Room 和 Fruit Market 就是这样生成的：20 次 Rodin 生成，157 MB
 
 | 等级 | ObjectTalk 中的实现 |
 |---|---|
-| **01 USE** | **130** 个 Rodin Gen-2.5 模型：书桌物品、宠物、咖啡馆与夜市菜单、小镇建筑与车辆、卧室物品、42 个可点读的场景道具 |
+| **01 USE** | **131** 个 Rodin Gen-2.5 模型：书桌物品、宠物、咖啡馆与夜市菜单、小镇建筑与车辆、卧室物品、42 个可点读的场景道具 |
 | **02 BUILD** | 全部在 Claude Code 中通过 **Hyper3D MCP** 生成；仓库自带 `.mcp.json` 并启用官方 `rodin3d-skill` 插件；流程沉淀为 Skill（`new-level`、`new-object-pack`） |
 | **03 CORE** | Object Studio 运行时调用 Rodin API：拍照生成你自己的游戏物品 |
 | **04 AGENT** | **Scene Agent** 自动生成、校验并发布可玩的完整关卡 |
@@ -141,7 +132,9 @@ Music Room 和 Fruit Market 就是这样生成的：20 次 Rodin 生成，157 MB
 | `npm run agent -- login` | 登录官方 Hyper3D CLI（Scene Agent 的 `cli` 后端） |
 | `PUBLIC_URL` | 部署后的二维码地址 |
 
-画质可用 `?fx=off|low|high` 手动指定。
+局内打开 **Controls → Settings**，即可直接调整鼠标灵敏度及画质，无需离开对局；更改即时生效并自动保存在浏览器。点击返回箭头回到工具面板，按 `Esc` 关闭侧栏。也可在独立设置页（`/settings`）调整。画质分为 Auto / High / Balanced / Performance：Auto 会在持续低帧率时逐级降档，手动档位保持固定。也可用 `?fx=auto|high|low|off` 指定并保存画质（`low` 对应 Balanced，`off` 对应 Performance）。
+
+夜市中靠近商店按 `B` 打开菜单，用购物袋查看或退回物品，沿东侧楼梯前往玉露茶铺、桃花点心和桂香甜品，回到入口集合处后按 `F` 交付。这个版本同步了上游的麦克风、字幕、操作面板和语音轮流播放，同时保留 ZhangJiayan44 的商户街区结构。`/demo` 的 AI 搭档轮流发言并等待语音播放结束；新一局开始时清理上一局的临时反馈。
 
 ## 🧪 开发
 
@@ -152,6 +145,8 @@ npm run agent          # Scene Agent 帮助
 
 ## 🙏 致谢
 
-为 **上海科技大学 Techathon 2026** 制作。3D 模型由 [Hyper3D Rodin](https://hyper3d.ai) 生成，参考图来自 [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji)（MIT）。完整第三方清单见 [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md)。
+为 **上海科技大学 Techathon 2026** 制作。3D 模型由 [Hyper3D Rodin](https://hyper3d.ai) 生成，参考图来自 [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji)（MIT）。
+
+UI 风格参考 [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) 项目的 [Educational Platform](https://www.uupm.cc/demo/educational-platform) 演示模板，包括其活泼的黏土拟态配色、卡片与按钮样式；UI 代码由本队自行实现。完整第三方清单见 [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md)。
 
 [MIT License](LICENSE)

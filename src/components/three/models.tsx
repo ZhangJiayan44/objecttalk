@@ -97,53 +97,17 @@ function Mug({ color, look }: { color: ColorName; look: Look }) {
   );
 }
 
-/** A celadon gaiwan for the tea stall; the item id stays bubble-tea for lesson compatibility. */
-function JadeTea({ look }: { look: Look }) {
-  const ghost = !!look.ghost;
-  const porcelain = '#a8c8b7';
-  const tea = '#b77b4e';
-  const shadow = '#6f9d8c';
-  return (
-    <group>
-      <mesh castShadow position={[0, 0.055, 0]}>
-        <cylinderGeometry args={[0.33, 0.28, 0.07, 24]} />
-        <meshStandardMaterial color="#d4b27d" roughness={0.8} transparent={ghost} opacity={ghost ? 0.35 : 1} />
-      </mesh>
-      <mesh castShadow position={[0, 0.29, 0]}>
-        <cylinderGeometry args={[0.27, 0.21, 0.43, 24]} />
-        <meshStandardMaterial color={porcelain} roughness={0.36} transparent={ghost} opacity={ghost ? 0.35 : 1} />
-      </mesh>
-      <mesh position={[0, 0.505, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.225, 24]} />
-        <meshStandardMaterial color={tea} roughness={0.45} transparent={ghost} opacity={ghost ? 0.35 : 1} />
-      </mesh>
-      <mesh castShadow position={[0, 0.55, 0]}>
-        <cylinderGeometry args={[0.285, 0.26, 0.045, 24]} />
-        <meshStandardMaterial color={porcelain} roughness={0.36} transparent={ghost} opacity={ghost ? 0.35 : 1} />
-      </mesh>
-      <mesh castShadow position={[0, 0.63, 0]}>
-        <sphereGeometry args={[0.075, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color={porcelain} roughness={0.36} transparent={ghost} opacity={ghost ? 0.35 : 1} />
-      </mesh>
-      <mesh position={[0, 0.67, 0]}>
-        <sphereGeometry args={[0.035, 12, 8]} />
-        <meshStandardMaterial color={shadow} roughness={0.45} transparent={ghost} opacity={ghost ? 0.35 : 1} />
-      </mesh>
-    </group>
-  );
-}
-
 /** One movable object. Normalized models are 1 unit at their largest side. */
 export function ItemModel({ kind, color, size, look = {} }: { kind: string; color: ColorName; size: SizeName; look?: Look }) {
   const def = getKind(kind);
   const scale = (def?.footprint ?? 0.32) * SIZE_SCALE[size];
-  return <group scale={scale}>{kind === 'bubble-tea' ? <JadeTea look={look} /> : def?.model ? <GlbModel url={def.model} rotation={def.rotation} look={look} /> : <Mug color={color} look={look} />}</group>;
+  return <group scale={scale}>{def?.model ? <GlbModel url={def.model} rotation={def.rotation} look={look} /> : <Mug color={color} look={look} />}</group>;
 }
 
 /** Warm the GLB cache for a level (or the hero items) while the lobby is open. */
 export function preloadModels(level?: string) {
   const urls = new Set(['/models/rocket.glb', '/models/teddy_bear.glb', '/models/cupcake.glb', '/models/sneaker.glb', '/models/game_controller.glb', DECOR_MODELS.plant, DECOR_MODELS.books]);
-  if (level) for (const k of kindsFor(level)) if (k.model && k.id !== 'bubble-tea') urls.add(k.model);
+  if (level) for (const k of kindsFor(level)) if (k.model) urls.add(k.model);
   if (level === 'nightmarket') urls.add('/models/nightmarket/shopkeeper.glb');
   if (level === 'city') for (const u of ['/models/bank.glb', '/models/convenience_store.glb', '/models/hospital.glb', '/models/school.glb', '/models/post_office.glb', '/models/hotel.glb', '/models/museum.glb', '/models/house.glb', '/models/fountain.glb', '/models/tree.glb', '/models/traffic_light.glb', '/models/bus_stop.glb']) urls.add(u);
   for (const url of urls) useGLTF.preload(asset(url), false, true);
@@ -308,7 +272,7 @@ export function Avatar({ role, name, label = true }: { role: Role; name: string;
     if (head.current) head.current.position.y = 1.32 + Math.sin(clock.elapsedTime * 2 + (role === 'guide' ? 0 : 1.5)) * 0.02;
   });
   return (
-    <group>
+    <group userData={{ walkSolid: true }}>
       <mesh castShadow position={[0, 0.62, 0]}>
         <capsuleGeometry args={[0.26, 0.6, 8, 20]} />
         <meshStandardMaterial color={color} roughness={0.55} />

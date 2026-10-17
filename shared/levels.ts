@@ -58,7 +58,7 @@ export interface LevelMeta {
   engine: EngineKind;
   skills: string[];
   roles: Record<Role, RoleCopy>;
-  /** How the builder moves: standing in place with mouse-look, or walking (WASD). */
+  /** Player movement; guides with a map/dollhouse view keep their overview. */
   controls: 'stand' | 'walk';
   /** What the guide looks at: their own standing view, a town map, or a dollhouse view of the room. */
   guideView: 'stand' | 'map' | 'dollhouse';
@@ -132,7 +132,7 @@ export const LEVELS: Record<LevelId, LevelMeta & { id: LevelId }> = {
       guide: { name: 'Shop owner', icon: '🧑‍🔧', sees: 'which pet a customer wants', does: 'explains which animal and where it goes' },
       builder: { name: 'Helper', icon: '🧤', sees: 'no target', does: 'picks up and moves the animals' },
     },
-    controls: 'stand',
+    controls: 'walk',
     guideView: 'stand',
     durationSec: 90,
     missions: 3,
@@ -172,7 +172,7 @@ export const LEVELS: Record<LevelId, LevelMeta & { id: LevelId }> = {
       guide: { name: 'Customer', icon: '🙋', sees: 'their order card', does: 'orders politely, with numbers and sizes' },
       builder: { name: 'Barista', icon: '🧑‍🍳', sees: 'the display case', does: 'puts the right food on the tray' },
     },
-    controls: 'stand',
+    controls: 'walk',
     guideView: 'stand',
     durationSec: 120,
     missions: 3,
@@ -355,7 +355,8 @@ export const LEVEL_ORDER: LevelId[] = ['study', 'pets', 'cafe', 'nightmarket', '
 const generatedLevels = new Map<string, LevelMeta>();
 
 export function registerLevels(levels: LevelMeta[]) {
-  for (const l of levels) if (l.generated && !(l.id in LEVELS)) generatedLevels.set(l.id, l);
+  // Older published bundles used standing controls; their shared sets now support bounded walking.
+  for (const l of levels) if (l.generated && !(l.id in LEVELS)) generatedLevels.set(l.id, { ...l, controls: 'walk' });
 }
 
 export function generatedLevelList(): LevelMeta[] {

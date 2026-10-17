@@ -3,6 +3,7 @@ import { buildBedroom, canReach, collideRoom, FURNITURE, generateSeekMission, it
 import type { Pose } from '../../../shared/city';
 import type { ClientMission, ReplayMission } from '../../../shared/protocol';
 import type { Role } from '../../../shared/types';
+import { moveWithCollision } from '../../../shared/collision';
 import { createBedroomBot } from '../bots/bedroom';
 import type { BotIO, EngineHost, LevelEngine, ReportInput } from './types';
 
@@ -71,10 +72,10 @@ export class BedroomEngine implements LevelEngine {
       id: m.id,
       index: m.index,
       type: 'seek',
-      title: view === 'guide' ? `Find ${possessive(m.kind)}` : `Lost thing #${m.index + 1}`,
+      title: `Lost thing #${m.index + 1}`,
       brief:
         view === 'guide'
-          ? `You lost ${possessive(m.kind)}. You remember where (gold ring). Tell your friend what it is and exactly where to look.`
+          ? 'Help your partner find the pictured object. The gold ring shows where you left it.'
           : 'Your friend lost something in this room. Ask what it is and where to look, walk there (WASD + mouse) and click it.',
     };
     if (view !== 'guide') return base;
@@ -118,7 +119,7 @@ export class BedroomEngine implements LevelEngine {
       dx *= max / len;
       dz *= max / len;
     }
-    const pos = collideRoom({ x: this.pose.x + dx, z: this.pose.z + dz });
+    const pos = moveWithCollision(this.pose, { x: this.pose.x + dx, z: this.pose.z + dz }, collideRoom);
     this.pose = { x: pos.x, z: pos.z, yaw: wrapYaw(p.yaw) };
     this.host.emitPose(this.pose, playerId);
     this.sample();

@@ -22,11 +22,9 @@ find things on a desk, order in a café, **ask for directions while walking thro
 
 [Quick start](#-quick-start) · [Levels](#-levels) · [Learning loop](#-the-learning-loop) · [Controls](#-controls) · [AI partner](#-the-ai-partner-agent) · [Scene Agent](#-scene-agent-whole-levels-from-a-theme) · [Product & market](docs/PRODUCT.md) · [Architecture](docs/ARCHITECTURE.md) · [Rodin ×4](docs/RODIN.md) · [中文文档](README.zh-CN.md)
 
-<img src="docs/review/heikesong3-overview.png" alt="ZhangJiayan44's night market: merchant arcades, upstairs shops and tea terrace" width="100%" />
+<img src="docs/images/city-walker.jpg" alt="Toy Town: the walker walks the 3D streets in first person and asks the navigator for directions" width="100%" />
 
 </div>
-
-This edition is maintained by [ZhangJiayan44](https://github.com/ZhangJiayan44). The default branch contains the heikesong3 merchant-quarter night market: nine interactive shops, three upstairs food shops, covered arcades, a tea terrace, decorative lantern and fan workshops, and open passages below the bridges. Earlier layouts are preserved on separate branches. Original contributor credits and the MIT license are retained.
 
 ## 💡 Why
 
@@ -44,7 +42,7 @@ speaking level (CEFR A1 to C1).
 
 ## 🚀 Quick start
 
-**Play in the browser now:** https://zhangjiayan44.github.io/objecttalk/ (Choose **Night Market** to play this edition. GitHub Pages: solo with the AI
+**Play in the browser now:** https://zhangjiayan44.github.io/objecttalk/ (GitHub Pages: solo with the AI
 partner and the AI-vs-AI demo run entirely in your browser; for two devices, the LLM agent and live
 Rodin generation run the full server below. See [docs/DEPLOY.md](docs/DEPLOY.md).)
 
@@ -78,7 +76,7 @@ Set `PUBLIC_URL` so QR codes point at your domain.
 | 📚 | **Cozy Study** | 🧭 Guide sees the gold target | 🛠️ Builder picks & places on the desk | *next to / between / on YOUR left / closer to you* |
 | 🐶 | **Pet Shop** | 🧑‍🔧 Shop owner knows which pet | 🧤 Helper picks up & moves the animals | *the small bunny next to the turtle · the puppy closest to you* |
 | ☕ | **Corner Café** | 🙋 Customer holds the order card | 🧑‍🍳 Barista fills the tray from the display case (19-dish menu) | *Could I have two croissants and a large coffee? · Small or large? · Anything else?* |
-| 🏮 | **Night Market** | 🧭 Partner holds a private shopping list and street map | 🛍️ Shopper visits nine shops across ground-floor lanes and upstairs merchant arcades | *Go upstairs to Peach Blossom Sweets · turn into the side lane · buy two bowls of noodles* |
+| 🏮 | **Night Market** | 🧭 Shopping partner sees the map and secret shopping list | 🛍️ Shopper visits nine ground-floor and upstairs shops, then returns to the entrance gate | *Take the stairs to Peach Blossom Sweets · two bowls of noodles · a large bubble tea* |
 | 🏙️ | **Toy Town** | 🗺️ Navigator has the map | 🚶 Walker **walks the streets** (WASD) | *Excuse me, how do I get to…? · Turn left at the bank · It's on your right* |
 | 🛏️ | **Messy Bedroom** | 🤔 Owner remembers where things are | 🔦 Seeker **walks the room**, opens boxes | *under the bed · on top of the wardrobe · inside the toy box · warmer / colder* |
 | 🎸 | **Music Room** ✨ | 🎼 Band leader | 🧰 Roadie | instrument words + perspective (made by the Scene Agent) |
@@ -106,25 +104,30 @@ today, so classmates can compare scores.
 
 | | What happens |
 |---|---|
+| 🛟 **中文求助 (Chinese lifeline)** | Stuck for a word? Press <kbd>H</kbd> and type or say it in Chinese. You privately get the English line (DeepSeek, or an offline glossary), hear it, and **say it yourself**. Your partner never sees Chinese; the first lifeline is free, later ones cost 4 points, and lifeline lines do not count for the CEFR estimate. |
 | 📝 **Borrowed words** | After the round, every borrowed phrase is listed (*you said it ✓ / not said yet*) and saved to your word book. |
-| 👆 **Word cards** | Point at any prop in a scene (73 new Rodin props: plants, vehicles, pets…): its English name pops up; click to hear it and save it. |
+| 👆 **Word cards** | Point at any prop in a scene (73 new Rodin props: plants, vehicles, pets…): its English and Chinese name pops up; click to hear it and save it. |
 | 📒 **Word book** | `/progress`: flip-card review of borrowed phrases, looked-up words and your own photo objects, weakest first. |
 | 📷 **Your things in the game** | Object Studio: snap a photo → Qwen3.6 vision names it (English, plural, Chinese, an example sentence) → you practise saying it while Rodin builds it → it hides in the bedroom, sits on the desk or becomes the café's special. |
 
+<img src="docs/images/lifeline.jpg" alt="The Chinese lifeline: Chinese in, a private English line out" width="100%" />
+
 ## 🎮 Controls
 
-**Night Market shopping:** winding lanes connect nine interactive shops. The tea house, pastry shop and dessert shop occupy the upper floor, reached by the east stairs and merchant bridges; the lantern and fan workshops are scenery. Covered frontages, tea seating, preparation shelves and open underpasses give the district distinct places to visit. The partner alone receives the shopping list; every list visits at least two shops and a side lane. Walk to a merchant and click their counter (or press **B**) to buy, return incorrect items from the shopping bag, then bring the bag to the entrance gate and press **F** to deliver. Shared movement rules validate elevation, purchase distance and delivery. Solo AI, two players on a full server, AI-vs-AI, mobile joystick and path replays are supported. Shopkeepers use abstract procedural figures with a gentle idle sway. See the [Chinese walkthrough](README.zh-CN.md#灯火夜市结伴采购).
-
-Click the 3D view once and the mouse is yours, **CS-style**: moving the mouse turns your head,
-the crosshair is your pointer, click to interact, <kbd>Esc</kbd> gives the mouse back to the page.
+Click the 3D view once to capture the mouse: moving the mouse turns your head,
+the centre dot is your pointer, click to interact, <kbd>Esc</kbd> gives the mouse back to the page.
+The microphone is on by default during play. Just speak; final sentences are sent automatically.
+The bottom bar keeps mic, typing and captions together; **Controls** opens the other tools and shortcuts.
 
 | Key | | Key | |
 |---|---|---|---|
-| <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows | walk (town, bedroom); <kbd>Shift</kbd> run | <kbd>Space</kbd> (hold) | talk (speech-to-text) |
+| <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows | walk (all except the basic study); <kbd>Shift</kbd> run | <kbd>M</kbd> | mic on / off |
 | click | pick up · place · add to tray · open | <kbd>Enter</kbd> | type a message instead |
-| <kbd>F</kbd> | serve the tray (café) | <kbd>1</kbd>–<kbd>6</kbd> | quick phrases for your role |
-| <kbd>C</kbd> | captions on / off (**off by default**) | <kbd>T</kbd> | full transcript |
-| <kbd>L</kbd> | object labels | click a prop | word card: hear it, save it |
+| <kbd>F</kbd> | serve the tray (café) | Controls button | tools and keyboard shortcuts |
+| <kbd>E</kbd> | show / hide the mission card | <kbd>C</kbd> | captions on / off (**off by default**) |
+| <kbd>Tab</kbd> | phrasebook (with Chinese glosses) | <kbd>T</kbd> | full transcript |
+| <kbd>G</kbd> | the AI partner's reasoning | <kbd>L</kbd> | object labels |
+| <kbd>H</kbd> | 🛟 中文求助: say it in Chinese, get the English | click a prop | word card: hear it, save it |
 
 **Voice-first by design.** Reading your partner's text is not speaking practice, so captions are
 off: you *hear* the AI (and your friend's transcribed speech), can replay any line with 👂,
@@ -146,7 +149,7 @@ what its role knows and only talks through the chat, like a human.
   the café, step execution with corner counting in the town, "the top shelf or the bottom shelf?"
   in the bedroom), answers the question you actually asked, never repeats itself verbatim, and
   takes over instantly whenever the LLM is off or slow.
-- Open the **AI brain** panel from the top bar to see which brain answered, every tool call and result.
+- Open the **AI brain** panel (<kbd>G</kbd>) to see which brain answered, every tool call and result.
 - Simulation tests run AI vs AI on every level and difficulty: all missions complete.
 
 ## 🏭 Scene Agent: whole levels from a theme
@@ -167,7 +170,7 @@ were made this way: 20 Rodin generations, 157 MB → 5.5 MB, every check PASS.
 
 | Level | In ObjectTalk |
 |---|---|
-| **01 USE** | **130** Rodin Gen-2.5 models: desk objects, pets, café and night-market menus, town buildings, cars & landmarks, bedroom belongings, 42 scenery props with word cards |
+| **01 USE** | **131** Rodin Gen-2.5 models: desk objects, pets, café and night-market menus, town buildings, cars & landmarks, bedroom belongings, 42 scenery props with word cards |
 | **02 BUILD** | All produced through the **Hyper3D MCP** inside Claude Code; the repo ships `.mcp.json` and enables the official `rodin3d-skill` plugin; workflows packaged as skills (`new-level`, `new-object-pack`) |
 | **03 CORE** | Object Studio calls the Rodin API at runtime: your photo becomes a game object |
 | **04 AGENT** | The **Scene Agent** generates, validates and publishes whole playable levels |
@@ -189,7 +192,9 @@ Everything is optional. Copy [`.env.example`](.env.example) to `.env`:
 | `LLM_PARTNER` | on | Set `0` to keep the LLM for coaching only |
 | `ICE_SERVERS` | public STUN | WebRTC voice link (add TURN for strict networks) |
 
-Graphics: `?fx=off|low|high` overrides the automatic post-processing level (remembered per browser).
+During play, open **Controls → Settings** to adjust mouse sensitivity and graphics quality without leaving the round. Changes apply immediately and are saved in this browser; **Back** returns to tools and **Esc** closes the drawer. Settings are also available at `/settings`. Quality modes: Auto, High, Balanced or Performance. Auto lowers quality after sustained slow frames; manual modes stay fixed. `?fx=auto|high|low|off` selects and remembers a mode (`low` = Balanced, `off` = Performance).
+
+Night Market: press **B** near a shop to open its menu, use the shopping bag to review or return items, then press **F** at the entrance gate to deliver. This edition keeps the upstream control bar, microphone, captions and controls drawer while using ZhangJiayan44's nine-shop merchant-quarter map with upstairs tea, pastry and dessert shops. In `/demo`, AI partners take turns speaking and wait for playback to finish; a new round clears the previous round's transient feedback.
 
 ## 🧪 Development
 
@@ -214,7 +219,9 @@ tests/    vitest: engines, NLU, agent harness, AI-vs-AI simulations, end-to-end 
 
 Built for **ShanghaiTech Techathon 2026**. 3D models by [Hyper3D Rodin](https://hyper3d.ai);
 reference art from [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT);
-UI style inspired by a playful claymorphism template; 2D-over-3D interaction inspired by
-[medkit](https://github.com/bedriyan/medkit-app). Full list: [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md).
+UI style inspired by the [Educational Platform](https://www.uupm.cc/demo/educational-platform)
+demo from [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill),
+including its playful claymorphism palette, cards and buttons. UI code is implemented by our team.
+Full list: [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md).
 
 Released under the [MIT License](LICENSE).

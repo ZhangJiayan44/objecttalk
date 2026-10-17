@@ -84,7 +84,7 @@ export class CafeEngine implements LevelEngine {
       title: `${this.market ? 'Shopping list' : 'Order'} ${m.index + 1}`,
       brief:
         view === 'guide'
-          ? 'You are the customer. Order everything on your card: numbers, sizes and all. Say "That\'s all" when you are done.'
+          ? 'Order the pictured items in the quantities and sizes shown.'
           : `You are the ${levelOf(this.host.settings.level).roles.builder.name.toLowerCase()}. Listen to the order, ask about sizes and numbers, put everything on the tray, then serve it.`,
     };
     if (this.market) base.brief = view === 'guide'

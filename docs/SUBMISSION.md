@@ -24,7 +24,7 @@ Builder 的右边。一局 90 秒、3 个任务（找物 Find / 摆放 Place）�
 ### 功能说明
 
 1. **六个日常场景关卡**：Cozy Study 书房（找物/摆放，练方位与视角）、Corner Café 咖啡馆（点单，练数量/复数/大小杯/礼貌用语）、Toy Town 小镇（问路，问路者在 3D 街道中行走）、Messy Bedroom 卧室（寻物，练 under / inside / on top of / behind）、以及由 Scene Agent 自动生成的 Music Room 与 Fruit Market。
-2. **可行走的 3D 世界**：第一人称视角，点击后锁定鼠标、移动鼠标即转动视角（CS 式），WASD 行走带碰撞；手机端拖动转视角 + 虚拟摇杆。场景含环境光遮蔽、灯光泛光、光束与浮尘等氛围效果。
+2. **可行走的 3D 世界**：第一人称视角，点击后锁定鼠标、移动鼠标即转动视角（CS 式），WASD 行走带碰撞；手机端拖动转视角 + 虚拟摇杆。场景含环境光遮蔽、灯光泛光与光束等氛围效果。
 3. **双人信息差，协议层隔离**：每个关卡的秘密信息（目标、点单卡、目的地、物品位置）只发给对应一方；卧室中未打开的玩具箱内容也不会下发给寻找者。
 4. **语音优先的交流方式**：按住空格说话，默认不显示对方文字（只听），可一键重听 / 单句显示 / 按 C 打开字幕、按 T 查看完整记录；1–6 快捷短语、带中文释义的短语手册，可选 WebRTC 远程语音。
 5. **更聪明的 AI 搭档**：每个关卡都有基于对话状态的规则大脑（回答你真正问的问题、追问大小杯与数量、按路口执行“第二个路口右转”）；接入 LLM（默认 DeepSeek-V4-Flash）后成为带接地工具与护栏的工具调用 Agent，按 G 可查看推理过程；`/demo` 可观看 AI 对 AI。
@@ -37,8 +37,7 @@ Builder 的右边。一局 90 秒、3 个任务（找物 Find / 摆放 Place）�
 
 本队承诺：ObjectTalk 的代码、玩法设计、空间语言引擎（视角坐标系、指代表达生成、规则语义解析、任务生成与可玩性校验、教练分析）、UI 与文档均为本队在 48 小时内的原创成果。
 所有第三方开源库、模型、素材与服务均已在 [`docs/THIRD_PARTY.md`](THIRD_PARTY.md) 中完整标注来源与许可证：
-- UI 风格参考 uupm.cc “playful educational platform” 模板的配色与卡片样式，代码自行实现；
-- 2D 覆盖层交互参考 medkit 项目的思路，**未复制任何代码**；
+- UI 风格参考 [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) 项目的 [Educational Platform](https://www.uupm.cc/demo/educational-platform) 演示模板，包括其活泼的黏土拟态配色、卡片与按钮样式；UI 代码由本队自行实现；
 - 3D 模型由本队使用 Hyper3D Rodin 生成，参考图来自 Microsoft Fluent Emoji（MIT）；
 - 依赖库均为 MIT / ISC / Apache-2.0 / OFL 许可。
 

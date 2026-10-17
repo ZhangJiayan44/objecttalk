@@ -4,39 +4,21 @@ import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from '@react
 import { ToneMappingMode } from 'postprocessing';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { useRenderQuality } from './performance';
 
 /**
  * Atmosphere kit shared by every level: post-processing (ambient occlusion,
- * bloom on lamps, vignette), floating dust in sunbeams, soft light shafts,
+ * bloom on lamps, vignette), soft light shafts,
  * painted canvas textures for signs and menus, cartoon clouds. No downloaded
  * HDRs or textures: everything is generated in the browser.
  */
-
-export type Quality = 'high' | 'low' | 'off';
-
-/** Lower the cost on phones and small GPUs. `?fx=off|low|high` overrides (also remembered). */
-export function detectQuality(): Quality {
-  if (typeof window === 'undefined') return 'high';
-  try {
-    const q = new URLSearchParams(window.location.search).get('fx');
-    if (q === 'off' || q === 'low' || q === 'high') {
-      localStorage.setItem('objecttalk:fx', q);
-      return q;
-    }
-    const saved = localStorage.getItem('objecttalk:fx');
-    if (saved === 'off' || saved === 'low' || saved === 'high') return saved;
-  } catch {
-    /* storage unavailable */
-  }
-  const coarse = window.matchMedia('(pointer: coarse)').matches;
-  return coarse || (navigator.hardwareConcurrency ?? 8) <= 4 ? 'low' : 'high';
-}
 
 /**
  * Bloom only catches real light sources (lamps, neon, screens: emissive above 1.0
  * in linear HDR), never sunlit walls, so the picture stays crisp instead of hazy.
  */
-export function PostFx({ quality = 'high', bloom = 0.4, vignette = 0.38, ao = true }: { quality?: Quality; bloom?: number; vignette?: number; ao?: boolean }) {
+export function PostFx({ bloom = 0.4, vignette = 0.38, ao = true }: { bloom?: number; vignette?: number; ao?: boolean }) {
+  const quality = useRenderQuality();
   if (quality === 'off') return null;
   if (quality === 'low')
     return (
@@ -66,67 +48,6 @@ export function SoftIBL({ warm = '#ffe0c8', cool = '#d6ecff', intensity = 1 }: {
       <Lightformer intensity={1.2 * intensity} position={[6, 2, -1]} rotation-y={-Math.PI / 2} scale={[8, 4, 1]} color={cool} />
       <Lightformer intensity={0.7 * intensity} position={[0, 1, 7]} scale={[10, 2, 1]} color="#fff6e0" />
     </Environment>
-  );
-}
-
-/** Slowly drifting dust motes: tiny soft dots (screen-size capped, so none can fill the view). */
-export function Dust({ count = 260, area = [8, 3, 6], center = [0, 1.6, 0], color = '#fff4d6', size = 0.03 }: { count?: number; area?: [number, number, number]; center?: [number, number, number]; color?: string; size?: number }) {
-  const ref = useRef<THREE.Points>(null);
-  const { positions, seeds } = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const seeds = new Float32Array(count);
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = center[0] + (Math.random() - 0.5) * area[0];
-      positions[i * 3 + 1] = center[1] + (Math.random() - 0.5) * area[1];
-      positions[i * 3 + 2] = center[2] + (Math.random() - 0.5) * area[2];
-      seeds[i] = Math.random() * 100;
-    }
-    return { positions, seeds };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count]);
-  const material = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: { color: { value: new THREE.Color(color) }, size: { value: size * 900 } },
-        vertexShader: `uniform float size; varying float vFade;
-          void main() {
-            vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            float d = -mv.z;
-            vFade = smoothstep(0.4, 1.4, d);
-            gl_PointSize = clamp(size / max(d, 0.001), 1.0, 5.0);
-            gl_Position = projectionMatrix * mv;
-          }`,
-        fragmentShader: `uniform vec3 color; varying float vFade;
-          void main() {
-            float r = length(gl_PointCoord - 0.5);
-            float a = smoothstep(0.5, 0.0, r) * 0.45 * vFade;
-            if (a < 0.01) discard;
-            gl_FragColor = vec4(color, a);
-          }`,
-      }),
-    [color, size],
-  );
-  useFrame(({ clock }) => {
-    const pts = ref.current;
-    if (!pts) return;
-    const arr = pts.geometry.attributes.position.array as Float32Array;
-    const t = clock.elapsedTime;
-    for (let i = 0; i < count; i++) {
-      const s = seeds[i];
-      arr[i * 3 + 1] += Math.sin(t * 0.3 + s) * 0.0007;
-      arr[i * 3] += Math.cos(t * 0.2 + s * 1.3) * 0.0006;
-    }
-    pts.geometry.attributes.position.needsUpdate = true;
-  });
-  return (
-    <points ref={ref} material={material}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-    </points>
   );
 }
 

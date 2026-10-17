@@ -1,7 +1,8 @@
-import { Environment, Html, Lightformer } from '@react-three/drei';
+import { Center, Environment, Html, Lightformer, OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Suspense, useEffect, useRef } from 'react';
+import { Suspense, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { INTERESTS } from '@shared/catalog';
 import { ItemModel } from './models';
 
@@ -31,11 +32,53 @@ function Spinner({ children, speed, phase }: { children: React.ReactNode; speed:
   return <group ref={ref}>{children}</group>;
 }
 
+/** Single-object previews frame the actual model, independent of its in-game footprint. */
+function ObjectPreview({ kind }: { kind: string }) {
+  const { camera, size } = useThree();
+  const controls = useRef<OrbitControlsImpl>(null);
+  const fit = useCallback(({ boundingSphere }: { boundingSphere: THREE.Sphere }) => {
+    if (!(camera instanceof THREE.PerspectiveCamera)) return;
+    const halfVertical = THREE.MathUtils.degToRad(camera.fov / 2);
+    const halfHorizontal = Math.atan(Math.tan(halfVertical) * size.width / Math.max(1, size.height));
+    // A sphere stays inside the frame at every turntable angle, including portrait layouts.
+    const distance = Math.max(boundingSphere.radius, 0.01) * 1.15 / Math.sin(Math.min(halfVertical, halfHorizontal));
+    camera.position.set(0, 0.25, 1).normalize().multiplyScalar(distance);
+    camera.lookAt(0, 0, 0);
+    camera.near = distance / 100;
+    camera.far = distance * 100;
+    camera.updateProjectionMatrix();
+    controls.current?.target.set(0, 0, 0);
+    controls.current?.update();
+  }, [camera, size.width, size.height]);
+
+  return (
+    <>
+      <Center key={kind} precise onCentered={fit}>
+        <ItemModel kind={kind} color="red" size="regular" />
+      </Center>
+      <OrbitControls ref={controls} makeDefault target={[0, 0, 0]} autoRotate autoRotateSpeed={1.2} enablePan={false} enableZoom={false} />
+    </>
+  );
+}
+
+function InterestLabel({ interest }: { interest: (typeof INTERESTS)[number] }) {
+  const height = useThree((state) => state.size.height);
+  return (
+    <Html position={[0, -0.18, 0.3]} center distanceFactor={height / 100} style={{ pointerEvents: 'none' }}>
+      <div className="inline-flex max-w-[88px] items-center gap-1 whitespace-nowrap rounded-full border border-ink bg-white px-2 py-0.5 font-display text-[13px] leading-tight font-semibold text-ink shadow-[1px_1px_0_#2d3748]">
+        <span className="shrink-0" aria-hidden="true">{interest.emoji}</span>
+        <span className="truncate">{interest.label}</span>
+      </div>
+    </Html>
+  );
+}
+
 export function Showcase({ kinds = INTERESTS.map((i) => i.kind), labels = true, className }: { kinds?: string[]; labels?: boolean; className?: string }) {
   const gap = 0.95;
+  const single = kinds.length === 1;
   return (
     <Canvas className={className} dpr={[1, 2]} camera={{ fov: 38, position: [0, 1.2, 4] }} gl={{ alpha: true, antialias: true }} shadows>
-      <Fit count={kinds.length} gap={gap} />
+      {!single && <Fit count={kinds.length} gap={gap} />}
       <ambientLight intensity={0.6} />
       <directionalLight position={[2, 5, 4]} intensity={1.4} castShadow shadow-mapSize={[1024, 1024]} />
       <Environment resolution={128} frames={1}>
@@ -50,7 +93,7 @@ export function Showcase({ kinds = INTERESTS.map((i) => i.kind), labels = true, 
           </Html>
         }
       >
-        {kinds.map((kind, i) => {
+        {single ? <ObjectPreview kind={kinds[0]} /> : kinds.map((kind, i) => {
           const x = (i - (kinds.length - 1) / 2) * gap;
           const interest = INTERESTS.find((it) => it.kind === kind);
           return (
@@ -68,13 +111,7 @@ export function Showcase({ kinds = INTERESTS.map((i) => i.kind), labels = true, 
                   <ItemModel kind={kind} color="red" size="regular" />
                 </group>
               </Spinner>
-              {labels && interest && (
-                <Html position={[0, -0.18, 0.3]} center distanceFactor={5} style={{ pointerEvents: 'none' }}>
-                  <div className="rounded-full border-2 border-ink bg-white px-2.5 py-0.5 font-display text-sm font-semibold whitespace-nowrap text-ink shadow-[2px_2px_0_#2d3748]">
-                    {interest.emoji} {interest.label}
-                  </div>
-                </Html>
-              )}
+              {labels && interest && <InterestLabel interest={interest} />}
             </group>
           );
         })}

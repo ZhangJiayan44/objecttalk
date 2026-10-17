@@ -1,5 +1,5 @@
 import { Html, OrbitControls } from '@react-three/drei';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import * as THREE from 'three';
@@ -10,11 +10,12 @@ import type { Pose } from '@shared/protocol';
 import type { Role, SceneState } from '@shared/types';
 import { asset } from '@/lib/asset';
 import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
-import { detectQuality, PostFx, Sign, SkyDome, SoftIBL } from './env';
+import { PostFx, Sign, SkyDome, SoftIBL } from './env';
 import { Box } from './furniture';
 import { Avatar, ItemModel } from './models';
 import { Prop } from './props';
 import { LanternString, Stars, Steam } from './stalls';
+import { SceneCanvas as Canvas } from './performance';
 
 interface Props {
   scene: SceneState;
@@ -497,7 +498,6 @@ function Contents(p: Props) {
   const live = useRef(p.pose);
   live.current = p.pose;
   const walker = p.view === 'builder';
-  const quality = useMemo(detectQuality, []);
   useEffect(() => {
     if (!p.interactive) return;
     const key = (e: KeyboardEvent) => {
@@ -523,12 +523,12 @@ function Contents(p: Props) {
       </mesh>
       <Sign lines={['集合处 · Meeting Point']} position={[0, 0.12, 1.8]} rotation={[-Math.PI / 2, 0, 0]} size={[3.8, 0.6]} bg="#5b6f66" fg="#ffe3a2" border="#c4a767" />
     </group>
-    <PostFx quality={quality} ao={true} bloom={0.12} vignette={0.1} />
+    <PostFx ao={true} bloom={0.12} vignette={0.1} />
   </>;
 }
 
 export function NightMarketScene(props: Props) {
-  return <Canvas className={props.className} shadows dpr={[1, 1.5]} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 150, position: props.view === 'builder' ? [MARKET_START.x, 1.65, MARKET_START.z] : [36, 42, 42] }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
+  return <Canvas className={props.className} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 150, position: props.view === 'builder' ? [MARKET_START.x, 1.65, MARKET_START.z] : [36, 42, 42] }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
     <Suspense fallback={<Html center>Opening the night market...</Html>}><Contents {...props} /></Suspense>
   </Canvas>;
 }

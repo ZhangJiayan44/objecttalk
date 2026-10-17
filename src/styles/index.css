@@ -17,10 +17,13 @@
 .market-map-label { padding: 5px 9px; border: 1px solid #8c7665; border-radius: 7px; background: #fff7e9e8; color: #514943; font-size: 12px; letter-spacing: 0.01em; font-weight: 800; text-align: center; white-space: nowrap; box-shadow: 1px 2px 0 rgb(58 48 44 / 0.18); }
 .market-map-label small { display: block; font-size: 10px; }
 
+
 /*
  * ObjectTalk claymorphism design system.
- * Palette and card/button recipe follow the "playful educational platform"
- * reference: chunky ink outlines, offset shadows, soft pastel fills.
+ * Palette and card/button recipe are inspired by UI UX Pro Max's Educational Platform demo:
+ * https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+ * https://www.uupm.cc/demo/educational-platform
+ * Chunky ink outlines, offset shadows, soft pastel fills; UI code implemented by our team.
  */
 @theme {
   --font-sans: 'Nunito Variable', 'Nunito', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;

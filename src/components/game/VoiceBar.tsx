@@ -1,21 +1,13 @@
-import { Captions, CaptionsOff, Ear, Eye, Keyboard, Mic, MicOff, ScrollText, Send, Volume2, VolumeX, X } from 'lucide-react';
+import { Captions, CaptionsOff, Ear, Eye, Keyboard, Mic, MicOff, Send, SlidersHorizontal, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { levelOf } from '@shared/levels';
+import { hasChinese } from '@shared/lifeline';
 import type { ChatMessage } from '@shared/protocol';
 import { Kbd, Tip } from '@/components/ui';
 import { useGame, useGameClient } from '@/lib/game-client';
 import { speak, useSpeechInput } from '@/lib/speech';
 
-/**
- * Voice-first comms bar. Speaking practice means NOT reading the partner's
- * lines, so captions are off by default: you hear the AI (or your friend's
- * transcribed speech) through text-to-speech and can replay any line. The
- * chat is still there for anyone who needs it:
- *   Space (hold)  talk         Enter  type a message
- *   C             captions     T      full transcript
- *   1-6           quick phrases
- */
+/** Voice-first communication: an open microphone, optional typing, and unchanged captions. */
 
 const isTyping = (el: EventTarget | null) => {
   const t = el as HTMLElement | null;
@@ -96,19 +88,20 @@ export function useReadAloud(enabled: boolean, liveVoice = false, allAI = false)
   }, [client, enabled, liveVoice, allAI, phase]);
 }
 
-export function VoiceBar({ prefs, compact = false, pttKey = true, tts = true, liveVoice = false }: { prefs: CommsPrefs; compact?: boolean; pttKey?: boolean; tts?: boolean; liveVoice?: boolean }) {
+export function VoiceBar({ prefs, compact = false, pttKey = true, tts = true, liveVoice = false, micEnabled, onMicChange, speechPaused = false, controlsOpen, onToggleControls }: {
+  prefs: CommsPrefs; compact?: boolean; pttKey?: boolean; tts?: boolean; liveVoice?: boolean;
+  micEnabled: boolean; onMicChange(enabled: boolean): void; speechPaused?: boolean;
+  controlsOpen: boolean; onToggleControls(): void;
+}) {
   const client = useGameClient();
   const chat = useGame((s) => s.chat);
   const me = useGame((s) => s.state?.you);
   const role = useGame((s) => s.state?.yourRole ?? null);
-  const levelId = useGame((s) => s.state?.settings.level);
   const playing = useGame((s) => s.state?.phase === 'playing');
-  const level = levelOf(levelId);
   const [typing, setTyping] = useState(false);
   const [text, setText] = useState('');
   const [reveal, setReveal] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const quick = role ? level.quick[role].slice(0, 6) : [];
 
   useReadAloud(tts && prefs.voiceOut, liveVoice);
 
@@ -116,18 +109,33 @@ export function VoiceBar({ prefs, compact = false, pttKey = true, tts = true, li
     (t: string, via: 'text' | 'quick' = 'text') => {
       const clean = t.trim();
       if (!clean) return;
+      // Chinese never goes to the partner: it becomes a private lifeline (English back to you).
+      if (hasChinese(clean)) {
+        client.actions
+          .assist(clean)
+          .then((res) => {
+            toast.success(`🛟 Say: “${res.en}”`, { duration: 9000 });
+            speak(res.en, { rate: 0.9 });
+          })
+          .catch((err: Error) => toast.error(err.message));
+        return;
+      }
       client.actions.say(clean, via);
     },
     [client],
   );
 
-  const speech = useSpeechInput((said) => client.actions.say(said, 'voice'));
+  const speech = useSpeechInput((said) => (hasChinese(said) ? send(said) : client.actions.say(said, 'voice')), 'en-US', {
+    handsFree: true,
+    enabled: !compact && playing && !!role && micEnabled && !typing && !speechPaused,
+  });
   useEffect(() => {
     if (speech.error) {
       toast.error(speech.error);
+      onMicChange(false);
       speech.clearError();
     }
-  }, [speech.error, speech]);
+  }, [speech.error]);
 
   const openTyping = useCallback(() => {
     if (document.pointerLockElement) document.exitPointerLock();
@@ -135,40 +143,23 @@ export function VoiceBar({ prefs, compact = false, pttKey = true, tts = true, li
     setTimeout(() => inputRef.current?.focus(), 30);
   }, []);
 
-  // Keyboard: Space = push to talk, Enter = type, C/T toggles, 1-6 quick phrases.
+  // Shortcuts live beside their matching actions; no numbered quick phrases.
   useEffect(() => {
     if (!pttKey) return;
     const down = (e: KeyboardEvent) => {
-      if (isTyping(e.target)) return;
-      if (e.code === 'Space' && !e.repeat && speech.supported && role) {
+      if (isTyping(e.target) || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if ((e.key === 'm' || e.key === 'M') && role) {
         e.preventDefault();
-        speech.start();
+        onMicChange(!micEnabled);
       } else if (e.key === 'Enter' && role) {
         e.preventDefault();
         openTyping();
       } else if (e.key === 'c' || e.key === 'C') prefs.toggleCaptions();
       else if (e.key === 't' || e.key === 'T') prefs.toggleTranscript();
-      else if (/^[1-6]$/.test(e.key) && playing && role) {
-        const q = quick[Number(e.key) - 1];
-        if (q && !q.endsWith('…')) send(q, 'quick');
-        else if (q) {
-          setText(q.replace(/…$/, ' '));
-          openTyping();
-        }
-      }
-    };
-    const up = (e: KeyboardEvent) => {
-      if (e.code !== 'Space' || isTyping(e.target)) return;
-      e.preventDefault();
-      speech.stop();
     };
     window.addEventListener('keydown', down);
-    window.addEventListener('keyup', up);
-    return () => {
-      window.removeEventListener('keydown', down);
-      window.removeEventListener('keyup', up);
-    };
-  }, [pttKey, speech, role, prefs, quick, send, playing, openTyping]);
+    return () => window.removeEventListener('keydown', down);
+  }, [pttKey, role, prefs, openTyping, micEnabled, onMicChange]);
 
   // The latest partner line (what you just heard).
   const lastPartner = useMemo(() => [...chat].reverse().find((m) => m.playerId !== me && m.role && m.via !== 'system'), [chat, me]);
@@ -211,8 +202,8 @@ export function VoiceBar({ prefs, compact = false, pttKey = true, tts = true, li
       )}
 
       {/* Your own words while the mic is on */}
-      {speech.listening && (
-        <div className="max-w-[min(40rem,calc(100vw-1rem))] animate-pulse rounded-2xl border-2 border-dashed border-ink bg-mint/80 px-3 py-1.5 text-sm font-semibold">🎙️ {speech.interim || 'Listening… speak now'}</div>
+      {speech.listening && speech.interim && (
+        <div className="max-w-[min(40rem,calc(100vw-1rem))] rounded-2xl border-2 border-dashed border-ink bg-mint/80 px-3 py-1.5 text-sm font-semibold">🎙️ {speech.interim || 'Listening… speak now'}</div>
       )}
 
       {typing && (
@@ -244,69 +235,32 @@ export function VoiceBar({ prefs, compact = false, pttKey = true, tts = true, li
         </form>
       )}
 
-      {/* The bar itself */}
-      {role && (
-        <div className="pointer-events-auto flex items-center gap-2 rounded-full border-[3px] border-ink bg-white/95 p-1.5 shadow-[4px_4px_0_#2d3748] backdrop-blur">
-          {!compact && quick.length > 0 && (
-            <div className="hidden max-w-[34rem] items-center gap-1 overflow-x-auto px-1 md:flex">
-              {quick.map((q, i) => (
-                <button
-                  key={q}
-                  onClick={() => (q.endsWith('…') ? (setText(q.replace(/…$/, ' ')), openTyping()) : send(q, 'quick'))}
-                  className="flex shrink-0 items-center gap-1 rounded-full border-2 border-ink bg-cream px-2 py-0.5 text-xs font-bold whitespace-nowrap hover:bg-sun"
-                  title={`Press ${i + 1}`}
-                >
-                  <span className="kbd !min-w-4 !px-1 !text-[10px] !leading-4">{i + 1}</span>
-                  {q}
-                </button>
-              ))}
-            </div>
-          )}
-          {speech.supported ? (
-            <Tip label={<span>Hold to talk (or hold <Kbd>Space</Kbd>)</span>}>
-              <button
-                type="button"
-                aria-label="Hold to talk"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  speech.start();
-                }}
-                onPointerUp={() => speech.stop()}
-                onPointerLeave={() => speech.listening && speech.stop()}
-                className={`flex h-12 w-12 touch-none items-center justify-center rounded-full border-[3px] border-ink shadow-[2px_2px_0_#2d3748] transition ${speech.listening ? 'scale-110 bg-coral text-white' : 'bg-sun hover:brightness-95'}`}
-              >
-                {speech.listening ? <MicOff size={22} strokeWidth={3} /> : <Mic size={22} strokeWidth={3} />}
-              </button>
-            </Tip>
-          ) : (
-            <Tip label="Voice input needs Chrome or Edge. Press Enter to type instead.">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full border-[3px] border-ink bg-line opacity-60">
-                <MicOff size={22} strokeWidth={3} />
-              </span>
-            </Tip>
-          )}
-          <Tip label={<span>Type instead <Kbd>Enter</Kbd></span>}>
-            <button className="rounded-full border-2 border-ink bg-white p-2 hover:bg-cream" aria-label="Type a message" onClick={openTyping}>
-              <Keyboard size={18} strokeWidth={3} />
-            </button>
-          </Tip>
-          <Tip label={<span>{prefs.captions ? 'Hide' : 'Show'} captions <Kbd>C</Kbd></span>}>
-            <button className={`rounded-full border-2 border-ink p-2 ${prefs.captions ? 'bg-lavender' : 'bg-white hover:bg-cream'}`} aria-label="Toggle captions" aria-pressed={prefs.captions} onClick={prefs.toggleCaptions}>
-              {prefs.captions ? <Captions size={18} strokeWidth={3} /> : <CaptionsOff size={18} strokeWidth={3} />}
-            </button>
-          </Tip>
-          <Tip label={<span>Transcript <Kbd>T</Kbd></span>}>
-            <button className={`rounded-full border-2 border-ink p-2 ${prefs.transcript ? 'bg-lavender' : 'bg-white hover:bg-cream'}`} aria-label="Toggle transcript" aria-pressed={prefs.transcript} onClick={prefs.toggleTranscript}>
-              <ScrollText size={18} strokeWidth={3} />
-            </button>
-          </Tip>
-          {tts && (
-            <Tip label={prefs.voiceOut ? 'Mute partner voice' : 'Read partner lines aloud'}>
-              <button className="rounded-full border-2 border-ink bg-white p-2 hover:bg-cream" aria-label="Toggle partner voice" onClick={prefs.toggleVoiceOut}>
-                {prefs.voiceOut ? <Volume2 size={18} strokeWidth={3} /> : <VolumeX size={18} strokeWidth={3} />}
-              </button>
-            </Tip>
-          )}
+      {/* Four clear actions; secondary controls open in the side panel. */}
+      {role && !compact && (
+        <div className="pointer-events-auto flex max-w-full items-center gap-1 rounded-2xl border-[3px] border-ink bg-white/95 p-1.5 shadow-[4px_4px_0_#2d3748] backdrop-blur sm:gap-2">
+          <button
+            type="button"
+            aria-label={micEnabled ? 'Mute microphone' : 'Enable microphone'}
+            aria-pressed={micEnabled}
+            disabled={!speech.supported && !liveVoice}
+            onClick={() => onMicChange(!micEnabled)}
+            title={speech.supported || liveVoice ? 'Microphone · M' : 'Voice input needs Chrome or Edge. Use Type instead.'}
+            className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-ink px-3 text-sm font-bold transition-colors disabled:opacity-50 ${micEnabled ? 'bg-mint hover:bg-mint/70' : 'bg-cream hover:bg-sun/40'}`}
+          >
+            {micEnabled ? <Mic size={19} strokeWidth={2.5} /> : <MicOff size={19} strokeWidth={2.5} />}
+            <span>{micEnabled ? 'Mic on' : 'Mic off'}</span>
+            <span className="hidden sm:inline"><Kbd>M</Kbd></span>
+          </button>
+          <button className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold hover:bg-cream" aria-label="Type a message" onClick={openTyping}>
+            <Keyboard size={19} strokeWidth={2.5} /><span>Type</span><span className="hidden sm:inline"><Kbd>Enter</Kbd></span>
+          </button>
+          <button className={`flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold ${prefs.captions ? 'bg-lavender' : 'hover:bg-cream'}`} aria-label="Toggle captions" aria-pressed={prefs.captions} onClick={prefs.toggleCaptions}>
+            {prefs.captions ? <Captions size={19} strokeWidth={2.5} /> : <CaptionsOff size={19} strokeWidth={2.5} />}<span className="hidden sm:inline">Captions</span><span className="hidden sm:inline"><Kbd>C</Kbd></span>
+          </button>
+          <div className="h-6 w-px bg-line" />
+          <button className={`flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold ${controlsOpen ? 'bg-sky' : 'hover:bg-cream'}`} aria-label="Controls and tools" aria-expanded={controlsOpen} aria-controls="game-controls" onClick={onToggleControls}>
+            <SlidersHorizontal size={19} strokeWidth={2.5} /><span className="hidden sm:inline">Controls</span>
+          </button>
         </div>
       )}
     </div>
@@ -331,7 +285,7 @@ export function Transcript({ onClose, compact = false }: { onClose(): void; comp
         </button>
       </div>
       <div ref={listRef} className={`space-y-2 overflow-y-auto px-3 py-3 ${compact ? 'max-h-36' : 'max-h-[42vh]'}`} aria-live="polite">
-        {visible.length === 0 && <p className="py-2 text-center text-sm text-muted">Nothing said yet. Hold Space and talk!</p>}
+        {visible.length === 0 && <p className="py-2 text-center text-sm text-muted">Nothing said yet. Speak with your mic on, or type a message.</p>}
         {visible.map((m) => {
           const mine = m.playerId === me;
           return (

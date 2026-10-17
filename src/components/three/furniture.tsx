@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { DECOR_MODELS } from '@shared/catalog';
 import type { Palette } from '@shared/levels';
 import { asset } from '@/lib/asset';
-import { Dust, LightShaft, Sign, useTextTexture } from './env';
+import { LightShaft, Sign, useTextTexture } from './env';
 
 /**
  * Furniture kit: rounded, chunky pieces in the clay style, shared by the
@@ -87,7 +87,7 @@ export function Decor({ url, size, position, rotation = 0 }: { url: string; size
     });
     return c;
   }, [gltf.scene]);
-  return <primitive object={obj} position={position} rotation-y={rotation} scale={size} />;
+  return <primitive object={obj} userData={{ walkSolid: position[1] <= 0.5 }} position={position} rotation-y={rotation} scale={size} />;
 }
 
 export function Box({ size, position, color, radius = 0.04, rotation, roughness = 0.7, cast = true }: { size: [number, number, number]; position: [number, number, number]; color: string; radius?: number; rotation?: [number, number, number]; roughness?: number; cast?: boolean }) {
@@ -393,7 +393,6 @@ export function StudyRoom({ palette, sign }: { palette?: Palette; sign?: string 
       <Plant position={[5.2, 0, -4.2]} scale={1.1} />
       <Plant position={[-5.2, 0, 4.2]} />
       <PendantLamp position={[0, 3.4, 0]} drop={1.0} />
-      <Dust area={[11, 3, 9]} center={[0, 1.7, 0]} />
     </group>
   );
 }

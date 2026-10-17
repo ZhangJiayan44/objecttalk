@@ -55,8 +55,7 @@ Dev tooling: Vite, TypeScript, Vitest, tsx, esbuild, concurrently (all MIT).
 
 ## Design references
 
-- UI style follows the open "playful educational platform" claymorphism template
-  at uupm.cc (colour tokens, card and button recipe). All markup and code here is our own.
-- Interaction pattern (2D overlays opened with keys over a 3D scene) is inspired by
-  [medkit](https://github.com/bedriyan/medkit-app). **No code was copied**; medkit's
-  license is proprietary.
+- UI style is inspired by the [Educational Platform](https://www.uupm.cc/demo/educational-platform)
+  demo from [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill),
+  including its playful claymorphism palette, cards and buttons. All markup and UI code
+  here is implemented by our team.

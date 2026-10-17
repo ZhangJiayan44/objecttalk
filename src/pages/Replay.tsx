@@ -96,7 +96,7 @@ export default function ReplayPage() {
       .then(() => fetchReplay(id))
       .then((r) => {
         setReplay(r);
-        setView(levelOf(r.level).controls === 'walk' ? 'guide' : 'overview');
+        setView(['walknav', 'walksearch'].includes(levelOf(r.level).engine) ? 'guide' : 'overview');
         setPlaying(true);
       })
       .catch((err: Error) => setError(err.message));
@@ -155,7 +155,7 @@ export default function ReplayPage() {
     ...replay.events.filter((e) => e.type === 'wrong' || e.type === 'success' || e.type === 'mission').map((e) => ({ t: e.t, cls: e.type === 'wrong' ? 'bg-coral' : e.type === 'success' ? 'bg-cta' : 'bg-grape', label: e.type })),
     ...replay.messages.map((m) => ({ t: m.t, cls: 'bg-ink h-2 w-1 rounded-none', label: m.text })),
   ];
-  const views: ViewMode[] = level.controls === 'walk' ? ['guide', 'builder'] : ['guide', 'builder', 'overview'];
+  const views: ViewMode[] = ['walknav', 'walksearch'].includes(level.engine) ? ['guide', 'builder'] : ['guide', 'builder', 'overview'];
   const world = replay.initialWorld;
 
   let sceneEl: React.ReactNode = null;

@@ -2,12 +2,14 @@ import { events as createPointerEvents, useFrame, useThree, type EventManager, t
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import type { Pose } from '@shared/protocol';
+import { collideSolids, intersectsSolids, moveWithCollision } from '@shared/collision';
+import { sceneSolids } from './collision';
 import { readMouseSensitivity } from '@/lib/settings';
 
 /**
  * First-person controls, CS-style: click the 3D view once to capture the
  * mouse, then simply moving the mouse turns your head (no dragging); the
- * crosshair in the middle is your pointer and a click interacts with what it
+ * dot in the middle is your pointer and a click interacts with what it
  * is on. Esc releases the mouse for the UI. Walking levels add WASD / arrows
  * (Shift to run) with collision. On touch screens: drag to look, tap to
  * interact, and an on-screen joystick to walk.
@@ -32,7 +34,7 @@ const isTyping = (el: EventTarget | null) => {
   return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
 };
 
-/** Raycast from the crosshair (screen centre) while the mouse is captured, from the cursor otherwise. */
+/** Raycast from the interaction dot (screen centre) while captured, from the cursor otherwise. */
 export function centerRayEvents(store: Parameters<typeof createPointerEvents>[0]): EventManager<HTMLElement> {
   const base = createPointerEvents(store);
   return {
@@ -49,6 +51,7 @@ export interface WalkOptions {
   speed: number;
   run: number;
   eye: number;
+  radius?: number;
   groundHeight?(p: { x: number; z: number; y?: number }): number;
   collide(p: { x: number; z: number; y?: number }, previous?: { x: number; z: number; y?: number }): { x: number; z: number; y?: number };
   onPose?(pose: Pose): void;
@@ -193,7 +196,9 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
     };
   }, [gl, enabled, capture]);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
+    // Returning from a background tab must not create a single giant movement step.
+    dt = Math.min(dt, 0.05);
     const l = look.current;
     let moved = false;
     if (walk && enabled) {
@@ -212,22 +217,30 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
         const speed = k.has('ShiftLeft') || k.has('ShiftRight') ? walk.run : walk.speed;
         const f = { x: -Math.sin(l.yaw), z: -Math.cos(l.yaw) };
         const r = { x: Math.cos(l.yaw), z: -Math.sin(l.yaw) };
-        const moveDt = walk.groundHeight ? Math.min(dt, 0.1) : dt;
-        const next = walk.collide({ x: pos.current.x + (f.x * fx + r.x * sx) * speed * moveDt, z: pos.current.z + (f.z * fx + r.z * sx) * speed * moveDt, y: pos.current.y }, pos.current);
+        const destination = {
+          x: pos.current.x + (f.x * fx + r.x * sx) * speed * dt,
+          z: pos.current.z + (f.z * fx + r.z * sx) * speed * dt,
+        };
+        // Multi-floor scenes own their height-aware collision; other levels keep their existing solids.
+        const radius = walk.radius ?? 0.35;
+        const solids = walk.groundHeight ? [] : sceneSolids(state.scene, walk.eye);
+        const next = walk.groundHeight
+          ? walk.collide({ ...destination, y: pos.current.y }, pos.current)
+          : moveWithCollision(pos.current, destination, (q) => walk.collide(collideSolids(walk.collide(q), solids, radius)), (q) => !intersectsSolids(q, solids, radius));
         moved = Math.hypot(next.x - pos.current.x, next.z - pos.current.z) > 1e-4;
         pos.current = next;
         bob.current += dt * speed * 2.2;
       }
       camera.position.set(pos.current.x, (walk.groundHeight?.(pos.current) ?? 0) + walk.eye + (moved ? Math.sin(bob.current) * 0.035 : 0), pos.current.z);
       const pose: Pose = { x: +pos.current.x.toFixed(2), z: +pos.current.z.toFixed(2), yaw: +wrap(l.yaw).toFixed(2), ...(walk.groundHeight ? { y: pos.current.y ?? walk.groundHeight(pos.current) } : {}) };
-      const key = `${pose.x},${pose.z},${pose.yaw},${pose.y}`;
+      const key = `${pose.x},${pose.z},${pose.yaw}${pose.y === undefined ? '' : `,${pose.y}`}`;
       if (key !== lastSent.current) {
         lastSent.current = key;
         walk.onPose?.(pose);
       }
     } else camera.position.set(...position);
     camera.rotation.set(l.pitch, l.yaw, 0, 'YXZ');
-    // Keep hover/crosshair targets fresh while the view moves without mouse events.
+    // Keep hover targets fresh while the view moves without mouse events.
     if ((moved || input.locked) && events.update) events.update();
   });
 

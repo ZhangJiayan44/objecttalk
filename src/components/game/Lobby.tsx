@@ -300,7 +300,7 @@ export function Lobby() {
             </h2>
             <p className="mt-2 text-sm font-semibold text-muted">
               The AI partner only knows what its role knows and talks with you in natural English. It answers what you actually ask, asks when you are vague, and on Tricky it makes the classic mistakes on purpose so you practise catching them.
-              {info?.features.llm ? ` Its replies come from an LLM agent (${info.features.llmModel ?? 'LLM'}) with grounded game tools; inspect the AI brain from the top bar.` : ' (Offline rule brain: set LLM_API_KEY for the LLM agent.)'}
+              {info?.features.llm ? ` Its replies come from an LLM agent (${info.features.llmModel ?? 'LLM'}) with grounded game tools: open the AI brain with G.` : ' (Offline rule brain: set LLM_API_KEY for the LLM agent.)'}
             </p>
             {host && (
               <button className={btn('white', 'sm', 'mt-4')} onClick={() => client.actions.updateSettings({ aiRole: s.aiRole === 'guide' ? 'builder' : 'guide' })}>
@@ -326,7 +326,7 @@ export function Lobby() {
             <li>
               2. {level.roles.builder.icon} The {level.roles.builder.name} sees {level.roles.builder.sees} and {level.roles.builder.does}.
             </li>
-            <li>3. Talk! Hold Space for the mic. Captions are off: listen, ask, repeat (C shows them).</li>
+            <li>3. Your mic is on by default. Just speak; press M to mute. Press C for captions.</li>
             <li>4. {level.controls === 'walk' ? 'Click the view, then mouse to look and WASD to walk.' : 'Click the view, then just move the mouse to look around.'}</li>
             <li>5. Afterwards: replay, coach report and your CEFR estimate.</li>
           </ol>

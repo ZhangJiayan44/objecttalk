@@ -223,7 +223,7 @@ export function analyzeCafe(input: BaseInput & { records: CafeRecord[]; level?: 
     });
   }
   const extraTips: string[] = [];
-  if (!instructional && humans.has('guide')) extraTips.push('Say your order out loud (hold Space) so the coach can check it.');
+  if (!instructional && humans.has('guide')) extraTips.push('Say your order out loud with your mic on so the coach can check it.');
   if (humans.has('builder') && !baristaChecks) extraTips.push(level === 'nightmarket' ? 'Ask your partner: "Which shop?", "How many?", "Small or large?"' : 'Behind the counter, ask: "Small or large?", "How many?", "Anything else?"');
   return finish({
     level,
@@ -337,7 +337,7 @@ export function analyzeCity(input: BaseInput & { records: CityRecord[]; town: To
     });
   }
   const extraTips: string[] = [];
-  if (!instructional && humans.has('guide')) extraTips.push('Give directions out loud (hold Space): "Go straight, then turn left at the bank."');
+  if (!instructional && humans.has('guide')) extraTips.push('Give directions out loud with your mic on: "Go straight, then turn left at the bank."');
   if (humans.has('builder') && !questions) extraTips.push('Walkers ask: "Excuse me, how do I get to …?" and "Left or right?"');
   return finish({
     level: 'city',
