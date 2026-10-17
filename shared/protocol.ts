@@ -212,8 +212,8 @@ export interface Replay {
   players: { name: string; role: Role; isAI: boolean }[];
   initialScene: SceneState | null;
   initialWorld?: WorldState | null;
-  /** Walking levels: the walker's path, sampled a few times a second. [t, x, z, yaw] */
-  poses?: [number, number, number, number][];
+  /** Walking levels: sampled path [t, x, z, yaw, optional foot height]. */
+  poses?: [number, number, number, number, number?][];
   missions: ReplayMission[];
   records: MissionRecord[];
   events: ReplayEvent[];

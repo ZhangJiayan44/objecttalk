@@ -49,7 +49,8 @@ export interface WalkOptions {
   speed: number;
   run: number;
   eye: number;
-  collide(p: { x: number; z: number }): { x: number; z: number };
+  groundHeight?(p: { x: number; z: number; y?: number }): number;
+  collide(p: { x: number; z: number; y?: number }, previous?: { x: number; z: number; y?: number }): { x: number; z: number; y?: number };
   onPose?(pose: Pose): void;
 }
 
@@ -79,7 +80,7 @@ const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
 export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.32, yawRange, pitchMin = -1.2, pitchMax = 0.5, walk, resetKey, enabled = true, capture = true, onLockChange }: FirstPersonProps) {
   const { camera, gl, events } = useThree();
   const look = useRef({ yaw: baseYaw, pitch: basePitch });
-  const pos = useRef({ x: position[0], z: position[2] });
+  const pos = useRef<{ x: number; z: number; y?: number }>({ x: position[0], z: position[2], ...(walk?.groundHeight ? { y: position[1] - walk.eye } : {}) });
   const bob = useRef(0);
   const lastSent = useRef('');
   const onLock = useRef(onLockChange);
@@ -91,7 +92,7 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
   // Reset when the spawn point or mission changes.
   useEffect(() => {
     look.current = { yaw: baseYaw, pitch: basePitch };
-    pos.current = { x: position[0], z: position[2] };
+    pos.current = { x: position[0], z: position[2], ...(walk?.groundHeight ? { y: position[1] - walk.eye } : {}) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]);
 
@@ -211,14 +212,15 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
         const speed = k.has('ShiftLeft') || k.has('ShiftRight') ? walk.run : walk.speed;
         const f = { x: -Math.sin(l.yaw), z: -Math.cos(l.yaw) };
         const r = { x: Math.cos(l.yaw), z: -Math.sin(l.yaw) };
-        const next = walk.collide({ x: pos.current.x + (f.x * fx + r.x * sx) * speed * dt, z: pos.current.z + (f.z * fx + r.z * sx) * speed * dt });
+        const moveDt = walk.groundHeight ? Math.min(dt, 0.1) : dt;
+        const next = walk.collide({ x: pos.current.x + (f.x * fx + r.x * sx) * speed * moveDt, z: pos.current.z + (f.z * fx + r.z * sx) * speed * moveDt, y: pos.current.y }, pos.current);
         moved = Math.hypot(next.x - pos.current.x, next.z - pos.current.z) > 1e-4;
         pos.current = next;
         bob.current += dt * speed * 2.2;
       }
-      camera.position.set(pos.current.x, walk.eye + (moved ? Math.sin(bob.current) * 0.035 : 0), pos.current.z);
-      const pose = { x: +pos.current.x.toFixed(2), z: +pos.current.z.toFixed(2), yaw: +wrap(l.yaw).toFixed(2) };
-      const key = `${pose.x},${pose.z},${pose.yaw}`;
+      camera.position.set(pos.current.x, (walk.groundHeight?.(pos.current) ?? 0) + walk.eye + (moved ? Math.sin(bob.current) * 0.035 : 0), pos.current.z);
+      const pose: Pose = { x: +pos.current.x.toFixed(2), z: +pos.current.z.toFixed(2), yaw: +wrap(l.yaw).toFixed(2), ...(walk.groundHeight ? { y: pos.current.y ?? walk.groundHeight(pos.current) } : {}) };
+      const key = `${pose.x},${pose.z},${pose.yaw},${pose.y}`;
       if (key !== lastSent.current) {
         lastSent.current = key;
         walk.onPose?.(pose);

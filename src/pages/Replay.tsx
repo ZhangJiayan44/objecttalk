@@ -74,7 +74,7 @@ function frameAt(replay: Replay, t: number): Frame {
       if (p[0] > t) break;
       lo = p;
     }
-    pose = { x: lo[1], z: lo[2], yaw: lo[3] };
+    pose = { x: lo[1], z: lo[2], yaw: lo[3], ...(lo[4] === undefined ? {} : { y: lo[4] }) };
   }
   return { scene, heldId, tray, open: [...open], found, missionIndex, pointer, pose };
 }

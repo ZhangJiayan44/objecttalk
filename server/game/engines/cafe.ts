@@ -21,7 +21,7 @@ export class CafeEngine implements LevelEngine {
   private served = 0;
   private pose: Pose = { ...MARKET_START };
   private lastMoveAt = 0;
-  private trail: [number, number, number, number][] = [];
+  private trail: [number, number, number, number, number?][] = [];
   private get market() { return this.host.settings.level === 'nightmarket'; }
 
   constructor(private host: EngineHost) {}
@@ -38,7 +38,7 @@ export class CafeEngine implements LevelEngine {
     this.state = this.market ? buildMarket(this.host.rng, this.host.settings.customKinds) : buildCafe(this.host.rng, this.pool, this.host.settings.customKinds);
     this.pose = { ...MARKET_START };
     this.lastMoveAt = 0;
-    this.trail = [[this.host.now(), this.pose.x, this.pose.z, this.pose.yaw]];
+    this.trail = [[this.host.now(), this.pose.x, this.pose.z, this.pose.yaw, this.pose.y]];
     this.initial = structuredClone(this.state);
     this.current = null;
     this.records = [];
@@ -53,7 +53,7 @@ export class CafeEngine implements LevelEngine {
       const shops = new Set(m.order.map((l) => shopForKind(l.kind).id));
       if (shops.size < 2 || !m.order.some((l) => Math.abs(shopForKind(l.kind).x) > 6)) {
         const candidate = this.host.rng.pick(this.state.scene.objects.filter((o) => Math.abs(shopForKind(o.kind).x) > 6 && !m.order.some((l) => l.kind === o.kind)));
-        m.order[m.order.length - 1] = { kind: candidate.kind, size: null, qty: this.host.settings.quest === 'party' ? 2 : 1 };
+        m.order[m.order.length - 1] = { kind: candidate.kind, size: candidate.size === 'regular' ? null : candidate.size, qty: this.host.settings.quest === 'party' ? 2 : 1 };
       }
       m.modelAnswer = m.order.map(shoppingInstruction).join(' ') + ' Then bring the shopping bag back to the entrance gate.';
       m.hint = 'Give one shop and item at a time. Use your partner’s heading for left and right. Only you can see this list.';
@@ -110,7 +110,7 @@ export class CafeEngine implements LevelEngine {
     this.pose = marketStep(this.pose, p, 10 * dt + 0.25);
     this.host.emitPose(this.pose, playerId);
     const t = this.host.now();
-    if (!this.trail.length || t - this.trail[this.trail.length - 1][0] >= 200) this.trail.push([t, this.pose.x, this.pose.z, this.pose.yaw]);
+    if (!this.trail.length || t - this.trail[this.trail.length - 1][0] >= 200) this.trail.push([t, this.pose.x, this.pose.z, this.pose.yaw, this.pose.y]);
   }
 
   held() {

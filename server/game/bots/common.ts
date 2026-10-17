@@ -50,10 +50,10 @@ export abstract class BaseBot implements Bot {
   onPose?(p: Pose): void;
   abstract onFx(e: FxEvent): void;
 
-  protected later(ms: number, fn: () => void): Timer {
+  protected later(ms: number, fn: () => void, pauseWhileListening = true): Timer {
     const run = () => {
       if (this.disposed) return;
-      if (this.io.listening?.()) {
+      if (pauseWhileListening && this.io.listening?.()) {
         t.handle = setTimeout(run, 100);
       } else {
         this.timers.delete(t);
