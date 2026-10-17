@@ -1,12 +1,14 @@
 import { EyeOff, Maximize, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CHAPTERS, FILM_DURATION, chapterAt, clampTime } from '@/components/demo/timeline';
+import { PROGRAM_CHAPTERS as CHAPTERS, PROGRAM_DURATION as FILM_DURATION, programChapterAt as chapterAt, clampProgram as clampTime, OPENING_DURATION, contentTimeAt, audioTimeAt } from '@/components/demo/program';
 import { asset } from '@/lib/asset';
 import { DemoClockContext, DemoPrewarmTimeContext, DemoQualityContext, warmNativeScenes } from '@/components/demo/NativeDemoScene';
 import { ChapterContent, FilmLogo } from '@/components/demo/FilmScenes';
+import { Opening } from '@/components/demo/Opening';
 import { readGraphicsMode, type GraphicsMode } from '@/lib/graphics';
 import { paintFilmMotion, TRANSITION_SECONDS } from '@/components/demo/motion';
 import './demo.css';
+import '@/components/demo/opening.css';
 
 declare global {
   interface Window {
@@ -17,6 +19,7 @@ declare global {
       pause: () => void;
       ready: boolean;
       duration: number;
+      contentOffset: number;
     };
   }
 }
@@ -47,6 +50,7 @@ export default function Demo() {
   const audio = useRef<HTMLAudioElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const clock = useRef({ time, started: 0 });
+  const contentClock = useRef({ time: contentTimeAt(time) });
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const chapter = chapterAt(time);
   const chapterIndex = CHAPTERS.indexOf(chapter);
@@ -56,9 +60,10 @@ export default function Demo() {
   const seek = useCallback((seconds: number) => {
     const next = clampTime(seconds);
     clock.current.time = next;
+    contentClock.current.time = contentTimeAt(next);
     clock.current.started = performance.now();
     setTime(next);
-    if (audio.current) audio.current.currentTime = next;
+    if (audio.current) audio.current.currentTime = audioTimeAt(next);
   }, []);
   const showControls = useCallback(() => {
     if (clean) return;
@@ -110,7 +115,10 @@ export default function Demo() {
           // slide starts; never freeze a half-completed transition.
           next = currentChapter.end - 0.0001;
         }
+        if (clock.current.time < OPENING_DURATION && next >= OPENING_DURATION && audio.current)
+          audio.current.currentTime = audioTimeAt(next);
         clock.current.time = next;
+        contentClock.current.time = contentTimeAt(next);
         const interval = 1000 / (quality === 'off' ? 30 : 60);
         if (now - committed >= interval - 0.5 || next === FILM_DURATION) {
           setTime(next);
@@ -119,7 +127,7 @@ export default function Demo() {
           committed += Math.max(1, Math.floor((now - committed + 0.5) / interval)) * interval;
         }
         if (audio.current && !audio.current.muted && audio.current.paused) {
-          audio.current.currentTime = next;
+          audio.current.currentTime = audioTimeAt(next);
           void audio.current.play().catch(() => setMuted(true));
         }
         if (next === FILM_DURATION) {
@@ -138,7 +146,7 @@ export default function Demo() {
     if (!audio.current) return;
     audio.current.muted = muted;
     if (playing && ready && !muted) {
-      audio.current.currentTime = time;
+      audio.current.currentTime = audioTimeAt(time);
       void audio.current.play().catch(() => setMuted(true));
     } else audio.current.pause();
     // RAF is authoritative; resync audio only when transport changes or the user seeks.
@@ -152,6 +160,7 @@ export default function Demo() {
         pause: () => setPlaying(false),
         ready: ready && prepared,
         duration: FILM_DURATION,
+        contentOffset: OPENING_DURATION,
       };
     return () => {
       if (capture) delete window.__objectTalkDemo;
@@ -201,10 +210,10 @@ export default function Demo() {
   }, [toggle, seek, fullscreen, showControls, time, capture]);
   return (
     <DemoQualityContext.Provider value={quality}>
-    <DemoClockContext.Provider value={clock}>
+    <DemoClockContext.Provider value={contentClock}>
       <main
         className={`demo-cinema ${capture ? 'is-capture' : ''} ${clean ? 'is-clean' : ''} ${playing ? 'is-playing' : 'is-paused'} ${reduced ? 'is-reduced' : ''}`}
-        aria-label="ObjectTalk 48-second animated demo"
+        aria-label={`ObjectTalk ${FILM_DURATION}-second animated demo`}
         onPointerMove={showControls}
         onPointerDown={showControls}
       >
@@ -215,13 +224,14 @@ export default function Demo() {
           style={{ transform: `translate(-50%, -50%) scale(${scale})` }}
           data-chapter={chapter.id}
           data-time={time.toFixed(3)}
+          data-content-time={contentTimeAt(time).toFixed(3)}
         >
           <div className="film-brand">
             <FilmLogo />
             <span>ENGLISH, IN PLAY.</span>
           </div>
           <div className="film-chapter-label">
-            <span>0{chapterIndex + 1}</span><i />{chapter.label}
+            <span>{chapterIndex === 0 ? 'START' : `0${chapterIndex}`}</span><i />{chapter.label}
           </div>
           {!ready ? (
             <div className="film-loading">
@@ -241,13 +251,15 @@ export default function Demo() {
                 // Warm fully entered content: opacity:0 / visibility:hidden
                 // lets browsers defer the first real canvas composition.
                 const sceneTime = active ? time : previous || parked ? c.end - 0.001 : c.start + 2;
+                const offset = c.id === 'how-it-works' ? 0 : OPENING_DURATION;
                 return (
                   <div key={c.id} className="film-chapter-layer"
                     data-film-layer={active ? 'active' : previous ? 'previous' : preload ? 'preload' : 'parked'}
                     data-boundary={previous ? chapter.start : c.start}
-                    data-scene={c.id} data-transition={['cut', 'slats', 'iris', 'slats', 'lift', 'brand'][previous ? chapterIndex : i]} aria-hidden={!active}>
-                    <DemoPrewarmTimeContext.Provider value={preload ? c.start : undefined}>
-                      <ChapterContent id={c.id} time={sceneTime} reduced={reduced} />
+                    data-clock-offset={offset}
+                    data-scene={c.id} data-transition={['cut', 'cut', 'slats', 'iris', 'slats', 'lift', 'brand'][previous ? chapterIndex : i]} aria-hidden={!active}>
+                    <DemoPrewarmTimeContext.Provider value={preload ? c.start - offset : undefined}>
+                      {c.id === 'how-it-works' ? <Opening /> : <ChapterContent id={c.id} time={sceneTime - offset} reduced={reduced} />}
                     </DemoPrewarmTimeContext.Provider>
                     <div className="film-caption">{c.caption}</div>
                   </div>
@@ -329,7 +341,7 @@ export default function Demo() {
         )}
         {!clean && reduced && !playing && time === 0 && (
           <button className="film-motion-start" onClick={toggle}>
-            <Play size={18} /> Play the 48-second film
+            <Play size={18} /> Play the {FILM_DURATION}-second film
           </button>
         )}
       </main>

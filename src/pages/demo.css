@@ -68,7 +68,7 @@
 .native-role-copy span { display:block; margin-top:5px; font-size:15px; font-weight:700; }
 .duo-connection { position:absolute; left:704px; top:330px; display:flex; align-items:center; gap:12px; padding:11px 17px; background:var(--color-sun); border:3px solid var(--color-ink); border-radius:25px; box-shadow:5px 5px 0 var(--color-ink); z-index:5; }
 .duo-your { position:absolute; left:620px; top:210px; padding:10px 24px; background:var(--color-mint); border:3px solid var(--color-ink); box-shadow:6px 6px 0 var(--color-ink); border-radius:16px; font:600 45px var(--font-display); z-index:6; }
-.duo-footer { position:absolute; top:633px; left:536px; }
+.duo-footer { position:absolute; top:633px; left:0; right:0; display:flex; justify-content:center; }
 .duo-impact { left:620px; top:140px; }
 
 /* 03. A correctly framed, projected cursor and the real native pick/place scene. */

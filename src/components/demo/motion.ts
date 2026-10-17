@@ -18,7 +18,7 @@ function sample(keys: MotionKey[], time: number, reduced: boolean): Required<Pos
 }
 
 /** Composite flat layers at the display refresh rate, independently of the
- * native 3D scenes' 30fps budget. Seeking/export uses this same clock. */
+ * native 3D scenes' render budget. Seeking/export uses this same clock. */
 export function paintFilmMotion(stage: HTMLElement | null, time: number, reduced: boolean) {
   if (!stage) return;
   stage.querySelectorAll<HTMLElement>('[data-film-layer]').forEach((layer) => {
@@ -31,6 +31,7 @@ export function paintFilmMotion(stage: HTMLElement | null, time: number, reduced
     layer.style.clipPath = '';
     layer.style.opacity = phase === 'preload' ? '0.001' : '1';
     if (phase === 'preload') layer.style.transform = 'translate3d(0,0,0)';
+    else if (mode === 'cut') layer.style.transform = 'none';
     else if (mode === 'iris' || mode === 'brand') {
       layer.style.transform = `scale(${phase === 'previous' ? 1 + p * 0.07 : 1.08 - p * 0.08})`;
       if (phase === 'active') layer.style.clipPath = `circle(${p * 125}% at ${mode === 'iris' ? '41% 49%' : '50% 48%'})`;
@@ -48,16 +49,22 @@ export function paintFilmMotion(stage: HTMLElement | null, time: number, reduced
     if (stored?.source !== source) { stored = { source, keys: JSON.parse(source), layer: el.closest<HTMLElement>('[data-film-layer]') }; cache.set(el, stored); }
     const layer = stored.layer;
     if (layer?.dataset.filmLayer === 'parked') return;
-    const t = layer?.dataset.filmLayer === 'preload' ? Number(layer.dataset.boundary) + 3 : time;
+    const offset = Number(layer?.dataset.clockOffset ?? 0);
+    const t = layer?.dataset.filmLayer === 'preload' ? Number(layer.dataset.boundary) - offset + 3 : time - offset;
     const v = sample(stored.keys, t, reduced);
     el.style.transform = `translate3d(${v.x}px,${v.y}px,0) rotate(${reduced ? 0 : v.r}deg) scale(${v.s * v.sx},${v.s * v.sy})`;
     el.style.opacity = String(Math.max(0, Math.min(1, v.o)));
   });
-  stage.querySelectorAll<HTMLElement>('[data-voice-bar]').forEach((bar, i) => {
-    bar.style.transform = `scaleY(${reduced ? 0.6 : 0.25 + Math.abs(Math.sin(time * 9 + i * 1.2)) * 0.75})`;
+  let openingVoiceIndex = 0, bodyVoiceIndex = 0;
+  stage.querySelectorAll<HTMLElement>('[data-voice-bar]').forEach((bar) => {
+    const layer = bar.closest<HTMLElement>('[data-film-layer]');
+    const i = layer?.dataset.scene === 'how-it-works' ? openingVoiceIndex++ : bodyVoiceIndex++;
+    const localTime = time - Number(layer?.dataset.clockOffset ?? 0);
+    bar.style.transform = `scaleY(${reduced ? 0.6 : 0.25 + Math.abs(Math.sin(localTime * 9 + i * 1.2)) * 0.75})`;
   });
   stage.querySelectorAll<HTMLElement>('[data-transition-slat]').forEach((slat) => {
-    const start = Number(slat.dataset.start), delay = Number(slat.dataset.transitionSlat) * 0.045;
+    const offset = Number(slat.closest<HTMLElement>('[data-film-layer]')?.dataset.clockOffset ?? 0);
+    const start = Number(slat.dataset.start) + offset, delay = Number(slat.dataset.transitionSlat) * 0.045;
     const p = progress(time, start + delay, 0.48);
     slat.style.transform = `translate3d(${(smooth(p) * 220 - 110)}%,0,0) skewX(-12deg)`;
     slat.style.visibility = !reduced && p > 0 && p < 1 ? 'visible' : 'hidden';
