@@ -19,18 +19,20 @@ describe('scene building', () => {
 });
 
 describe('missions', () => {
+  // These seeded sweeps are CPU-bound and can exceed Vitest's five-second
+  // default when the CI runner executes the other suites at the same time.
   it('generate solvable, describable missions on every difficulty', () => {
     for (const difficulty of ['easy', 'normal', 'tricky'] as const) {
       const report = simulatePlayability({ interests: ['space', 'animals', 'games'], difficulty }, 60);
       expect(report.successRate).toBeGreaterThan(0.97);
     }
-  });
+  }, 30_000);
 
   it('tricky difficulty prefers perspective-dependent targets', () => {
     const easy = simulatePlayability({ interests: ['sports', 'food'], difficulty: 'easy' }, 80);
     const tricky = simulatePlayability({ interests: ['sports', 'food'], difficulty: 'tricky' }, 80);
     expect(tricky.perspectiveShare).toBeGreaterThan(easy.perspectiveShare);
-  });
+  }, 30_000);
 
   it('find targets are uniquely identified by their model answer', () => {
     for (let seed = 1; seed < 40; seed++) {
