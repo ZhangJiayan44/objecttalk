@@ -1,0 +1,21 @@
+{
+  "teamName": "ObjectTalk",
+  "team": [
+    {
+      "name": "",
+      "role": "Product & scene design"
+    },
+    {
+      "name": "",
+      "role": "Game & interaction"
+    },
+    {
+      "name": "",
+      "role": "AI & content pipeline"
+    }
+  ],
+  "video": {
+    "src": "/pitch/demo.mp4?v=12a6cb6285e3"
+  },
+  "playUrl": "/play"
+}

@@ -14,6 +14,7 @@ const RoomPage = lazy(() => import('./pages/Room'));
 const JoinPage = lazy(() => import('./pages/Join'));
 const Watch = lazy(() => import('./pages/Watch'));
 const Demo = lazy(() => import('./pages/Demo'));
+const Pitch = lazy(() => import('./pages/Pitch'));
 const ReplayPage = lazy(() => import('./pages/Replay'));
 const Studio = lazy(() => import('./pages/Studio'));
 const Progress = lazy(() => import('./pages/Progress'));
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
   { path: '/join/:code', element: page(<JoinPage />) },
   { path: '/watch/:code', element: page(<Watch />) },
   { path: '/demo', element: page(<Demo />) },
+  { path: '/pitch', element: page(<Pitch />) },
   { path: '/replay/:id', element: page(<ReplayPage />) },
   { path: '/studio', element: page(<Studio />) },
   { path: '/progress', element: page(<Progress />) },
