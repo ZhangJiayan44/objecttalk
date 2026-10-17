@@ -10,11 +10,18 @@ import type { GameClient } from './game-client';
 
 type Signal = { type: 'offer' | 'answer'; sdp: string } | { type: 'ice'; candidate: RTCIceCandidateInit } | { type: 'hello' };
 
-export function useVoiceLink(client: GameClient, enabled: boolean, partnerId: string | null, ice: ServerInfo['iceServers']) {
+export function useVoiceLink(client: GameClient, enabled: boolean, partnerId: string | null, ice: ServerInfo['iceServers'], muted = false) {
   const [status, setStatus] = useState<'off' | 'connecting' | 'live' | 'error'>('off');
   const [error, setError] = useState<string | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
+
+  useEffect(() => {
+    streamRef.current?.getAudioTracks().forEach((track) => { track.enabled = !muted; });
+  }, [muted]);
 
   useEffect(() => {
     if (!enabled || !partnerId) {
@@ -77,7 +84,12 @@ export function useVoiceLink(client: GameClient, enabled: boolean, partnerId: st
       setStatus('connecting');
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-        if (cancelled) return;
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = stream;
+        stream.getAudioTracks().forEach((track) => { track.enabled = !mutedRef.current; });
         stream.getTracks().forEach((t) => pc.addTrack(t, stream!));
         ready = true;
         // Announce ourselves; whichever side switches on second triggers the real offer.
@@ -93,6 +105,7 @@ export function useVoiceLink(client: GameClient, enabled: boolean, partnerId: st
       cancelled = true;
       client.socket.off('rtc:signal', onSignal);
       stream?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
       pc.close();
       audio.srcObject = null;
       pcRef.current = null;

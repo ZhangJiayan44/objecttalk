@@ -2,6 +2,7 @@ import { analyzeCity, type CityRecord } from '../../../shared/coach';
 import { buildTown, collide, generateRouteMission, hasArrived, placeById, PLACE_DEFS, type Pose, type RouteMission, type Town } from '../../../shared/city';
 import type { ClientMission, ReplayMission } from '../../../shared/protocol';
 import type { Role } from '../../../shared/types';
+import { moveWithCollision } from '../../../shared/collision';
 import { createCityBot } from '../bots/city';
 import type { BotIO, EngineHost, LevelEngine, ReportInput } from './types';
 
@@ -67,11 +68,11 @@ export class CityEngine implements LevelEngine {
       id: m.id,
       index: m.index,
       type: 'route',
-      title: `Get to the ${name}`,
+      title: view === 'guide' ? 'Guide the way' : `Get to the ${name}`,
       destination: m.destination,
       brief:
         view === 'guide'
-          ? `Your friend wants to go to the ${name}. You have the map; they only see the street. Give directions from THEIR point of view.`
+          ? 'Guide your partner to the highlighted destination using the map and their point of view.'
           : `You want to go to the ${name}, but you don't know the way. Ask your navigator, then walk there (WASD + mouse).`,
     };
     if (view !== 'guide') return base;
@@ -111,7 +112,7 @@ export class CityEngine implements LevelEngine {
       dx *= max / len;
       dz *= max / len;
     }
-    const pos = collide({ x: this.pose.x + dx, z: this.pose.z + dz });
+    const pos = moveWithCollision(this.pose, { x: this.pose.x + dx, z: this.pose.z + dz }, collide);
     this.pose = { x: pos.x, z: pos.z, yaw: wrapYaw(p.yaw) };
     this.host.emitPose(this.pose, playerId);
     this.sample();

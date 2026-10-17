@@ -33,7 +33,7 @@ function Model({ url, size, position, rotation = 0 }: { url: string; size: numbe
     });
     return c;
   }, [gltf.scene]);
-  return <primitive object={obj} position={position} rotation-y={rotation} scale={size} />;
+  return <primitive object={obj} userData={{ walkSolid: true }} position={position} rotation-y={rotation} scale={size} />;
 }
 
 const FACE: Record<Place['side'], number> = { S: 0, N: Math.PI, E: Math.PI / 2, W: -Math.PI / 2 };
@@ -292,8 +292,8 @@ function Beacon({ place }: { place: Place }) {
         <cylinderGeometry args={[1.6, 1.6, 28, 24, 1, true]} />
         <meshBasicMaterial color="#ffd166" transparent opacity={0.3} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </mesh>
-      <Html position={[0, 9, 0]} center distanceFactor={45} style={{ pointerEvents: 'none' }}>
-        <div className="whitespace-nowrap rounded-full border-2 border-ink bg-sun px-3 py-1 font-display text-base font-bold text-ink shadow-[3px_3px_0_#2d3748]">⭐ {place.name}</div>
+      <Html position={[0, 9, 0]} center distanceFactor={45} zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
+        <div aria-label="Destination" className="rounded-full border-2 border-ink bg-sun px-3 py-1 text-xl text-ink shadow-[3px_3px_0_#2d3748]">⭐</div>
       </Html>
     </group>
   );
@@ -336,7 +336,7 @@ function CityContents(p: CityViewProps) {
           pitch={-0.05}
           pitchMin={-1.2}
           pitchMax={0.9}
-          walk={{ speed: 5.5, run: 9.5, eye: 1.65, collide: (q) => collide(q), onPose: p.onMove }}
+          walk={{ speed: 5.5, run: 9.5, eye: 1.65, radius: 0.4, collide: (q) => collide(q), onPose: p.onMove }}
           onLockChange={p.onLockChange}
         />
       ) : walker ? (
@@ -374,7 +374,7 @@ function CityContents(p: CityViewProps) {
       {!walker && dest && <Beacon place={dest} />}
       {route && <Line points={route} color="#ffb703" lineWidth={5} dashed dashSize={2} gapSize={1.2} />}
       {!walker && (
-        <Html position={[EXTENT + 5, 1, -EXTENT - 5]} center distanceFactor={60} style={{ pointerEvents: 'none' }}>
+        <Html position={[EXTENT + 5, 1, -EXTENT - 5]} center distanceFactor={60} zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
           <div className="rounded-full border-2 border-ink bg-white px-3 py-1 font-display text-lg font-bold shadow-[2px_2px_0_#2d3748]">N ↑</div>
         </Html>
       )}

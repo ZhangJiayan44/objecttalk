@@ -1,4 +1,6 @@
 import type { Rng } from './rng';
+import { collideSolids } from './collision';
+import { VEHICLE_SOLIDS } from './city-traffic';
 
 /**
  * Toy Town: the navigator (guide) sees a north-up map, the walker (builder)
@@ -388,7 +390,7 @@ export function collide(pos: { x: number; z: number }, radius = 0.4): { x: numbe
         else z = c.z + Math.sign(dz || 1) * h;
       }
     }
-  return { x, z };
+  return collideSolids({ x, z }, VEHICLE_SOLIDS, radius);
 }
 
 // ---------------------------------------------------------------------------

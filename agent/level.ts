@@ -207,7 +207,7 @@ export function toLevelMeta(plan: LevelPlan, kinds: ItemKind[], agent: NonNullab
     engine: plan.engine,
     skills: plan.skills.slice(0, 4),
     roles: plan.roles,
-    controls: 'stand',
+    controls: 'walk',
     guideView: 'stand',
     durationSec: plan.durationSec,
     missions: 3,

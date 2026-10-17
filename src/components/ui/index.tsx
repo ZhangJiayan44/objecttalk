@@ -114,7 +114,6 @@ const LINKS = [
   { to: '/#missions', label: 'Missions' },
   { to: '/studio', label: 'Object Studio' },
   { to: '/progress', label: 'My progress' },
-  { to: '/settings', label: 'Settings' },
   { to: '/demo', label: 'Duo demo' },
 ];
 

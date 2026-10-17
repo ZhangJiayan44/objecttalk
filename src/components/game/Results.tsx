@@ -19,10 +19,6 @@ export const VERDICT_STYLE: Record<Verdict, { label: string; cls: string }> = {
   chat: { label: 'Chat', cls: 'bg-line' },
 };
 
-export function RoundOutcome({ report }: { report: Pick<SessionReport, 'missionsDone' | 'missionsTotal'> }) {
-  return <div role="status" className="clay-chip bg-white">{report.missionsTotal > 0 && report.missionsDone === report.missionsTotal ? 'All missions complete!' : 'Round over'}</div>;
-}
-
 export function Stars({ n }: { n: number }) {
   return (
     <div className="flex gap-1 text-4xl" aria-label={`${n} of 3 stars`}>
@@ -121,7 +117,7 @@ export function CefrCard({ report, coaching }: { report: SessionReport; coaching
           <p className="mt-2 text-xs text-muted">A rough guide from {est?.sample ?? 'your'} sentences, not an exam result.</p>
         </>
       ) : (
-        <p className="mt-2 text-sm font-semibold text-muted">Say at least three sentences (hold Space) and the coach will estimate your level (CEFR A1 to C1).</p>
+        <p className="mt-2 text-sm font-semibold text-muted">Say at least three sentences with your mic on and the coach will estimate your level (CEFR A1 to C1).</p>
       )}
     </div>
   );
@@ -221,12 +217,12 @@ export function Results() {
     <div className="mx-auto max-w-6xl px-4 pt-28 pb-16">
       <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
         <section className="clay-card bg-sun/30 p-6">
-          <RoundOutcome report={r} />
+          <span className="clay-chip bg-white">{r.missionsDone === r.missionsTotal ? '🏆 All missions done!' : '⏱ Round over'}</span>
           <div className="mt-4 flex items-end justify-between gap-4">
             <div>
               <div className="text-sm font-bold text-muted">Clarity score</div>
               <div className="font-display text-7xl font-bold">{r.clarity}</div>
-              {r.lifelinePenalty ? <div className="text-xs font-bold text-muted">incl. −{r.lifelinePenalty} for borrowed help</div> : null}
+              {r.lifelinePenalty ? <div className="text-xs font-bold text-muted">incl. −{r.lifelinePenalty} for 中文求助</div> : null}
             </div>
             <Stars n={r.stars} />
           </div>

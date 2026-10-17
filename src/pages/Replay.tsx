@@ -12,8 +12,6 @@ import { BorrowedWords, CefrCard, ReviewList, SkillBars, Stars, VERDICT_STYLE } 
 import { BedroomScene } from '@/components/three/BedroomScene';
 import { CafeScene } from '@/components/three/CafeScene';
 import { CityScene } from '@/components/three/CityScene';
-import { NightMarketScene } from '@/components/three/NightMarketScene';
-import { MARKET_START } from '@shared/nightmarket';
 import { RoomScene, type Pointer, type ViewMode } from '@/components/three/RoomScene';
 import { btn, Navbar } from '@/components/ui';
 import { fetchReplay, loadItems, loadLevels } from '@/lib/api';
@@ -56,7 +54,7 @@ function frameAt(replay: Replay, t: number): Frame {
     else if (e.type === 'untray' && e.objectId) tray = tray.filter((id) => id !== e.objectId);
     else if (e.type === 'serve' && e.message === 'ok' && scene) {
       // Served items leave the case (refills are not logged; the case simply looks emptier).
-      if (replay.level !== 'nightmarket') scene = { ...scene, objects: scene.objects.filter((o) => !tray.includes(o.id)) };
+      scene = { ...scene, objects: scene.objects.filter((o) => !tray.includes(o.id)) };
       tray = [];
     } else if (e.type === 'reveal' && e.message) {
       const [act, id] = e.message.split(' ');
@@ -96,7 +94,7 @@ export default function ReplayPage() {
       .then(() => fetchReplay(id))
       .then((r) => {
         setReplay(r);
-        setView(levelOf(r.level).controls === 'walk' ? 'guide' : 'overview');
+        setView(['walknav', 'walksearch'].includes(levelOf(r.level).engine) ? 'guide' : 'overview');
         setPlaying(true);
       })
       .catch((err: Error) => setError(err.message));
@@ -155,7 +153,7 @@ export default function ReplayPage() {
     ...replay.events.filter((e) => e.type === 'wrong' || e.type === 'success' || e.type === 'mission').map((e) => ({ t: e.t, cls: e.type === 'wrong' ? 'bg-coral' : e.type === 'success' ? 'bg-cta' : 'bg-grape', label: e.type })),
     ...replay.messages.map((m) => ({ t: m.t, cls: 'bg-ink h-2 w-1 rounded-none', label: m.text })),
   ];
-  const views: ViewMode[] = level.controls === 'walk' ? ['guide', 'builder'] : ['guide', 'builder', 'overview'];
+  const views: ViewMode[] = ['walknav', 'walksearch'].includes(level.engine) ? ['guide', 'builder'] : ['guide', 'builder', 'overview'];
   const world = replay.initialWorld;
 
   let sceneEl: React.ReactNode = null;
@@ -163,9 +161,7 @@ export default function ReplayPage() {
     const target = mission ? { findId: mission.targetId, itemId: mission.itemId, cell: mission.targetCell } : null;
     sceneEl = <RoomScene className="!absolute inset-0" scene={frame.scene} view={view} heldId={frame.heldId} target={target} pointer={frame.pointer} names={names} palette={level.generated?.palette} sign={level.generated?.sign} set={sceneOf(level) === 'petshop' ? 'petshop' : 'study'} />;
   } else if (level.engine === 'order' && frame.scene)
-    sceneEl = replay.level === 'nightmarket' && world?.kind === 'cafe' && world.market
-      ? <NightMarketScene className="!absolute inset-0" scene={frame.scene} tray={frame.tray} pose={frame.pose ?? MARKET_START} view={view} interactive={false} shopperName={names.builder} />
-      : <CafeScene className="!absolute inset-0" scene={frame.scene} tray={frame.tray} view={view} interactive={false} pointer={frame.pointer} names={names} level={replay.level} palette={level.generated?.palette} sign={level.generated?.sign} look={orderLook(level)} />;
+    sceneEl = <CafeScene className="!absolute inset-0" scene={frame.scene} tray={frame.tray} view={view} interactive={false} pointer={frame.pointer} names={names} level={replay.level} palette={level.generated?.palette} sign={level.generated?.sign} look={orderLook(level)} />;
   else if (level.engine === 'walknav' && world?.kind === 'city')
     sceneEl = <CityScene className="!absolute inset-0" town={world.town} pose={frame.pose ?? world.town.start} view={view} interactive={false} destination={mission?.destination ?? null} walkerName={names.builder} />;
   else if (level.engine === 'walksearch' && world?.kind === 'bedroom')

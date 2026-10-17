@@ -108,7 +108,6 @@ export function ItemModel({ kind, color, size, look = {} }: { kind: string; colo
 export function preloadModels(level?: string) {
   const urls = new Set(['/models/rocket.glb', '/models/teddy_bear.glb', '/models/cupcake.glb', '/models/sneaker.glb', '/models/game_controller.glb', DECOR_MODELS.plant, DECOR_MODELS.books]);
   if (level) for (const k of kindsFor(level)) if (k.model) urls.add(k.model);
-  if (level === 'nightmarket') urls.add('/models/nightmarket/shopkeeper.glb');
   if (level === 'city') for (const u of ['/models/bank.glb', '/models/convenience_store.glb', '/models/hospital.glb', '/models/school.glb', '/models/post_office.glb', '/models/hotel.glb', '/models/museum.glb', '/models/house.glb', '/models/fountain.glb', '/models/tree.glb', '/models/traffic_light.glb', '/models/bus_stop.glb']) urls.add(u);
   for (const url of urls) useGLTF.preload(asset(url), false, true);
 }
@@ -272,7 +271,7 @@ export function Avatar({ role, name, label = true }: { role: Role; name: string;
     if (head.current) head.current.position.y = 1.32 + Math.sin(clock.elapsedTime * 2 + (role === 'guide' ? 0 : 1.5)) * 0.02;
   });
   return (
-    <group>
+    <group userData={{ walkSolid: true }}>
       <mesh castShadow position={[0, 0.62, 0]}>
         <capsuleGeometry args={[0.26, 0.6, 8, 20]} />
         <meshStandardMaterial color={color} roughness={0.55} />

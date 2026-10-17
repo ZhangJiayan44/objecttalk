@@ -9,7 +9,7 @@ import type { AnyMission, Bot, BotIO } from '../engines/types';
  * (greetings, thanks, yes/no, "say that again", "what?").
  */
 
-export type Timer = { handle: ReturnType<typeof setTimeout> };
+export type Timer = ReturnType<typeof setTimeout>;
 
 export type DialogAct = 'greet' | 'thanks' | 'yes' | 'no' | 'repeat' | 'confused' | 'wait' | 'done' | 'other';
 
@@ -51,23 +51,17 @@ export abstract class BaseBot implements Bot {
   abstract onFx(e: FxEvent): void;
 
   protected later(ms: number, fn: () => void): Timer {
-    const run = () => {
-      if (this.disposed) return;
-      if (this.io.listening?.()) {
-        t.handle = setTimeout(run, 100);
-      } else {
-        this.timers.delete(t);
-        fn();
-      }
-    };
-    const t: Timer = { handle: setTimeout(run, ms) };
+    const t = setTimeout(() => {
+      this.timers.delete(t);
+      if (!this.disposed) fn();
+    }, ms);
     this.timers.add(t);
     return t;
   }
 
   protected cancel(t: Timer | null | undefined) {
     if (!t) return;
-    clearTimeout(t.handle);
+    clearTimeout(t);
     this.timers.delete(t);
   }
 
@@ -99,7 +93,7 @@ export abstract class BaseBot implements Bot {
 
   dispose() {
     this.disposed = true;
-    for (const t of this.timers) clearTimeout(t.handle);
+    for (const t of this.timers) clearTimeout(t);
     this.timers.clear();
   }
 }

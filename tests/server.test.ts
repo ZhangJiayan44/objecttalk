@@ -44,13 +44,6 @@ function waitForState(s: Client, pred: (st: ClientRoomState) => boolean, timeout
 }
 
 describe('realtime server', () => {
-  it('rejects an occupied port without an unhandled server error and keeps the existing server healthy', async () => {
-    await expect(startServer({ port: server.port, quiet: true, dataDir: mkdtempSync(path.join(os.tmpdir(), 'objecttalk-port-test-')) })).rejects.toMatchObject({ code: 'EADDRINUSE' });
-    const response = await fetch(`${url}/api/health`);
-    expect(response.ok).toBe(true);
-    expect((await response.json()).ok).toBe(true);
-  });
-
   it('serves health and info', async () => {
     const health = await (await fetch(`${url}/api/health`)).json();
     expect(health.ok).toBe(true);

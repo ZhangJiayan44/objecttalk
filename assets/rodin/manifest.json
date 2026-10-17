@@ -18,17 +18,6 @@
   "optimization": "dedup + prune + weld, centre (base at y=0), normalize largest side to 1 unit, WebP textures 1024px q82, meshopt geometry",
   "items": [
     {
-      "id": "nightmarket-shopkeeper",
-      "file": "public/models/nightmarket/shopkeeper.glb",
-      "generationId": "5131c61e-1d2d-474e-a69b-439139e0c843",
-      "displayUrl": "https://hyper3d.ai/workspace/rodin/5131c61e-1d2d-474e-a69b-439139e0c843",
-      "reference": "Text-to-3D through Hyper3D MCP; full prompt in assets/rodin/nightmarket-owner.json",
-      "prompt": "Cute clay-style ancient Chinese night market merchant, teal hanfu and cream apron, full-body standing pose, no scenery.",
-      "rawBytes": 9195800,
-      "optimizedBytes": 212848,
-      "triangles": 8000
-    },
-    {
       "id": "rocket",
       "file": "public/models/rocket.glb",
       "generationId": "b0b3ebca-979c-4049-bcbe-0d2a2cade86b",

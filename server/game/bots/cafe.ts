@@ -5,7 +5,7 @@ import type { ChatMessage, FxEvent, HoverEvent } from '../../../shared/protocol'
 import type { Toolkit } from '../../agent/harness';
 import { PartnerBrain } from '../../agent/partner';
 import type { AnyMission, Bot, BotIO } from '../engines/types';
-import { BaseBot, dialogAct, isBackchannel, NUMBER_WORDS, type Timer } from './common';
+import { BaseBot, dialogAct, isBackchannel, NUMBER_WORDS } from './common';
 
 /**
  * Corner Cafe AI partners.
@@ -303,7 +303,7 @@ class AiCustomer extends BaseBot {
   private toldDone = false;
   private lastDoneAt = 0;
   private opening: string | null = null;
-  private trayTimer: Timer | null = null;
+  private trayTimer: ReturnType<typeof setTimeout> | null = null;
   private brain: PartnerBrain;
 
   constructor(

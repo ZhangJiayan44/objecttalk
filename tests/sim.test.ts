@@ -81,16 +81,6 @@ describe('AI vs AI simulation (rule brains)', () => {
     expect(a.saved[0].missions.map((m) => m.order)).toEqual(b.saved[0].missions.map((m) => m.order));
   }, 60_000);
 
-  for (const difficulty of ['easy', 'tricky'] as const) it(`finishes walking nightmarket on ${difficulty} without leaking the list`, async () => {
-    const { states, saved } = await simulate('nightmarket', difficulty, 'builder');
-    expect(saved[0].report.missionsDone).toBe(3);
-    expect(saved[0].poses!.length).toBeGreaterThan(20);
-    for (const st of states.filter((s) => s.phase === 'playing')) {
-      expect(st.mission?.order).toBeUndefined();
-      expect(st.mission?.modelAnswer).toBeUndefined();
-    }
-  }, 60_000);
-
   it('walking levels record a trail for the replay', async () => {
     const { saved } = await simulate('city');
     expect(saved[0].poses!.length).toBeGreaterThan(20);

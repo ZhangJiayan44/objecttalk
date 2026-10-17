@@ -158,20 +158,7 @@ export async function startServer(opts: { port?: number; quiet?: boolean; dataDi
   // ------------------------------------------------------------ realtime
   attachRealtime(io, rooms, { assist: assistWithLlm });
 
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const onError = (error: Error) => reject(error);
-      server.once('error', onError);
-      server.listen(port, config.host, () => {
-        server.off('error', onError);
-        resolve();
-      });
-    });
-  } catch (error) {
-    rooms.dispose();
-    await io.close();
-    throw error;
-  }
+  await new Promise<void>((resolve) => server.listen(port, config.host, resolve));
   const actualPort = (server.address() as { port: number }).port;
   const lan = lanAddresses()[0];
   log(`\n  ObjectTalk server v${VERSION}`);
@@ -201,9 +188,7 @@ if (isMain) {
       process.on('SIGTERM', shutdown);
     })
     .catch((err) => {
-      if ((err as NodeJS.ErrnoException).code === 'EADDRINUSE') {
-        console.error(`[server] Port ${config.port} is already in use. Stop the other ObjectTalk server (Ctrl+C in its terminal), then run npm run dev again. To use another port, set PORT and update BACKEND_URL to match.`);
-      } else console.error(err);
+      console.error(err);
       process.exit(1);
     });
 }

@@ -4,9 +4,11 @@ import { Suspense, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { CAFE_COLS, TRAY_SLOTS } from '@shared/cafe';
 import { getKind, kindsFor } from '@shared/catalog';
+import { zhName } from '@shared/zh';
 import type { Palette } from '@shared/levels';
 import type { HoverEvent } from '@shared/protocol';
 import type { Role, SceneObject, SceneState } from '@shared/types';
+import { clampWalk, COUNTER_WALK_BOUNDS } from '@shared/walking';
 import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
 import { detectQuality, Dust, LightShaft, PostFx, Sign, SoftIBL, useTextTexture } from './env';
 import { Box, PendantLamp, Plant, RoomShellBox, usePatternTexture, usePlankTexture, WindowPane, INK } from './furniture';
@@ -37,6 +39,8 @@ export interface CafeViewProps {
   interactive: boolean;
   /** Capture the mouse on click (the local player). */
   capture?: boolean;
+  /** Allow local players to walk within their side of the counter. */
+  walk?: boolean;
   /** What the barista is pointing at (shown to the customer). */
   pointer?: HoverEvent | null;
   /** Ids on the customer's order (guide only), to highlight on the tray. */
@@ -119,12 +123,11 @@ function Counter({ look = 'cafe' }: { look?: CafeViewProps['look'] }) {
 
 function Bell({ interactive, onServe, armed }: { interactive: boolean; onServe?(): void; armed: boolean }) {
   const ref = useRef<THREE.Group>(null);
-  const hit = useRef(0);
-  useFrame(({ clock }) => {
+  const ringLeft = useRef(0);
+  useFrame((_, dt) => {
     if (!ref.current) return;
-    const since = clock.elapsedTime - hit.current;
-    ref.current.rotation.z = since < 0.5 ? Math.sin(since * 40) * 0.2 * (0.5 - since) : 0;
-    ref.current.scale.setScalar(armed ? 1 + Math.sin(clock.elapsedTime * 5) * 0.05 : 1);
+    ringLeft.current = Math.max(0, ringLeft.current - dt);
+    ref.current.rotation.z = Math.sin((0.5 - ringLeft.current) * 40) * 0.2 * ringLeft.current;
   });
   return (
     <group
@@ -133,13 +136,13 @@ function Bell({ interactive, onServe, armed }: { interactive: boolean; onServe?(
       onClick={(e: ThreeEvent<MouseEvent>) => {
         if (!interactive || !clickInteracts()) return;
         e.stopPropagation();
-        hit.current = performance.now() / 1000;
+        ringLeft.current = 0.5;
         onServe?.();
       }}
       onPointerOver={() => interactive && (document.body.style.cursor = 'pointer')}
       onPointerOut={() => (document.body.style.cursor = '')}
     >
-      <mesh position={[0, 0.02, 0]}>
+      <mesh position={[0, 0.025, 0]}>
         <cylinderGeometry args={[0.12, 0.13, 0.04, 24]} />
         <meshStandardMaterial color={INK} />
       </mesh>
@@ -236,7 +239,7 @@ function SeatingArea() {
   );
 }
 
-function CaseItem({ obj, pos, hovered, interactive, onHover, onClick, shakeKey, label }: { obj: SceneObject; pos: [number, number, number]; hovered: boolean; interactive: boolean; onHover?(e: HoverEvent): void; onClick?(): void; shakeKey: number; label: string }) {
+function CaseItem({ obj, pos, hovered, interactive, onHover, onClick, shakeKey, label, showLabel }: { obj: SceneObject; pos: [number, number, number]; hovered: boolean; interactive: boolean; onHover?(e: HoverEvent): void; onClick?(): void; shakeKey: number; label: string; showLabel: boolean }) {
   const ref = useRef<THREE.Group>(null);
   const shakeUntil = useRef(0);
   const lastShake = useRef(0);
@@ -275,10 +278,11 @@ function CaseItem({ obj, pos, hovered, interactive, onHover, onClick, shakeKey, 
       <group rotation-y={obj.yaw}>
         <ItemModel kind={obj.kind} color={obj.color} size={obj.size} look={{ glow: hovered ? '#4f8ef7' : null }} />
       </group>
-      {hovered && (
+      {hovered && showLabel && (
         <Html position={[0, 0.42, 0]} center distanceFactor={2.6} zIndexRange={[12, 0]} style={{ pointerEvents: 'none' }}>
           <div className="flex flex-col items-center whitespace-nowrap rounded-2xl border-2 border-ink bg-white px-2 py-0.5 font-display text-ink shadow-[2px_2px_0_#2d3748]">
             <span className="text-sm leading-tight font-semibold">{label}</span>
+            {zhName(getKind(obj.kind)) && <span className="text-[10px] leading-tight font-bold text-ink/55">{zhName(getKind(obj.kind))}</span>}
           </div>
         </Html>
       )}
@@ -295,17 +299,22 @@ function CafeContents(p: CafeViewProps) {
   const hoverId = p.pointer?.objectId ?? null;
   const fps = p.view !== 'overview';
   const trayIndex = new Map(p.tray.map((id, i) => [id, i]));
+  const walking = (p.walk ?? true) && (p.capture ?? p.interactive);
   return (
     <>
       {fps ? (
         <FirstPersonRig
-          position={p.view === 'builder' ? [0.6, 1.66, -1.55] : [-0.2, 1.6, 2.45]}
+          position={p.view === 'builder' ? [0.6, 1.66, -1.4] : [-0.2, 1.6, 1.85]}
           yaw={p.view === 'builder' ? Math.PI : 0}
           pitch={p.view === 'builder' ? -0.24 : -0.16}
-          yawRange={1.45}
+          yawRange={walking ? undefined : 1.45}
           pitchMin={-1.05}
           pitchMax={0.45}
-          resetKey={p.missionKey}
+          walk={walking ? {
+            speed: 1.7, run: 2.5, eye: p.view === 'builder' ? 1.66 : 1.6,
+            collide: (q) => clampWalk(q, COUNTER_WALK_BOUNDS[p.view === 'guide' ? 'guide' : 'builder']),
+          } : undefined}
+          resetKey={`${p.view}:${p.missionKey ?? ''}`}
           capture={p.capture ?? p.interactive}
           onLockChange={p.onLockChange}
         />
@@ -359,6 +368,7 @@ function CafeContents(p: CafeViewProps) {
             onClick={() => p.onTray?.(o.id, onTray === undefined)}
             shakeKey={p.shakeId?.id === o.id ? p.shakeId.key : 0}
             label={`${labelOf(o)}${onTray !== undefined ? ' (on the tray: click to take it back)' : ''}`}
+            showLabel={p.view !== 'guide'}
           />
         );
       })}

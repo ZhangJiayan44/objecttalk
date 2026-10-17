@@ -1,4 +1,4 @@
-import { BrainCircuit, Play, RefreshCw, Tv, Volume2, VolumeX } from 'lucide-react';
+import { BrainCircuit, Play, RefreshCw, Tv } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -6,8 +6,7 @@ import { generatedLevelList, LEVEL_ORDER, LEVELS, levelOf } from '@shared/levels
 import type { Difficulty, Role } from '@shared/types';
 import { AgentPanel } from '@/components/game/AgentPanel';
 import { GameView } from '@/components/game/GameView';
-import { CefrCard, ReviewList, RoundOutcome, SkillBars, Stars } from '@/components/game/Results';
-import { useCommsPrefs, useReadAloud } from '@/components/game/VoiceBar';
+import { CefrCard, ReviewList, SkillBars, Stars } from '@/components/game/Results';
 import { preloadModels } from '@/components/three/models';
 import { btn, Logo } from '@/components/ui';
 import { loadItems, loadLevels } from '@/lib/api';
@@ -29,7 +28,6 @@ function Pane({ role }: { role: Role }) {
     const r = st.results.report;
     return (
       <div className="h-full overflow-y-auto p-4">
-        <RoundOutcome report={r} />
         <div className="flex items-center justify-between">
           <span className={`clay-chip ${role === 'guide' ? 'bg-peach' : 'bg-sky'}`}>
             {level.roles[role].icon} {level.roles[role].name}
@@ -74,11 +72,6 @@ function Pane({ role }: { role: Role }) {
 type Pair = { guide: GameClient; builder: GameClient };
 type DemoMode = 'sim' | 'duo';
 
-function DemoVoice({ enabled }: { enabled: boolean }) {
-  useReadAloud(enabled, false, true);
-  return null;
-}
-
 async function setupRoom(c: Pair, mode: DemoMode, level: string, difficulty: Difficulty) {
   const durationSec = levelOf(level).durationSec;
   if (mode === 'sim') {
@@ -98,7 +91,6 @@ export default function Demo() {
   const [level, setLevel] = useState<string>('study');
   const [difficulty, setDifficulty] = useState<Difficulty>('tricky');
   const [brain, setBrain] = useState(true);
-  const prefs = useCommsPrefs();
   const [nonce, setNonce] = useState(0);
   const [, setVersion] = useState(0);
   const guideState = useGameStoreState(clients?.guide ?? null);
@@ -175,11 +167,6 @@ export default function Demo() {
           <button className={btn(brain ? 'grape' : 'white', 'sm')} onClick={() => setBrain((b) => !b)} aria-pressed={brain}>
             <BrainCircuit size={16} strokeWidth={3} /> AI brain
           </button>
-          {mode === 'sim' && (
-            <button className={btn('white', 'sm', '!px-2')} onClick={prefs.toggleVoiceOut} aria-label={prefs.voiceOut ? 'Mute AI voices' : 'Enable AI voices'} title={prefs.voiceOut ? 'Mute AI voices' : 'Enable AI voices'}>
-              {prefs.voiceOut ? <Volume2 size={16} /> : <VolumeX size={16} />}
-            </button>
-          )}
           {code && (
             <a href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/watch/${code}`} target="_blank" rel="noreferrer" className={btn('white', 'sm')}>
               <Tv size={16} strokeWidth={3} /> Spectator screen
@@ -190,7 +177,6 @@ export default function Demo() {
           </button>
         </div>
       </header>
-      {clients && mode === 'sim' && <GameContext.Provider value={clients.guide}><DemoVoice enabled={prefs.voiceOut} /></GameContext.Provider>}
       <div className={`grid min-h-0 flex-1 grid-cols-1 gap-2 p-2 ${brain ? 'xl:grid-cols-[1fr_1fr_24rem]' : 'lg:grid-cols-2'}`}>
         {clients &&
           (['guide', 'builder'] as const).map((role) => (

@@ -58,7 +58,7 @@ export interface LevelMeta {
   engine: EngineKind;
   skills: string[];
   roles: Record<Role, RoleCopy>;
-  /** How the builder moves: standing in place with mouse-look, or walking (WASD). */
+  /** Player movement; guides with a map/dollhouse view keep their overview. */
   controls: 'stand' | 'walk';
   /** What the guide looks at: their own standing view, a town map, or a dollhouse view of the room. */
   guideView: 'stand' | 'map' | 'dollhouse';
@@ -132,7 +132,7 @@ export const LEVELS: Record<LevelId, LevelMeta & { id: LevelId }> = {
       guide: { name: 'Shop owner', icon: '🧑‍🔧', sees: 'which pet a customer wants', does: 'explains which animal and where it goes' },
       builder: { name: 'Helper', icon: '🧤', sees: 'no target', does: 'picks up and moves the animals' },
     },
-    controls: 'stand',
+    controls: 'walk',
     guideView: 'stand',
     durationSec: 90,
     missions: 3,
@@ -172,7 +172,7 @@ export const LEVELS: Record<LevelId, LevelMeta & { id: LevelId }> = {
       guide: { name: 'Customer', icon: '🙋', sees: 'their order card', does: 'orders politely, with numbers and sizes' },
       builder: { name: 'Barista', icon: '🧑‍🍳', sees: 'the display case', does: 'puts the right food on the tray' },
     },
-    controls: 'stand',
+    controls: 'walk',
     guideView: 'stand',
     durationSec: 120,
     missions: 3,
@@ -213,31 +213,28 @@ export const LEVELS: Record<LevelId, LevelMeta & { id: LevelId }> = {
   nightmarket: {
     id: 'nightmarket',
     title: 'Night Market',
-    tagline: 'Follow your partner through Lantern Street and shop for friends',
+    tagline: 'Order street food at a stall',
     emoji: '🏮',
     engine: 'order',
     scene: 'night',
-    skills: ['directions & shop names', 'a bowl of / a bag of', 'how many', 'small or large'],
+    skills: ['a bowl of / a bag of', 'how many', 'small or large', 'street food words'],
     roles: {
-      guide: { name: 'Shopping partner', icon: '🧭', sees: 'the secret shopping list and the street map', does: 'directs the shopper to each shop, with numbers and sizes' },
-      builder: { name: 'Shopper', icon: '🛍️', sees: 'the street and shop menus', does: 'walks to shopkeepers, buys food and returns to the entrance gate' },
+      guide: { name: 'Customer', icon: '🙋', sees: 'what their friends want', does: 'orders for everyone, with numbers and sizes' },
+      builder: { name: 'Stall owner', icon: '🧑‍🍳', sees: 'the food stall', does: 'puts the right food on the tray' },
     },
     controls: 'walk',
-    guideView: 'map',
-    durationSec: 300,
+    guideView: 'stand',
+    durationSec: 120,
     missions: 3,
     color: 'bg-grape',
     quick: {
-      builder: ['Where should I go?', 'What should I buy?', 'How many?', 'Small or large?', 'What should I do next?', 'Should I come back now?'],
-      guide: ['Go straight along the main street.', 'Turn left at the next lane.', 'Turn right at the next lane.', 'Buy two of those, please.', 'A large one, please.', 'Bring the shopping bag back to the entrance gate.'],
+      builder: ['What would you like?', 'How many?', 'Small or large?', 'Anything else?', 'Here you go!'],
+      guide: ['Could I have…', 'Two of those, please.', 'A large one, please.', 'That’s all, thanks!', 'No, I didn’t order that.'],
     },
     phrases: [
       {
         title: '🏮 Ordering',
         items: [
-          ['Go to Moon Noodle House and buy two bowls of noodles.', '去月来面馆买两碗面。'],
-          ['Which shop should I go to next?', '接下来去哪家店？'],
-          ['Turn right into the side lane.', '右转进入支巷。'],
           ['Could I have a bowl of noodles, please?', '请给我一碗面好吗？'],
           ['Two skewers and a large bubble tea, please.', '两串烤串和一杯大杯奶茶。'],
           ['A bag of chestnuts, please.', '一袋糖炒栗子。'],
@@ -355,7 +352,8 @@ export const LEVEL_ORDER: LevelId[] = ['study', 'pets', 'cafe', 'nightmarket', '
 const generatedLevels = new Map<string, LevelMeta>();
 
 export function registerLevels(levels: LevelMeta[]) {
-  for (const l of levels) if (l.generated && !(l.id in LEVELS)) generatedLevels.set(l.id, l);
+  // Older published bundles used standing controls; their shared sets now support bounded walking.
+  for (const l of levels) if (l.generated && !(l.id in LEVELS)) generatedLevels.set(l.id, { ...l, controls: 'walk' });
 }
 
 export function generatedLevelList(): LevelMeta[] {

@@ -274,7 +274,7 @@ function LostItem({ item, highlight, interactive, reachable, onPick }: { item: B
             <meshBasicMaterial color="#ffd166" toneMapped={false} />
           </mesh>
           <Html position={[0, 0.55, 0]} center distanceFactor={7} zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
-            <div className="animate-bounce whitespace-nowrap rounded-full border-2 border-ink bg-sun px-2.5 py-0.5 font-display text-sm font-bold text-ink shadow-[2px_2px_0_#2d3748]">⭐ {itemName(item.kind)}</div>
+            <div aria-label="Target object" className="rounded-full border-2 border-ink bg-sun px-2.5 py-0.5 text-lg shadow-[2px_2px_0_#2d3748]">⭐</div>
           </Html>
         </>
       )}

@@ -366,12 +366,6 @@ export default function Studio() {
               </div>
             ))}
           </div>
-          <div className="clay-card mt-6 overflow-x-auto bg-ink p-5 font-mono text-sm text-mint">
-            <div className="text-white/60"># Batch-generate a new object pack with the Scene Agent (L4)</div>
-            <div>npm run agent -- plan "breakfast table"</div>
-            <div>npm run agent -- build --pack breakfast --images ./my-photos</div>
-            <div>npm run agent -- validate</div>
-          </div>
         </section>
       </main>
       <Modal open={!!preview} onOpenChange={(o) => !o && setPreview(null)} title={preview?.name ?? ''} description={preview?.rodin ? `Rodin generation ${preview.rodin.generationId} · ${preview.rodin.tier}` : 'Procedural object'}>

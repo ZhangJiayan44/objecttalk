@@ -2,12 +2,13 @@ import { events as createPointerEvents, useFrame, useThree, type EventManager, t
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import type { Pose } from '@shared/protocol';
-import { readMouseSensitivity } from '@/lib/settings';
+import { collideSolids, intersectsSolids, moveWithCollision } from '@shared/collision';
+import { sceneSolids } from './collision';
 
 /**
  * First-person controls, CS-style: click the 3D view once to capture the
  * mouse, then simply moving the mouse turns your head (no dragging); the
- * crosshair in the middle is your pointer and a click interacts with what it
+ * dot in the middle is your pointer and a click interacts with what it
  * is on. Esc releases the mouse for the UI. Walking levels add WASD / arrows
  * (Shift to run) with collision. On touch screens: drag to look, tap to
  * interact, and an on-screen joystick to walk.
@@ -32,7 +33,7 @@ const isTyping = (el: EventTarget | null) => {
   return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
 };
 
-/** Raycast from the crosshair (screen centre) while the mouse is captured, from the cursor otherwise. */
+/** Raycast from the interaction dot (screen centre) while captured, from the cursor otherwise. */
 export function centerRayEvents(store: Parameters<typeof createPointerEvents>[0]): EventManager<HTMLElement> {
   const base = createPointerEvents(store);
   return {
@@ -49,6 +50,7 @@ export interface WalkOptions {
   speed: number;
   run: number;
   eye: number;
+  radius?: number;
   collide(p: { x: number; z: number }): { x: number; z: number };
   onPose?(pose: Pose): void;
 }
@@ -126,9 +128,8 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
     };
     const onMouseMove = (e: MouseEvent) => {
       if (document.pointerLockElement !== el) return;
-      const sensitivity = readMouseSensitivity();
-      look.current.yaw -= e.movementX * SENS_LOCKED * sensitivity;
-      look.current.pitch -= e.movementY * SENS_LOCKED * sensitivity;
+      look.current.yaw -= e.movementX * SENS_LOCKED;
+      look.current.pitch -= e.movementY * SENS_LOCKED;
       clampLook();
     };
     // Drag to look (touch, or when the mouse is not captured).
@@ -145,9 +146,8 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
       drag.x = e.clientX;
       drag.y = e.clientY;
       drag.moved += Math.abs(dx) + Math.abs(dy);
-      const sensitivity = readMouseSensitivity();
-      look.current.yaw -= dx * SENS_DRAG * sensitivity;
-      look.current.pitch -= dy * SENS_DRAG * sensitivity;
+      look.current.yaw -= dx * SENS_DRAG;
+      look.current.pitch -= dy * SENS_DRAG;
       clampLook();
     };
     const onUp = (e: PointerEvent) => {
@@ -192,7 +192,9 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
     };
   }, [gl, enabled, capture]);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
+    // Returning from a background tab must not create a single giant movement step.
+    dt = Math.min(dt, 0.05);
     const l = look.current;
     let moved = false;
     if (walk && enabled) {
@@ -211,7 +213,12 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
         const speed = k.has('ShiftLeft') || k.has('ShiftRight') ? walk.run : walk.speed;
         const f = { x: -Math.sin(l.yaw), z: -Math.cos(l.yaw) };
         const r = { x: Math.cos(l.yaw), z: -Math.sin(l.yaw) };
-        const next = walk.collide({ x: pos.current.x + (f.x * fx + r.x * sx) * speed * dt, z: pos.current.z + (f.z * fx + r.z * sx) * speed * dt });
+        const radius = walk.radius ?? 0.35;
+        const solids = sceneSolids(state.scene, walk.eye);
+        const next = moveWithCollision(pos.current, {
+          x: pos.current.x + (f.x * fx + r.x * sx) * speed * dt,
+          z: pos.current.z + (f.z * fx + r.z * sx) * speed * dt,
+        }, (q) => walk.collide(collideSolids(walk.collide(q), solids, radius)), (q) => !intersectsSolids(q, solids, radius));
         moved = Math.hypot(next.x - pos.current.x, next.z - pos.current.z) > 1e-4;
         pos.current = next;
         bob.current += dt * speed * 2.2;
@@ -225,7 +232,7 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
       }
     } else camera.position.set(...position);
     camera.rotation.set(l.pitch, l.yaw, 0, 'YXZ');
-    // Keep hover/crosshair targets fresh while the view moves without mouse events.
+    // Keep hover targets fresh while the view moves without mouse events.
     if ((moved || input.locked) && events.update) events.update();
   });
 

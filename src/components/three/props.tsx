@@ -12,7 +12,7 @@ import { clickInteracts } from './controls';
 /**
  * Scenery kit: Rodin props that make every place feel lived-in, and the
  * "word card" interaction that turns scenery into vocabulary. Point at any
- * prop with the crosshair (or tap it): its English name pops up,
+ * prop with the centre dot (or tap it): its English + Chinese name pops up,
  * a click says the word and saves it to the word book. Pets idle (breathe,
  * look around, hop), so a room never feels frozen.
  */
@@ -137,6 +137,7 @@ export function Prop({ name, position, size, rotation = 0, alive, word = true, r
   return (
     <group
       ref={ref}
+      userData={{ walkSolid: position[1] <= 0.5 }}
       position={position}
       rotation-y={rotation}
       scale={size * obj.userData.unit}
@@ -155,17 +156,18 @@ export function Prop({ name, position, size, rotation = 0, alive, word = true, r
       }
     >
       <primitive object={obj} />
-      {hot && card && <WordCard en={card[0]} y={1.15} />}
+      {hot && card && <WordCard en={card[0]} zh={card[1]} y={1.15} />}
     </group>
   );
 }
 
-/** The little floating label. Scales with the object, not the screen. */
-export function WordCard({ en, y = 1.1, hint = true }: { en: string; y?: number; hint?: boolean }) {
+/** The little floating label: English big, Chinese small. Scales with the object, not the screen. */
+export function WordCard({ en, zh, y = 1.1, hint = true }: { en: string; zh: string; y?: number; hint?: boolean }) {
   return (
     <Html position={[0, y, 0]} center distanceFactor={4} zIndexRange={[14, 0]} style={{ pointerEvents: 'none' }}>
       <div className="flex flex-col items-center whitespace-nowrap rounded-2xl border-2 border-ink bg-white px-2.5 py-1 font-display shadow-[2px_2px_0_#2d3748]">
         <span className="text-base leading-tight font-semibold">{en}</span>
+        <span className="text-xs leading-tight font-bold text-ink/60">{zh}</span>
         {hint && <span className="text-[10px] leading-tight text-ink/40">click: hear it · save it</span>}
       </div>
     </Html>

@@ -4,9 +4,12 @@ import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { AVATAR_Z, cellToWorld, TABLE_Y, VIEWPOINT } from '@shared/room';
+import { getKind } from '@shared/catalog';
 import { entityLabel, freeCells } from '@shared/spatial';
+import { zhName } from '@shared/zh';
 import type { Palette } from '@shared/levels';
 import { cellKey, sameCell, type Cell, type Role, type SceneObject, type SceneState } from '@shared/types';
+import { clampWalk, TABLE_WALK_BOUNDS } from '@shared/walking';
 import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
 import { detectQuality, PostFx, SoftIBL } from './env';
 import { StudyRoom } from './furniture';
@@ -41,10 +44,12 @@ export interface RoomSceneProps {
   className?: string;
   /** Slowly orbit the overview camera (landing page hero). */
   autoRotate?: boolean;
-  /** First-person view for players (mouse-look, crosshair). Spectators and replays orbit. */
+  /** First-person view for players (mouse-look, centre dot). Spectators and replays orbit. */
   firstPerson?: boolean;
   /** Capture the mouse on click (the local player). Off: drag to look. */
   capture?: boolean;
+  /** Walk in the clear aisle on this player's side of the table. */
+  walk?: boolean;
   /** Agent-made levels repaint the room. */
   palette?: Palette;
   sign?: string;
@@ -220,6 +225,7 @@ function SceneItem({
         <Html position={[0, 0.5, 0]} center distanceFactor={3.2} zIndexRange={[12, 0]} style={{ pointerEvents: 'none' }}>
           <div className="flex flex-col items-center whitespace-nowrap rounded-2xl border-2 border-ink bg-white px-2.5 py-0.5 font-display text-ink shadow-[2px_2px_0_#2d3748]">
             <span className="text-sm leading-tight font-semibold">{entityLabel({ ...obj, landmark: false })}</span>
+            {zhName(getKind(obj.kind)) && <span className="text-[10px] leading-tight font-bold text-ink/55">{zhName(getKind(obj.kind))}</span>}
           </div>
         </Html>
       )}
@@ -294,6 +300,7 @@ function DevProbe({ scene }: { scene: SceneState }) {
 function SceneContents(props: RoomSceneProps) {
   const { scene, view, heldId, target, pointer, localHover, interactive = false, onHover, onPick, onPlace, onDrop, wrong, names, labels = true, autoRotate, firstPerson, capture = false, missionKey, onLockChange, palette, sign, set = 'study' } = props;
   const fps = firstPerson && view !== 'overview';
+  const walking = props.walk && capture;
   const quality = useMemo(detectQuality, []);
   const ghostSource = target?.itemId ? scene.objects.find((o) => o.id === target.itemId) : undefined;
   const hoverObj = interactive ? localHover?.objectId : pointer?.objectId;
@@ -305,10 +312,14 @@ function SceneContents(props: RoomSceneProps) {
           position={[0, 1.72, view === 'guide' ? -2.3 : 2.3]}
           yaw={view === 'guide' ? Math.PI : 0}
           pitch={-0.45}
-          yawRange={1.35}
+          yawRange={walking ? undefined : 1.35}
           pitchMin={-1.05}
           pitchMax={0.35}
-          resetKey={missionKey}
+          walk={walking ? {
+            speed: 1.7, run: 2.5, eye: 1.72,
+            collide: (q) => clampWalk(q, TABLE_WALK_BOUNDS[view]),
+          } : undefined}
+          resetKey={`${view}:${missionKey ?? ''}`}
           capture={capture}
           onLockChange={onLockChange}
         />
@@ -347,7 +358,7 @@ function SceneContents(props: RoomSceneProps) {
           onPick={onPick}
           onDrop={onDrop}
           shakeKey={wrong?.objectId === o.id ? wrong.key : 0}
-          label={labels}
+          label={labels && view !== 'guide'}
         />
       ))}
       {interactive && heldId && <Slots scene={scene} heldId={heldId} hoverCell={hoverCell} onHover={onHover} onPlace={onPlace} />}

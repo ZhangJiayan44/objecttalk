@@ -87,7 +87,7 @@ export function Decor({ url, size, position, rotation = 0 }: { url: string; size
     });
     return c;
   }, [gltf.scene]);
-  return <primitive object={obj} position={position} rotation-y={rotation} scale={size} />;
+  return <primitive object={obj} userData={{ walkSolid: position[1] <= 0.5 }} position={position} rotation-y={rotation} scale={size} />;
 }
 
 export function Box({ size, position, color, radius = 0.04, rotation, roughness = 0.7, cast = true }: { size: [number, number, number]; position: [number, number, number]; color: string; radius?: number; rotation?: [number, number, number]; roughness?: number; cast?: boolean }) {
