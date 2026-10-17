@@ -3,6 +3,7 @@ import { trayStatus } from '@shared/cafe';
 import { getKind } from '@shared/catalog';
 import { PLACE_DEFS, type PlaceKind } from '@shared/city';
 import { levelOf } from '@shared/levels';
+import { shopForKind } from '@shared/nightmarket';
 import type { ClientRoomState, Pose } from '@shared/protocol';
 import { COLOR_HEX, type ColorName, type SizeName } from '@shared/types';
 import { asset } from '@/lib/asset';
@@ -97,11 +98,12 @@ export function MissionCard({ st, view, onClose }: { st: ClientRoomState; pose: 
   }
 
   if (m.type === 'order') {
+    const market = level.id === 'nightmarket';
     const world = st.world?.kind === 'cafe' ? st.world : null;
     const tray = world && st.scene ? world.tray.map((id) => st.scene!.objects.find((o) => o.id === id)).filter((o) => !!o) : [];
     const status = isGuide && m.order && world && st.scene ? trayStatus({ scene: st.scene, tray: world.tray }, m.order) : null;
     return (
-      <Shell title={`${isGuide ? '🧾 Your order' : '☕ New customer'} · ${m.index + 1}`} chip="bg-sun" onClose={onClose}>
+      <Shell title={`${market ? isGuide ? '🧾 Shopping list' : '🛍️ Shopping trip' : isGuide ? '🧾 Your order' : '☕ New customer'} · ${m.index + 1}`} chip="bg-sun" onClose={onClose}>
         <p className="text-sm font-semibold">{m.brief}</p>
         {isGuide && m.order && (
           <ul className="mt-3 space-y-2 rounded-2xl border-2 border-dashed border-ink bg-cream p-2">
@@ -114,6 +116,7 @@ export function MissionCard({ st, view, onClose }: { st: ClientRoomState; pose: 
                   <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-1">
                     <span className="font-display text-2xl font-semibold" aria-label={`Quantity: ${l.qty}`}>× {l.qty}</span>
                     <SizeCue size={l.size} />
+                    {market && <small className="w-full text-xs font-bold text-muted">{shopForKind(l.kind).name}{missing && ` · ${missing.qty} left`}</small>}
                   </div>
                   {ready && <Check size={20} className="shrink-0 text-cta-deep" aria-label="Ready" />}
                 </li>
@@ -123,7 +126,7 @@ export function MissionCard({ st, view, onClose }: { st: ClientRoomState; pose: 
         )}
         {!isGuide && (
           <div className="mt-3 rounded-2xl border-2 border-dashed border-ink bg-cream p-3 text-sm">
-            <div className="font-display font-semibold">On your tray</div>
+            <div className="font-display font-semibold">{market ? 'In your shopping bag' : 'On your tray'}</div>
             {tray.length ? (
               <div className="mt-1 flex flex-wrap gap-1">
                 {tray.map((o) => (
@@ -134,10 +137,10 @@ export function MissionCard({ st, view, onClose }: { st: ClientRoomState; pose: 
                 ))}
               </div>
             ) : (
-              <div className="text-muted">Nothing yet. Click food in the case to add it.</div>
+              <div className="text-muted">{market ? 'Your bag is empty.' : 'Nothing yet. Click food in the case to add it.'}</div>
             )}
             <div className="mt-2 text-muted">
-              Ring the bell <Kbd>F</Kbd> to serve. Ask: “Small or large?”, “How many?”, “Anything else?”
+              {market ? <>Return to the entrance gate and press <Kbd>F</Kbd> to deliver.</> : <>Ring the bell <Kbd>F</Kbd> to serve. Ask: “Small or large?”, “How many?”, “Anything else?”</>}
             </div>
           </div>
         )}

@@ -61,7 +61,7 @@ export type { Pose };
  */
 export type WorldState =
   | { kind: 'tabletop' }
-  | { kind: 'cafe'; tray: string[]; served: number }
+  | { kind: 'cafe'; tray: string[]; served: number; market?: { pose: Pose } }
   | { kind: 'city'; town: Town; pose: Pose }
   | { kind: 'bedroom'; items: BedroomItem[]; found: string[]; pose: Pose; open: string[] };
 
@@ -212,8 +212,8 @@ export interface Replay {
   players: { name: string; role: Role; isAI: boolean }[];
   initialScene: SceneState | null;
   initialWorld?: WorldState | null;
-  /** Walking levels: the walker's path, sampled a few times a second. [t, x, z, yaw] */
-  poses?: [number, number, number, number][];
+  /** Walking levels: sampled path [t, x, z, yaw, optional foot height]. */
+  poses?: [number, number, number, number, number?][];
   missions: ReplayMission[];
   records: MissionRecord[];
   events: ReplayEvent[];
@@ -263,6 +263,8 @@ export interface ClientToServer {
   /** Bedroom: open or close the toy box / wardrobe. */
   'act:open': (p: { id: string; open: boolean }) => void;
   'chat:send': (p: { text: string; via: Via }) => void;
+  /** Sim host reports the active AI line's browser speech playback. */
+  'chat:playback': (p: { id: string; state: 'started' | 'ended' | 'unavailable' }) => void;
   /** Chinese lifeline: Chinese in, a private English sentence back (nothing is sent to the partner). */
   'chat:assist': (p: { text: string }, ack: Ack<{ en: string; source: 'llm' | 'glossary'; left: number }>) => void;
   'rtc:signal': (p: { to: string; data: unknown }) => void;

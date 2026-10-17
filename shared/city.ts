@@ -27,6 +27,8 @@ export interface Pose {
   x: number;
   z: number;
   yaw: number;
+  /** Foot height for scenes with overlapping walkable floors. */
+  y?: number;
 }
 
 export type PlaceKind = 'bank' | 'shop' | 'hospital' | 'school' | 'postOffice' | 'hotel' | 'museum' | 'house' | 'park';

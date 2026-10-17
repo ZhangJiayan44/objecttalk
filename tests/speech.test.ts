@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { speak, useSpeechInput } from '../src/lib/speech';
+import { speak, stopSpeaking, useSpeechInput } from '../src/lib/speech';
 
 class FakeRecognition extends EventTarget {
   static instances: FakeRecognition[] = [];
@@ -58,11 +58,30 @@ beforeEach(() => {
 
 afterEach(() => {
   act(() => trees.forEach((tree) => tree.unmount()));
+  stopSpeaking();
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 
 describe('hands-free microphone', () => {
+  it('reports AI playback completion and then resumes the local hands-free microphone', () => {
+    const app = mountSpeech();
+    const rec = FakeRecognition.instances[0];
+    const onStart = vi.fn(), onEnd = vi.fn(), onError = vi.fn();
+    act(() => { speak('Go to Jade Tea Shop.', { onStart, onEnd, onError }); });
+    expect(rec.abort).toHaveBeenCalledOnce();
+    expect(onStart).toHaveBeenCalledOnce();
+    expect(onEnd).not.toHaveBeenCalled();
+    const utterance = playback.speak.mock.calls[0][0] as SpeechSynthesisUtterance;
+    act(() => { utterance.onend?.({} as SpeechSynthesisEvent); });
+    expect(onEnd).toHaveBeenCalledOnce();
+    expect(onError).not.toHaveBeenCalled();
+    act(() => { vi.advanceTimersByTime(750); });
+    expect(FakeRecognition.instances).toHaveLength(2);
+    act(() => FakeRecognition.instances[1].result('Which shop should I visit next?'));
+    expect(app.onFinal).toHaveBeenCalledExactlyOnceWith('Which shop should I visit next?');
+  });
+
   it('opens automatically and sends final sentences without waiting for the mic to close', () => {
     const app = mountSpeech();
     const rec = FakeRecognition.instances[0];

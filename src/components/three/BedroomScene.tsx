@@ -1,12 +1,13 @@
 import { Html, OrbitControls } from '@react-three/drei';
-import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
-import { Suspense, useMemo, useRef } from 'react';
+import { useFrame, type ThreeEvent } from '@react-three/fiber';
+import { SceneCanvas as Canvas } from './performance';
+import { Suspense, useRef } from 'react';
 import * as THREE from 'three';
 import { canReach, collideRoom, FURNITURE, itemName, ROOM_D, ROOM_W, spotById, type BedroomItem } from '@shared/bedroom';
 import type { Pose } from '@shared/city';
 import type { Role } from '@shared/types';
 import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
-import { detectQuality, Dust, LightShaft, PostFx, SoftIBL } from './env';
+import { LightShaft, PostFx, SoftIBL } from './env';
 import { Box, INK, OpenShelf, Plant, Poster, RoomShellBox, usePatternTexture, usePlankTexture, WallClock, WindowPane } from './furniture';
 import { Avatar, ItemModel } from './models';
 import { Prop } from './props';
@@ -341,7 +342,6 @@ export interface BedroomViewProps {
 }
 
 function BedroomContents(p: BedroomViewProps) {
-  const quality = useMemo(detectQuality, []);
   const floor = usePlankTexture('#e8c49a', '#c99c6c', [7, 6]);
   const rug = usePatternTexture('#e6e6fa', '#c9b8f5', 'dots', [3, 2]);
   const seeker = p.view === 'builder';
@@ -415,15 +415,14 @@ function BedroomContents(p: BedroomViewProps) {
           <LostItem key={i.id} item={i} highlight={p.targetId === i.id ? 'target' : null} interactive={p.interactive} reachable={canReach(p.pose, i)} onPick={() => p.onPick?.(i.id)} />
         ))}
       {!seeker && <SeekerMarker pose={p.pose} name={p.names?.builder ?? 'Seeker'} />}
-      <Dust area={[8, 2.6, 6]} center={[0, 1.4, 0]} count={160} />
-      <PostFx quality={quality} />
+      <PostFx />
     </>
   );
 }
 
 export function BedroomScene(props: BedroomViewProps) {
   return (
-    <Canvas className={props.className} shadows dpr={[1, 2]} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.05, far: 80, position: [0, 9, 8.5] }} gl={{ antialias: false, powerPreference: 'high-performance' }}>
+    <Canvas className={props.className} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.05, far: 80, position: [0, 9, 8.5] }} gl={{ antialias: false, powerPreference: 'high-performance' }}>
       <color attach="background" args={['#efe6f6']} />
       <Suspense fallback={<Html center>Tidying up…</Html>}>
         <BedroomContents {...props} />

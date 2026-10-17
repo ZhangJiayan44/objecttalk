@@ -12,6 +12,8 @@ import { BorrowedWords, CefrCard, ReviewList, SkillBars, Stars, VERDICT_STYLE } 
 import { BedroomScene } from '@/components/three/BedroomScene';
 import { CafeScene } from '@/components/three/CafeScene';
 import { CityScene } from '@/components/three/CityScene';
+import { NightMarketScene } from '@/components/three/NightMarketScene';
+import { MARKET_START } from '@shared/nightmarket';
 import { RoomScene, type Pointer, type ViewMode } from '@/components/three/RoomScene';
 import { btn, Navbar } from '@/components/ui';
 import { fetchReplay, loadItems, loadLevels } from '@/lib/api';
@@ -54,7 +56,7 @@ function frameAt(replay: Replay, t: number): Frame {
     else if (e.type === 'untray' && e.objectId) tray = tray.filter((id) => id !== e.objectId);
     else if (e.type === 'serve' && e.message === 'ok' && scene) {
       // Served items leave the case (refills are not logged; the case simply looks emptier).
-      scene = { ...scene, objects: scene.objects.filter((o) => !tray.includes(o.id)) };
+      if (replay.level !== 'nightmarket') scene = { ...scene, objects: scene.objects.filter((o) => !tray.includes(o.id)) };
       tray = [];
     } else if (e.type === 'reveal' && e.message) {
       const [act, id] = e.message.split(' ');
@@ -72,7 +74,7 @@ function frameAt(replay: Replay, t: number): Frame {
       if (p[0] > t) break;
       lo = p;
     }
-    pose = { x: lo[1], z: lo[2], yaw: lo[3] };
+    pose = { x: lo[1], z: lo[2], yaw: lo[3], ...(lo[4] === undefined ? {} : { y: lo[4] }) };
   }
   return { scene, heldId, tray, open: [...open], found, missionIndex, pointer, pose };
 }
@@ -161,7 +163,9 @@ export default function ReplayPage() {
     const target = mission ? { findId: mission.targetId, itemId: mission.itemId, cell: mission.targetCell } : null;
     sceneEl = <RoomScene className="!absolute inset-0" scene={frame.scene} view={view} heldId={frame.heldId} target={target} pointer={frame.pointer} names={names} palette={level.generated?.palette} sign={level.generated?.sign} set={sceneOf(level) === 'petshop' ? 'petshop' : 'study'} />;
   } else if (level.engine === 'order' && frame.scene)
-    sceneEl = <CafeScene className="!absolute inset-0" scene={frame.scene} tray={frame.tray} view={view} interactive={false} pointer={frame.pointer} names={names} level={replay.level} palette={level.generated?.palette} sign={level.generated?.sign} look={orderLook(level)} />;
+    sceneEl = replay.level === 'nightmarket' && world?.kind === 'cafe' && world.market
+      ? <NightMarketScene className="!absolute inset-0" scene={frame.scene} tray={frame.tray} pose={frame.pose ?? MARKET_START} view={view} interactive={false} shopperName={names.builder} />
+      : <CafeScene className="!absolute inset-0" scene={frame.scene} tray={frame.tray} view={view} interactive={false} pointer={frame.pointer} names={names} level={replay.level} palette={level.generated?.palette} sign={level.generated?.sign} look={orderLook(level)} />;
   else if (level.engine === 'walknav' && world?.kind === 'city')
     sceneEl = <CityScene className="!absolute inset-0" town={world.town} pose={frame.pose ?? world.town.start} view={view} interactive={false} destination={mission?.destination ?? null} walkerName={names.builder} />;
   else if (level.engine === 'walksearch' && world?.kind === 'bedroom')

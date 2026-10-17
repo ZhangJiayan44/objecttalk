@@ -1,5 +1,6 @@
 import { Html, OrbitControls } from '@react-three/drei';
-import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { SceneCanvas as Canvas } from './performance';
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -11,7 +12,7 @@ import type { Palette } from '@shared/levels';
 import { cellKey, sameCell, type Cell, type Role, type SceneObject, type SceneState } from '@shared/types';
 import { clampWalk, TABLE_WALK_BOUNDS } from '@shared/walking';
 import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
-import { detectQuality, PostFx, SoftIBL } from './env';
+import { PostFx, SoftIBL } from './env';
 import { StudyRoom } from './furniture';
 import { PetShopRoom, StudyDressing } from './sets';
 import { Avatar, ItemModel, LandmarkModel, Table } from './models';
@@ -301,7 +302,6 @@ function SceneContents(props: RoomSceneProps) {
   const { scene, view, heldId, target, pointer, localHover, interactive = false, onHover, onPick, onPlace, onDrop, wrong, names, labels = true, autoRotate, firstPerson, capture = false, missionKey, onLockChange, palette, sign, set = 'study' } = props;
   const fps = firstPerson && view !== 'overview';
   const walking = props.walk && capture;
-  const quality = useMemo(detectQuality, []);
   const ghostSource = target?.itemId ? scene.objects.find((o) => o.id === target.itemId) : undefined;
   const hoverObj = interactive ? localHover?.objectId : pointer?.objectId;
   const hoverCell = interactive ? (localHover?.cell ?? null) : (pointer?.cell ?? null);
@@ -337,7 +337,7 @@ function SceneContents(props: RoomSceneProps) {
         </>
       )}
       <Table />
-      <PostFx quality={quality} />
+      <PostFx />
       {scene.landmarks.map((l) => {
         const [x, y, z] = cellToWorld(l.cell);
         return (
@@ -411,8 +411,6 @@ export function RoomScene(props: RoomSceneProps) {
   return (
     <Canvas
       className={props.className}
-      shadows
-      dpr={[1, 2]}
       events={centerRayEvents}
       camera={{ fov: props.firstPerson ? 62 : 45, near: 0.05, far: 80, position: [0, 3, 4] }}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}

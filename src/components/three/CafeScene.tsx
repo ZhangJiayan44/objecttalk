@@ -1,6 +1,7 @@
 import { Html, OrbitControls } from '@react-three/drei';
-import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
-import { Suspense, useMemo, useRef } from 'react';
+import { useFrame, type ThreeEvent } from '@react-three/fiber';
+import { SceneCanvas as Canvas } from './performance';
+import { Suspense, useRef } from 'react';
 import * as THREE from 'three';
 import { CAFE_COLS, TRAY_SLOTS } from '@shared/cafe';
 import { getKind, kindsFor } from '@shared/catalog';
@@ -10,7 +11,7 @@ import type { HoverEvent } from '@shared/protocol';
 import type { Role, SceneObject, SceneState } from '@shared/types';
 import { clampWalk, COUNTER_WALK_BOUNDS } from '@shared/walking';
 import { centerRayEvents, clickInteracts, FirstPersonRig } from './controls';
-import { detectQuality, Dust, LightShaft, PostFx, Sign, SoftIBL, useTextTexture } from './env';
+import { LightShaft, PostFx, Sign, SoftIBL, useTextTexture } from './env';
 import { Box, PendantLamp, Plant, RoomShellBox, usePatternTexture, usePlankTexture, WindowPane, INK } from './furniture';
 import { Avatar, ItemModel } from './models';
 import { CafeDressing, MarketSet, NightMarketSet } from './stalls';
@@ -293,7 +294,6 @@ function CaseItem({ obj, pos, hovered, interactive, onHover, onClick, shakeKey, 
 const labelOf = (o: SceneObject) => `${o.size === 'small' ? 'small ' : o.size === 'big' ? 'large ' : ''}${getKind(o.kind)?.name ?? o.kind}`;
 
 function CafeContents(p: CafeViewProps) {
-  const quality = useMemo(detectQuality, []);
   const look = p.look ?? 'cafe';
   const floor = usePatternTexture('#f4e2cc', '#e8cfae', 'checks', [12, 10]);
   const hoverId = p.pointer?.objectId ?? null;
@@ -400,8 +400,7 @@ function CafeContents(p: CafeViewProps) {
           <Avatar role="guide" name={p.names?.guide ?? 'Customer'} />
         </group>
       )}
-      {look !== 'night' && <Dust area={[11, 3, 9]} center={[0, 1.7, 0.5]} count={180} />}
-      <PostFx quality={quality} bloom={look === 'night' ? 0.95 : 0.65} />
+      <PostFx bloom={look === 'night' ? 0.95 : 0.65} />
     </>
   );
 }
@@ -423,7 +422,7 @@ function PointerArrow({ pos }: { pos: [number, number, number] }) {
 
 export function CafeScene(props: CafeViewProps) {
   return (
-    <Canvas className={props.className} shadows dpr={[1, 2]} events={centerRayEvents} camera={{ fov: 62, near: 0.05, far: 80, position: [0, 2, 4] }} gl={{ antialias: false, powerPreference: 'high-performance' }} onPointerMissed={() => props.interactive && props.onHover?.({ objectId: null, cell: null })}>
+    <Canvas className={props.className} events={centerRayEvents} camera={{ fov: 62, near: 0.05, far: 80, position: [0, 2, 4] }} gl={{ antialias: false, powerPreference: 'high-performance' }} onPointerMissed={() => props.interactive && props.onHover?.({ objectId: null, cell: null })}>
       <color attach="background" args={[props.look === 'night' ? '#1c1838' : '#f4e2cc']} />
       <Suspense fallback={<Html center>Loading…</Html>}>
         <CafeContents {...props} />

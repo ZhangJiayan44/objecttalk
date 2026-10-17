@@ -93,6 +93,10 @@ export function attachRealtime(io: Server<ClientToServer, ServerToClient>, rooms
       const via = p?.via === 'voice' || p?.via === 'quick' ? p.via : 'text';
       room()?.say(pid(), str(p?.text), via);
     });
+    socket.on('chat:playback', (p) => {
+      if (typeof p?.id !== 'string' || !['started', 'ended', 'unavailable'].includes(p?.state)) return;
+      room()?.playback(pid(), p.id, p.state);
+    });
     let assistBudget = { count: 0, since: Date.now() };
     socket.on('chat:assist', async (p, ack) => {
       if (typeof ack !== 'function') return;

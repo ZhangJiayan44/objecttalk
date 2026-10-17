@@ -43,6 +43,8 @@ export interface BotIO {
   /** The AI player's id. */
   id: string;
   role: Role;
+  /** Simulation: defer scheduled reactions while the other AI is speaking. */
+  listening?(): boolean;
   say(text: string): void;
   /** Record a reasoning trace (shown in the agent panel + saved with the replay). */
   trace(t: Omit<AgentTrace, 'id' | 't' | 'role'>): void;

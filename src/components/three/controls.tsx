@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Pose } from '@shared/protocol';
 import { collideSolids, intersectsSolids, moveWithCollision } from '@shared/collision';
 import { sceneSolids } from './collision';
+import { readMouseSensitivity } from '@/lib/settings';
 
 /**
  * First-person controls, CS-style: click the 3D view once to capture the
@@ -51,7 +52,8 @@ export interface WalkOptions {
   run: number;
   eye: number;
   radius?: number;
-  collide(p: { x: number; z: number }): { x: number; z: number };
+  groundHeight?(p: { x: number; z: number; y?: number }): number;
+  collide(p: { x: number; z: number; y?: number }, previous?: { x: number; z: number; y?: number }): { x: number; z: number; y?: number };
   onPose?(pose: Pose): void;
 }
 
@@ -81,7 +83,7 @@ const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
 export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.32, yawRange, pitchMin = -1.2, pitchMax = 0.5, walk, resetKey, enabled = true, capture = true, onLockChange }: FirstPersonProps) {
   const { camera, gl, events } = useThree();
   const look = useRef({ yaw: baseYaw, pitch: basePitch });
-  const pos = useRef({ x: position[0], z: position[2] });
+  const pos = useRef<{ x: number; z: number; y?: number }>({ x: position[0], z: position[2], ...(walk?.groundHeight ? { y: position[1] - walk.eye } : {}) });
   const bob = useRef(0);
   const lastSent = useRef('');
   const onLock = useRef(onLockChange);
@@ -93,7 +95,7 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
   // Reset when the spawn point or mission changes.
   useEffect(() => {
     look.current = { yaw: baseYaw, pitch: basePitch };
-    pos.current = { x: position[0], z: position[2] };
+    pos.current = { x: position[0], z: position[2], ...(walk?.groundHeight ? { y: position[1] - walk.eye } : {}) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]);
 
@@ -128,8 +130,9 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
     };
     const onMouseMove = (e: MouseEvent) => {
       if (document.pointerLockElement !== el) return;
-      look.current.yaw -= e.movementX * SENS_LOCKED;
-      look.current.pitch -= e.movementY * SENS_LOCKED;
+      const sensitivity = readMouseSensitivity();
+      look.current.yaw -= e.movementX * SENS_LOCKED * sensitivity;
+      look.current.pitch -= e.movementY * SENS_LOCKED * sensitivity;
       clampLook();
     };
     // Drag to look (touch, or when the mouse is not captured).
@@ -146,8 +149,9 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
       drag.x = e.clientX;
       drag.y = e.clientY;
       drag.moved += Math.abs(dx) + Math.abs(dy);
-      look.current.yaw -= dx * SENS_DRAG;
-      look.current.pitch -= dy * SENS_DRAG;
+      const sensitivity = readMouseSensitivity();
+      look.current.yaw -= dx * SENS_DRAG * sensitivity;
+      look.current.pitch -= dy * SENS_DRAG * sensitivity;
       clampLook();
     };
     const onUp = (e: PointerEvent) => {
@@ -213,19 +217,23 @@ export function FirstPersonRig({ position, yaw: baseYaw, pitch: basePitch = -0.3
         const speed = k.has('ShiftLeft') || k.has('ShiftRight') ? walk.run : walk.speed;
         const f = { x: -Math.sin(l.yaw), z: -Math.cos(l.yaw) };
         const r = { x: Math.cos(l.yaw), z: -Math.sin(l.yaw) };
-        const radius = walk.radius ?? 0.35;
-        const solids = sceneSolids(state.scene, walk.eye);
-        const next = moveWithCollision(pos.current, {
+        const destination = {
           x: pos.current.x + (f.x * fx + r.x * sx) * speed * dt,
           z: pos.current.z + (f.z * fx + r.z * sx) * speed * dt,
-        }, (q) => walk.collide(collideSolids(walk.collide(q), solids, radius)), (q) => !intersectsSolids(q, solids, radius));
+        };
+        // Multi-floor scenes own their height-aware collision; other levels keep their existing solids.
+        const radius = walk.radius ?? 0.35;
+        const solids = walk.groundHeight ? [] : sceneSolids(state.scene, walk.eye);
+        const next = walk.groundHeight
+          ? walk.collide({ ...destination, y: pos.current.y }, pos.current)
+          : moveWithCollision(pos.current, destination, (q) => walk.collide(collideSolids(walk.collide(q), solids, radius)), (q) => !intersectsSolids(q, solids, radius));
         moved = Math.hypot(next.x - pos.current.x, next.z - pos.current.z) > 1e-4;
         pos.current = next;
         bob.current += dt * speed * 2.2;
       }
-      camera.position.set(pos.current.x, walk.eye + (moved ? Math.sin(bob.current) * 0.035 : 0), pos.current.z);
-      const pose = { x: +pos.current.x.toFixed(2), z: +pos.current.z.toFixed(2), yaw: +wrap(l.yaw).toFixed(2) };
-      const key = `${pose.x},${pose.z},${pose.yaw}`;
+      camera.position.set(pos.current.x, (walk.groundHeight?.(pos.current) ?? 0) + walk.eye + (moved ? Math.sin(bob.current) * 0.035 : 0), pos.current.z);
+      const pose: Pose = { x: +pos.current.x.toFixed(2), z: +pos.current.z.toFixed(2), yaw: +wrap(l.yaw).toFixed(2), ...(walk.groundHeight ? { y: pos.current.y ?? walk.groundHeight(pos.current) } : {}) };
+      const key = `${pose.x},${pose.z},${pose.yaw}${pose.y === undefined ? '' : `,${pose.y}`}`;
       if (key !== lastSent.current) {
         lastSent.current = key;
         walk.onPose?.(pose);

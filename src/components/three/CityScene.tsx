@@ -1,11 +1,12 @@
 import { Html, Line, OrbitControls, useGLTF } from '@react-three/drei';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
+import { SceneCanvas as Canvas } from './performance';
 import { Suspense, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { AVENUES, BLOCK, collide, EXTENT, LOT, lotCenter, nodePos, NODES, parseNode, PLACE_DEFS, planRoute, ROAD_W, SIDEWALK, STREETS, type Place, type Pose, type Town } from '@shared/city';
 import type { Role } from '@shared/types';
 import { centerRayEvents, FirstPersonRig } from './controls';
-import { Cloud, detectQuality, PostFx, Sign, SkyDome, SoftIBL } from './env';
+import { Cloud, PostFx, Sign, SkyDome, SoftIBL } from './env';
 import { Box, INK } from './furniture';
 import { Avatar } from './models';
 import { asset } from '@/lib/asset';
@@ -315,7 +316,6 @@ export interface CityViewProps {
 }
 
 function CityContents(p: CityViewProps) {
-  const quality = useMemo(detectQuality, []);
   const dest = p.destination ? p.town.places.find((x) => x.id === p.destination) : undefined;
   const route = useMemo(() => {
     if (!p.showRoute || !dest) return null;
@@ -378,7 +378,7 @@ function CityContents(p: CityViewProps) {
           <div className="rounded-full border-2 border-ink bg-white px-3 py-1 font-display text-lg font-bold shadow-[2px_2px_0_#2d3748]">N ↑</div>
         </Html>
       )}
-      <PostFx quality={quality} ao={false} bloom={0.4} vignette={0.3} />
+      <PostFx ao={false} bloom={0.4} vignette={0.3} />
     </>
   );
 }
@@ -398,7 +398,7 @@ function FollowCamera({ pose }: { pose: Pose }) {
 
 export function CityScene(props: CityViewProps) {
   return (
-    <Canvas className={props.className} shadows dpr={[1, 1.75]} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 600, position: [0, 92, 66] }} gl={{ antialias: false, powerPreference: 'high-performance' }}>
+    <Canvas className={props.className} events={centerRayEvents} camera={{ fov: props.view === 'builder' ? 70 : 45, near: 0.1, far: 600, position: [0, 92, 66] }} gl={{ antialias: false, powerPreference: 'high-performance' }}>
       <Suspense fallback={<Html center>Building the town…</Html>}>
         <CityContents {...props} />
       </Suspense>

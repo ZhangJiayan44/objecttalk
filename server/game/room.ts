@@ -5,6 +5,7 @@ import { isLevel, levelOf } from '../../shared/levels';
 import { dailySeed, questsFor } from '../../shared/quests';
 import { glossaryTranslate, hasChinese, lifelinePenalty, MAX_LIFELINES, saidLifeline, type Lifeline } from '../../shared/lifeline';
 import { createRng, randomSeed, type Rng } from '../../shared/rng';
+import { speechDuration } from '../../shared/speech';
 import {
   DEFAULT_SETTINGS,
   type AgentTrace,
@@ -84,6 +85,8 @@ export class Room {
   private assisted = new Set<string>();
   private results: ClientRoomState['results'] = null;
   private bots = new Map<string, Bot>();
+  private speechQueue: { message: ChatMessage; missionId: string }[] = [];
+  private speech: { message: ChatMessage; missionId: string; timer: ReturnType<typeof setTimeout>; playback: boolean } | null = null;
 
   constructor(
     readonly code: string,
@@ -186,7 +189,7 @@ export class Room {
     if (!isLevel(next.level)) next.level = this.settings.level;
     // A new level brings its own default round length.
     if (patch.level && patch.level !== this.settings.level && patch.durationSec === undefined) next.durationSec = levelOf(next.level).durationSec;
-    next.durationSec = Math.min(240, Math.max(45, Math.round(next.durationSec)));
+    next.durationSec = Math.min(next.level === 'nightmarket' ? 300 : 240, Math.max(45, Math.round(next.durationSec)));
     next.interests = next.interests.slice(0, 5);
     // Only real item kinds (a player's own Object Studio objects), at most two.
     next.customKinds = (Array.isArray(next.customKinds) ? next.customKinds : []).filter((k) => typeof k === 'string' && !!getKind(k)).slice(0, 2);
@@ -332,6 +335,7 @@ export class Room {
           rng: this.rng,
           id: ai.id,
           role,
+          listening: () => this.settings.mode === 'sim' && !!this.speech && this.speech.message.role !== role,
           say: (text) => this.say(ai.id, text, 'ai'),
           trace: (t) => this.trace(role, t),
           transcript: () => this.chat.filter((m) => m.t >= 0 && m.role).slice(-16),
@@ -348,6 +352,7 @@ export class Room {
 
   private startMission(index: number) {
     if (!this.engine || this.phase !== 'playing') return;
+    this.clearSpeech();
     const mission = this.engine.startMission(index);
     if (!mission) {
       void this.finish('complete');
@@ -435,6 +440,8 @@ export class Room {
     this.phase = 'lobby';
     this.engine = null;
     this.results = null;
+    this.completed = [];
+    this.mistakes = 0;
     this.startedAt = this.endsAt = null;
     this.broadcast();
   }
@@ -521,15 +528,77 @@ export class Room {
       text: clean,
       via: p.isAI ? 'ai' : via,
     };
+    if (pending.length) this.assisted.add(msg.id);
+    if (this.phase === 'playing' && this.settings.mode === 'sim' && p.isAI) {
+      const mission = this.engine?.mission();
+      if (!mission || this.completed.includes(mission.index)) return;
+      if (!this.speechQueue.some((e) => e.message.playerId === msg.playerId && e.message.text === msg.text)) {
+        this.speechQueue.push({ message: msg, missionId: mission.id });
+      }
+      this.nextSpeech();
+      return;
+    }
+    this.publishChat(msg);
+    if (this.phase !== 'playing') return;
+    const missionId = this.engine?.mission()?.id;
+    const delay = p.isAI ? speechDuration(clean) : 200;
+    for (const [id, b] of this.bots) if (msg.playerId !== id) this.later(delay, () => {
+      if (this.phase === 'playing' && this.engine?.mission()?.id === missionId) b.onChat(msg);
+    });
+  }
+
+  private publishChat(msg: ChatMessage) {
     this.chat.push(msg);
     if (this.chat.length > 400) this.chat.shift();
-    if (pending.length) this.assisted.add(msg.id);
     this.io.to(this.code).emit('chat', msg);
-    if (this.phase !== 'playing') return;
-    // Partners hear a line after it has been spoken: roughly speech time for an AI voice,
-    // a short beat for humans. This also keeps two AI partners (sim mode) from talking over each other.
-    const delay = p.isAI ? Math.min(2600, 600 + clean.length * 22) : 200;
-    for (const [id, b] of this.bots) if (msg.playerId !== id) this.later(delay, () => this.phase === 'playing' && b.onChat(msg));
+  }
+
+  private nextSpeech(): void {
+    if (this.speech || this.phase !== 'playing') return;
+    const entry = this.speechQueue.shift();
+    if (!entry) return;
+    const mission = this.engine?.mission();
+    if (mission?.id !== entry.missionId || this.completed.includes(mission.index)) return this.nextSpeech();
+    const message = { ...entry.message, at: Date.now(), t: this.now() };
+    this.speech = { ...entry, message, playback: false, timer: this.later(speechDuration(message.text), () => this.endSpeech(message.id)) };
+    this.publishChat(message);
+  }
+
+  /** Only the simulation host controls pacing; spectator tabs cannot end a line early. */
+  playback(playerId: string, id: string, state: 'started' | 'ended' | 'unavailable') {
+    const p = this.players.get(playerId);
+    const speech = this.speech;
+    if (!p?.connected || !p.isHost || this.settings.mode !== 'sim' || this.phase !== 'playing' || speech?.message.id !== id) return;
+    if (state === 'ended') {
+      if (speech.playback) this.endSpeech(id);
+    } else if (state === 'started' && !speech.playback) {
+      speech.playback = true;
+      this.cancelTimer(speech.timer);
+      // A disconnected tab or stalled synthesis must not deadlock the simulation.
+      speech.timer = this.later(60_000, () => this.endSpeech(id));
+    } else if (state === 'unavailable' && speech.playback) {
+      speech.playback = false;
+      this.cancelTimer(speech.timer);
+      speech.timer = this.later(Math.max(200, speechDuration(speech.message.text) - (Date.now() - speech.message.at)), () => this.endSpeech(id));
+    }
+  }
+
+  private endSpeech(id: string) {
+    const speech = this.speech;
+    if (!speech || speech.message.id !== id) return;
+    this.cancelTimer(speech.timer);
+    this.speech = null;
+    const mission = this.engine?.mission();
+    if (this.phase === 'playing' && mission?.id === speech.missionId && !this.completed.includes(mission.index)) {
+      for (const [botId, b] of this.bots) if (botId !== speech.message.playerId) b.onChat(speech.message);
+    }
+    this.nextSpeech();
+  }
+
+  private clearSpeech() {
+    if (this.speech) this.cancelTimer(this.speech.timer);
+    this.speech = null;
+    this.speechQueue = [];
   }
 
   /**
@@ -654,9 +723,16 @@ export class Room {
       fn();
     }, ms);
     this.timers.add(t);
+    return t;
+  }
+
+  private cancelTimer(t: ReturnType<typeof setTimeout>) {
+    clearTimeout(t);
+    this.timers.delete(t);
   }
 
   private clearTimers() {
+    this.clearSpeech();
     for (const t of this.timers) clearTimeout(t);
     this.timers.clear();
   }

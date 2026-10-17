@@ -1,0 +1,16 @@
+{
+  "id": "nightmarket-shopkeeper",
+  "file": "public/models/nightmarket/shopkeeper.glb",
+  "generationId": "5131c61e-1d2d-474e-a69b-439139e0c843",
+  "displayUrl": "https://hyper3d.ai/workspace/rodin/5131c61e-1d2d-474e-a69b-439139e0c843",
+  "generatedAt": "2026-10-16",
+  "backend": "Hyper3D MCP / Rodin Gen-2.5",
+  "tier": "Gen-2.5-Medium",
+  "qualityOverride": 8000,
+  "prompt": "One single cute stylized Chinese ancient night market shopkeeper character, full body standing neutral pose, facing forward, friendly middle aged merchant with small round face rosy cheeks black hair in a small bun, wearing simple teal traditional hanfu robe and warm cream apron, dark cloth shoes, holding hands together at waist. Cozy clay toy cartoon aesthetic, soft rounded shapes, chunky proportions, clean readable silhouette, matte painted clay, low detail game ready, no base, no floor, no scenery, no accessories floating outside character, no text. Consistent with a warm lantern-lit chibi Chinese street market game. Character only.",
+  "optimization": "server/services/optimize.ts: base at y=0, largest dimension 1, 512px WebP textures, meshopt geometry",
+  "triangles": 8000,
+  "bytes": 212848,
+  "dimensions": [0.6953, 1, 0.3821],
+  "reuse": "Shared shopkeeper mesh across six named merchants, procedural idle sway; no skeletal animation."
+}

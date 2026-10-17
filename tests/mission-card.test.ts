@@ -24,6 +24,23 @@ function mainText(html: string) {
 }
 
 describe('visual guide missions', () => {
+  it('adds night-market shop directions while keeping the local visual task and hidden answers', () => {
+    const st = state('nightmarket', {
+      id: 'market1', index: 0, type: 'order', title: 'Shopping list 1',
+      brief: 'Guide your partner to the shops and back to the entrance gate.',
+      order: [{ kind: 'bubble-tea', size: 'big', qty: 2 }],
+      modelAnswer: 'Go to Jade Tea Shop and buy two large bubble teas.', hint: 'Give one shop at a time.',
+    }, { world: { kind: 'cafe', tray: [], served: 0, market: { pose: { x: 0, z: 16, yaw: 0 } } }, scene: { layoutId: 'nightmarket', landmarks: [], objects: [] } });
+    const guide = render(st);
+    expect(mainText(guide)).toContain('Jade Tea Shop');
+    expect(mainText(guide)).toContain('× 2');
+    expect(guide).toContain('aria-label="Large size"');
+    expect(guide).not.toContain(st.mission!.modelAnswer);
+    expect(mainText(guide)).not.toMatch(/bubble tea|large/i);
+    expect(mainText(render(st, 'builder'))).not.toContain('Jade Tea Shop');
+    expect(mainText(render(st, 'builder'))).toContain('entrance gate');
+  });
+
   it('shows an order as pictures, numeric quantities and size cues, with optional collapsed tips', () => {
     const st = state('cafe', {
       id: 'm1', index: 0, type: 'order', title: 'Order 1',

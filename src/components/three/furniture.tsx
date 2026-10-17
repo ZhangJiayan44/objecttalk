@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { DECOR_MODELS } from '@shared/catalog';
 import type { Palette } from '@shared/levels';
 import { asset } from '@/lib/asset';
-import { Dust, LightShaft, Sign, useTextTexture } from './env';
+import { LightShaft, Sign, useTextTexture } from './env';
 
 /**
  * Furniture kit: rounded, chunky pieces in the clay style, shared by the
@@ -393,7 +393,6 @@ export function StudyRoom({ palette, sign }: { palette?: Palette; sign?: string 
       <Plant position={[5.2, 0, -4.2]} scale={1.1} />
       <Plant position={[-5.2, 0, 4.2]} />
       <PendantLamp position={[0, 3.4, 0]} drop={1.0} />
-      <Dust area={[11, 3, 9]} center={[0, 1.7, 0]} />
     </group>
   );
 }
