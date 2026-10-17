@@ -9,7 +9,7 @@
 A two-player 3D game for **speaking** English. One player knows the goal, the other acts in the 3D world:<br/>
 find things on a desk, order in a café, **ask for directions while walking through a town**, hunt for lost keys.
 
-[![CI](https://github.com/wangzh12023/objecttalk/actions/workflows/ci.yml/badge.svg)](https://github.com/wangzh12023/objecttalk/actions/workflows/ci.yml)
+[![CI](https://github.com/ZhangJiayan44/objecttalk/actions/workflows/ci.yml/badge.svg)](https://github.com/ZhangJiayan44/objecttalk/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A520.11-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
@@ -22,9 +22,11 @@ find things on a desk, order in a café, **ask for directions while walking thro
 
 [Quick start](#-quick-start) · [Levels](#-levels) · [Learning loop](#-the-learning-loop) · [Controls](#-controls) · [AI partner](#-the-ai-partner-agent) · [Scene Agent](#-scene-agent-whole-levels-from-a-theme) · [Product & market](docs/PRODUCT.md) · [Architecture](docs/ARCHITECTURE.md) · [Rodin ×4](docs/RODIN.md) · [中文文档](README.zh-CN.md)
 
-<img src="docs/images/city-walker.jpg" alt="Toy Town: the walker walks the 3D streets in first person and asks the navigator for directions" width="100%" />
+<img src="docs/review/heikesong3-overview.png" alt="ZhangJiayan44's night market: merchant arcades, upstairs shops and tea terrace" width="100%" />
 
 </div>
+
+This edition is maintained by [ZhangJiayan44](https://github.com/ZhangJiayan44). The default branch contains the heikesong3 merchant-quarter night market: nine interactive shops, three upstairs food shops, covered arcades, a tea terrace, decorative lantern and fan workshops, and open passages below the bridges. Earlier layouts are preserved on separate branches. Original contributor credits and the MIT license are retained.
 
 ## 💡 Why
 
@@ -42,12 +44,12 @@ speaking level (CEFR A1 to C1).
 
 ## 🚀 Quick start
 
-**Play in the browser now:** https://wangzh12023.github.io/objecttalk/ (GitHub Pages: solo with the AI
+**Play in the browser now:** https://zhangjiayan44.github.io/objecttalk/ (Choose **Night Market** to play this edition. GitHub Pages: solo with the AI
 partner and the AI-vs-AI demo run entirely in your browser; for two devices, the LLM agent and live
 Rodin generation run the full server below. See [docs/DEPLOY.md](docs/DEPLOY.md).)
 
 ```bash
-git clone https://github.com/wangzh12023/objecttalk.git
+git clone https://github.com/ZhangJiayan44/objecttalk.git
 cd objecttalk && npm install
 npm run dev            # open http://localhost:5173
 ```
@@ -76,7 +78,7 @@ Set `PUBLIC_URL` so QR codes point at your domain.
 | 📚 | **Cozy Study** | 🧭 Guide sees the gold target | 🛠️ Builder picks & places on the desk | *next to / between / on YOUR left / closer to you* |
 | 🐶 | **Pet Shop** | 🧑‍🔧 Shop owner knows which pet | 🧤 Helper picks up & moves the animals | *the small bunny next to the turtle · the puppy closest to you* |
 | ☕ | **Corner Café** | 🙋 Customer holds the order card | 🧑‍🍳 Barista fills the tray from the display case (19-dish menu) | *Could I have two croissants and a large coffee? · Small or large? · Anything else?* |
-| 🏮 | **Night Market** | 🧭 Partner holds a private shopping list and street map | 🛍️ Shopper walks between six stores and buys from merchants | *Go to Moon Noodle House and buy two bowls of noodles · turn into the side lane · a large bubble tea* |
+| 🏮 | **Night Market** | 🧭 Partner holds a private shopping list and street map | 🛍️ Shopper visits nine shops across ground-floor lanes and upstairs merchant arcades | *Go upstairs to Peach Blossom Sweets · turn into the side lane · buy two bowls of noodles* |
 | 🏙️ | **Toy Town** | 🗺️ Navigator has the map | 🚶 Walker **walks the streets** (WASD) | *Excuse me, how do I get to…? · Turn left at the bank · It's on your right* |
 | 🛏️ | **Messy Bedroom** | 🤔 Owner remembers where things are | 🔦 Seeker **walks the room**, opens boxes | *under the bed · on top of the wardrobe · inside the toy box · warmer / colder* |
 | 🎸 | **Music Room** ✨ | 🎼 Band leader | 🧰 Roadie | instrument words + perspective (made by the Scene Agent) |
@@ -88,7 +90,7 @@ on purpose ("go north", describing things from its own side, forgetting a size) 
 
 | Pet Shop (shop owner) | Night Market (customer) |
 |---|---|
-| <img src="docs/images/pet-shop.jpg" alt="Pet Shop" /> | <img src="docs/images/night-market.jpg" alt="Night Market" /> |
+| <img src="docs/images/pet-shop.jpg" alt="Pet Shop" /> | <img src="docs/review/heikesong3-overview.png" alt="Merchant-quarter Night Market" /> |
 | **Cozy Study (first person)** | **Corner Café (customer)** |
 | <img src="docs/images/study.jpg" alt="Cozy Study" /> | <img src="docs/images/cafe.jpg" alt="Corner Café" /> |
 | **Toy Town: the navigator's map** | **Messy Bedroom + AI partner brain** |
@@ -111,7 +113,7 @@ today, so classmates can compare scores.
 
 ## 🎮 Controls
 
-**Night Market shopping:** a main street connects Peach Lane and Chestnut Lane, with four timber shops and two temporary table stalls. The partner alone receives the shopping list; every list visits at least two shops and a side lane. Walk to a merchant and click their counter (or press **B**) to buy, return incorrect items from the shopping bag, then bring the bag to the entrance gate and press **F** to deliver. Movement, purchase distance and delivery are checked by the server. Solo AI, two players, AI-vs-AI, mobile joystick and path replays are supported. The shared [Rodin shopkeeper](assets/rodin/nightmarket-owner.json) uses an idle sway without skeletal animation. See the [Chinese walkthrough](README.zh-CN.md#灯火夜市结伴采购).
+**Night Market shopping:** winding lanes connect nine interactive shops. The tea house, pastry shop and dessert shop occupy the upper floor, reached by the east stairs and merchant bridges; the lantern and fan workshops are scenery. Covered frontages, tea seating, preparation shelves and open underpasses give the district distinct places to visit. The partner alone receives the shopping list; every list visits at least two shops and a side lane. Walk to a merchant and click their counter (or press **B**) to buy, return incorrect items from the shopping bag, then bring the bag to the entrance gate and press **F** to deliver. Shared movement rules validate elevation, purchase distance and delivery. Solo AI, two players on a full server, AI-vs-AI, mobile joystick and path replays are supported. Shopkeepers use abstract procedural figures with a gentle idle sway. See the [Chinese walkthrough](README.zh-CN.md#灯火夜市结伴采购).
 
 Click the 3D view once and the mouse is yours, **CS-style**: moving the mouse turns your head,
 the crosshair is your pointer, click to interact, <kbd>Esc</kbd> gives the mouse back to the page.

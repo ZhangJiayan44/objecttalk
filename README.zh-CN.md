@@ -9,7 +9,7 @@
 双人 3D 英语**口语**游戏：一个人掌握目标，另一个人在 3D 世界里行动。<br/>
 在书桌上找东西、在咖啡馆点单、**在小镇里边走边问路**、在卧室里找丢失的钥匙。
 
-[![CI](https://github.com/wangzh12023/objecttalk/actions/workflows/ci.yml/badge.svg)](https://github.com/wangzh12023/objecttalk/actions/workflows/ci.yml)
+[![CI](https://github.com/ZhangJiayan44/objecttalk/actions/workflows/ci.yml/badge.svg)](https://github.com/ZhangJiayan44/objecttalk/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A520.11-339933?logo=node.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
@@ -18,9 +18,11 @@
 
 [快速开始](#-快速开始) · [关卡](#-关卡) · [操作](#-操作) · [AI 搭档](#-ai-搭档agent) · [Scene Agent](#-scene-agent一句话生成整个关卡) · [技术架构](docs/ARCHITECTURE.md) · [Rodin 四级](docs/RODIN.md) · [English](README.md)
 
-<img src="docs/images/city-walker.jpg" alt="Toy Town：问路者以第一人称在 3D 街道上行走" width="100%" />
+<img src="docs/review/heikesong3-overview.png" alt="ZhangJiayan44 的灯火夜市：楼上市街、商户廊道与茶座" width="100%" />
 
 </div>
+
+此版本由 [ZhangJiayan44](https://github.com/ZhangJiayan44) 维护。主分支采用 heikesong3 商户街区版夜市：九家可购物商铺、三家楼上食铺、有顶廊道、茶楼侧边茶座，以及灯彩作坊和绢扇铺街景；桥下保留地面通街，池院上方留空。早期布局保存在独立分支。保留原贡献者署名及 MIT 许可证。
 
 ## 💡 为什么做这个
 
@@ -35,10 +37,10 @@ AI 陪聊什么都能听懂，所以你**没有理由说清楚**。ObjectTalk �
 
 ## 🚀 快速开始
 
-**浏览器直接玩：** https://wangzh12023.github.io/objecttalk/ （GitHub Pages 静态版：和 AI 搭档单人练习、AI 对 AI 演示都在浏览器里运行；双设备对战、LLM Agent 和实时 Rodin 生成需要按下文启动完整服务器，详见 [docs/DEPLOY.md](docs/DEPLOY.md)。）
+**浏览器直接玩：** https://zhangjiayan44.github.io/objecttalk/ （选择 **Night Market** 查看本版本夜市。GitHub Pages 静态版支持和 AI 搭档单人练习及 AI 对 AI 演示；双设备对战、LLM Agent 和实时 Rodin 生成需要启动完整服务器，详见 [docs/DEPLOY.md](docs/DEPLOY.md)。）
 
 ```bash
-git clone https://github.com/wangzh12023/objecttalk.git
+git clone https://github.com/ZhangJiayan44/objecttalk.git
 cd objecttalk && npm install
 npm run dev            # 打开 http://localhost:5173
 ```
@@ -64,14 +66,14 @@ Tricky 下 AI 搭档会故意犯典型错误（说 “go north”、从自己的
 
 ### 灯火夜市：结伴采购
 
-夜市沿用现有的食物模型、灯笼和卡通材质，扩展成一条主街、桃花巷和栗香巷相连的街区。六家店包括月来面馆、玉露茶铺、桃花点心、灯下杂货，以及临时桌架的如意烤串和栗香小摊；每家都有可交互的老板。汉服老板由 Hyper3D Rodin 生成，模型与来源见 [生成记录](assets/rodin/nightmarket-owner.json)。
+夜市采用不对称巷道、池院与楼上市街布局，共有九家可购物商铺：月来面馆、玉露茶铺、如意烤串、栗香小摊、桃花点心、灯下杂货、竹里饺子铺、金穗炭炉与桂香甜品。其中玉露茶铺、桃花点心和桂香甜品位于二楼，沿东侧楼梯、有顶商户廊道与跨巷桥到达。茶楼侧边设茶座，商铺有备货架；灯彩作坊和绢扇铺为街景陈设，不参与采购任务。老板采用抽象化的程序几何人物与轻微待机摆动。
 
 - **Shopping partner / guide** 看俯视街区与私有购物清单，通过英语告知店名、物品、数量和杯型，例如 “Go to Moon Noodle House and buy two bowls of noodles.”
 - **Shopper / builder** 看第一人称街景，WASD 行走、Shift 跑；走到老板柜台点击，或按 **B** 打开店铺菜单，选购小杯/大杯或食物。右侧购物袋可退回误买的物品。
 - 清单始终不会发送给 shopper；每份清单至少跨两家店并包含支巷店铺。买齐后回入口牌坊的集合圈，按 **F** 或点击交货按钮提交。库存、距离、碰撞与交货条件由服务器校验。
 - 支持双人、AI 指挥、玩家指挥 AI、AI 对 AI、移动端摇杆及采购路线回放。每局三份清单，默认 300 秒；无 API key 时规则 partner 仍可使用，配置 LLM 后 guide 可调用接地路线工具。
 
-布局与采购规则：`shared/nightmarket.ts`；3D 场景及商店菜单：`src/components/three/NightMarketScene.tsx`；对话 partner：`server/game/bots/nightmarket.ts`。老板复用同一个模型和轻微待机摆动，没有骨骼动画。
+布局与采购规则：`shared/nightmarket.ts`；3D 场景及商店菜单：`src/components/three/NightMarketScene.tsx`；对话 partner：`server/game/bots/nightmarket.ts`。桥面和桥下道路分别记录高度，同一平面位置可以分层通行。
 
 点击一次 3D 画面即可锁定鼠标，**像 CS 一样**：移动鼠标就是转头，准星就是指针，点击即交互，`Esc` 释放鼠标。
 

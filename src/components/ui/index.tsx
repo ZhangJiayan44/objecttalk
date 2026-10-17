@@ -220,7 +220,7 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <a href="https://github.com/wangzh12023/objecttalk" className="hover:text-ink">
+              <a href="https://github.com/ZhangJiayan44/objecttalk" className="hover:text-ink">
                 Source on GitHub
               </a>
             </li>

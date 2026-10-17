@@ -4,7 +4,7 @@ ObjectTalk has two deploy targets. They run the same game code.
 
 | | **GitHub Pages** (static) | **Full server** (Node) |
 |---|---|---|
-| URL | https://wangzh12023.github.io/objecttalk/ | your host, e.g. Render / a VPS / Docker |
+| URL | https://zhangjiayan44.github.io/objecttalk/ | your host, e.g. Render / a VPS / Docker |
 | Solo with the AI partner | ✅ rule-based AI partners | ✅ rule brains + the LLM agent (DeepSeek / Qwen / Claude) |
 | AI vs AI demo (`/demo`) | ✅ | ✅ |
 | Two players on two devices | ❌ (no server to meet on) | ✅ QR code, LAN or internet |
