@@ -2,8 +2,9 @@ import type { SessionReport } from '@shared/analysis';
 import type { Role } from '@shared/types';
 
 /**
- * Local player profile + progress history. Lives in localStorage only:
- * no accounts needed for a 90-second booth demo.
+ * Player name and completed-game history persist in this browser's localStorage.
+ * Returning visits use the same history; other browser profiles and private
+ * windows have their own storage. No account or shared server profile is used.
  */
 
 export interface SessionSummary {
