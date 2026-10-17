@@ -70,6 +70,24 @@ These screenshots show the running game, with the player's mission, voice contro
 - **Your objects, in the game.** Object Studio can identify a photo and generate a playable 3D object with Hyper3D Rodin.
 - **More worlds from a scene brief.** Scene Agent plans, generates, validates, and publishes compatible levels.
 
+## A Scene Agent that builds something you can play
+
+Give ObjectTalk a theme such as **“music class”** or **“fruit market”**. Its Scene Agent selects a supported game format, plans distinct objects and language tasks, reviews reference images, and calls Hyper3D Rodin to make the 3D assets. It then optimizes the models and simulates missions before publishing the level.
+
+```mermaid
+flowchart LR
+  A[Scene brief] --> B[Objects, roles & language tasks]
+  B --> C[Reference image review]
+  C --> D[Hyper3D Rodin generation]
+  D --> E[Web-ready model optimization]
+  E --> F[Mission simulation]
+  F --> G[Playable level]
+```
+
+**Try the results:** Music Room and Fruit Market are shipped Agent-generated levels, available in the room's world selector. Their published [level bundles](content/levels) include asset provenance and validation results.
+
+ObjectTalk owns the game-specific planning and validation; [Hyper3D's official API and tools](https://hyper3d.ai/features/mcp) provide the modeling capability. The current pipeline supports **tabletop find-and-place** and **counter-order** levels, with themed objects, room colors, signs, and phrasebooks. Night Market's architecture and walkable routes are authored and checked separately. New levels must pass every sampled mission across all three difficulty settings before publication; sampled checks are recorded as evidence, not a guarantee for every possible round.
+
 ## From room to review
 
 <table>
