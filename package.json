@@ -98,7 +98,7 @@
     "type": "git",
     "url": "https://github.com/wangzh12023/ObjectTalk-Game.git"
   },
-  "homepage": "https://wangzh12023.github.io/ObjectTalk-Game/",
+  "homepage": "https://objecttalk-game.vercel.app/",
   "bugs": {
     "url": "https://github.com/wangzh12023/ObjectTalk-Game/issues"
   }

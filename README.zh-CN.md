@@ -8,11 +8,13 @@
 
 双人 3D 英语沟通游戏：一个人知道目标，另一个人负责行动。
 
-[开始试玩](https://wangzh12023.github.io/ObjectTalk-Game/) · [观看影片](https://wangzh12023.github.io/ObjectTalk-Game/demo) · [路演演示](https://wangzh12023.github.io/ObjectTalk-Game/pitch) · [English](README.md)
+[开始试玩](https://objecttalk-game.vercel.app/) · [观看影片](https://objecttalk-game.vercel.app/demo) · [路演演示](https://objecttalk-game.vercel.app/pitch) · [English](README.md)
 
 <img src="public/readme/hero.jpg" width="100%" alt="ObjectTalk 原生 3D 游戏画面" />
 
 </div>
+
+[GitHub Pages 备用入口](https://wangzh12023.github.io/ObjectTalk-Game/)
 
 “把火箭移到左边。”——**谁的左边？**
 
@@ -45,7 +47,7 @@
 
 完整保留 **53 秒 1080p60 产品影片**和**十页英文路演页面**。演示可切换真实 3D 场景，支持方向键翻页、全屏播放与影片结束后自动进入下一页。
 
-[打开路演](https://wangzh12023.github.io/ObjectTalk-Game/pitch) · [下载影片](https://wangzh12023.github.io/ObjectTalk-Game/demo/ObjectTalk-launch-film-53s-1080p60.mp4)
+[打开路演](https://objecttalk-game.vercel.app/pitch) · [下载影片](https://objecttalk-game.vercel.app/demo/ObjectTalk-launch-film-53s-1080p60.mp4)
 
 ## 本地运行
 
