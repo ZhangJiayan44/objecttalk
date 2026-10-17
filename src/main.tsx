@@ -7,6 +7,10 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { Toaster } from 'sonner';
+import RouteError from './components/RouteError';
+import { installModuleRecovery } from './lib/module-recovery';
+
+installModuleRecovery();
 
 const Landing = lazy(() => import('./pages/Landing'));
 const Play = lazy(() => import('./pages/Play'));
@@ -32,7 +36,7 @@ function PageLoader() {
 
 const page = (el: React.ReactNode) => <Suspense fallback={<PageLoader />}>{el}</Suspense>;
 
-const router = createBrowserRouter([
+const router = createBrowserRouter([{ errorElement: <RouteError />, children: [
   { path: '/', element: page(<Landing />) },
   { path: '/play', element: page(<Play />) },
   { path: '/room/:code', element: page(<RoomPage />) },
@@ -46,7 +50,7 @@ const router = createBrowserRouter([
   { path: '/settings', element: page(<Settings />) },
   ...(DevModels ? [{ path: '/dev/models', element: page(<DevModels />) }] : []),
   { path: '*', element: page(<NotFound />) },
-], { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' });
+]}], { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
