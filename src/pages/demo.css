@@ -1,0 +1,193 @@
+/* Film-only art direction. The site's Fredoka, Nunito, cream and clay palette stay native. */
+.demo-cinema { position:fixed; inset:0; z-index:70; overflow:hidden; background:var(--color-cream); color:var(--color-ink); }
+.film-stage { position:absolute; left:50%; top:50%; width:1600px; height:900px; overflow:hidden; transform-origin:center; background:var(--color-cream); }
+.film-stage, .film-chapter-layer { background-image:radial-gradient(#2d37480c 1.2px, transparent 1.2px); background-size:25px 25px; }
+.film-stage h1,.film-stage h2,.film-stage h3,.film-stage p { margin:0; }
+.film-stage h1,.film-stage h2,.film-stage h3 { font-family:var(--font-display); font-weight:570; letter-spacing:-2px; }
+.film-brand { position:absolute; left:54px; top:32px; display:flex; align-items:center; gap:23px; z-index:15; }
+.film-brand>span { border-left:1.5px solid #2d374830; padding-left:23px; font-size:11px; letter-spacing:2.4px; font-weight:900; }
+.film-logo { display:flex; align-items:center; gap:10px; font:600 29px var(--font-display); letter-spacing:-.8px; }
+.film-logo img { width:40px; height:40px; }
+.film-logo>span>span,.film-green { color:var(--color-cta-deep); }
+.film-logo.is-large { font-size:66px; gap:20px; letter-spacing:-2px; }
+.film-logo.is-large img { width:84px; height:84px; }
+.film-chapter-label { position:absolute; top:41px; right:54px; display:flex; align-items:center; gap:14px; font-size:12px; font-weight:850; z-index:15; }
+.film-chapter-label>span { font:600 21px var(--font-display); }
+.film-chapter-label i { width:24px; height:2px; background:var(--color-ink); }
+.film-chapter-layer { position:absolute; inset:0; background-color:var(--color-cream); will-change:transform,clip-path; contain:layout paint; transform-origin:center; }
+.film-chapter-layer[data-film-layer=preload] { opacity:.001; z-index:3; pointer-events:none; }
+.film-chapter-layer[data-film-layer=active] { z-index:2; }
+.film-chapter-layer[data-film-layer=previous] { z-index:1; pointer-events:none; }
+.film-chapter-layer[data-film-layer=parked] { z-index:0; visibility:hidden; pointer-events:none; }
+.film-scene { position:absolute; inset:102px 0 84px; }
+.film-caption { position:absolute; bottom:29px; left:54px; right:54px; text-align:center; font-size:18px; font-weight:700; }
+.film-tag { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:10px 18px; border:2.5px solid var(--color-ink); border-radius:100px; box-shadow:3px 3px 0 var(--color-ink); font-size:14px; font-weight:900; letter-spacing:.3px; white-space:nowrap; }
+.film-eyebrow { font-size:12px; font-weight:900; letter-spacing:3px; display:block; margin-bottom:13px; }
+[data-motion] { will-change:transform,opacity; }
+.kinetic-words { display:block; }
+.word-mask { display:inline-block; overflow:hidden; vertical-align:top; padding:0 .01em .12em; margin-bottom:-.12em; }
+.word-mask>[data-motion] { display:inline-block; transform-origin:bottom left; }
+.film-wave { display:inline-flex; align-items:center; gap:4px; height:48px; padding:0 6px; }
+.film-wave i { display:block; width:5px; background:var(--color-cta-deep); border-radius:9px; transform-origin:center; }
+.native-demo-scene { position:relative; width:100%; height:100%; overflow:hidden; pointer-events:none; }
+.native-demo-scene>div { position:absolute!important; inset:0; }
+.film-impact { position:absolute; width:340px; height:340px; pointer-events:none; z-index:8; }
+.film-impact svg { width:100%; height:100%; }
+.film-transition { position:absolute; inset:0; z-index:30; pointer-events:none; overflow:hidden; }
+.film-transition i,.film-mini-cut i { position:absolute; left:-10%; right:-10%; height:34%; visibility:hidden; background:var(--color-sun); border-block:3px solid var(--color-ink); will-change:transform; }
+.film-transition i:nth-child(2),.film-mini-cut i:nth-child(2) { top:33%; background:var(--color-mint); }
+.film-transition i:nth-child(3),.film-mini-cut i:nth-child(3) { top:66%; background:var(--color-peach); }
+.film-mini-cut { position:absolute; inset:-20px 0; z-index:9; pointer-events:none; }
+
+/* 01. A fast typographic hook over an orbiting native room. */
+.intro-copy { position:absolute; left:70px; top:35px; z-index:4; }
+.intro-copy h1 { font-size:104px; line-height:1.02; margin-top:24px; letter-spacing:-4px; }
+.intro-underline { height:7px; width:370px; background:var(--color-sun); border-radius:20px; margin-top:12px; transform-origin:left; }
+.intro-sub { font-size:24px; line-height:1.4; margin-top:24px; font-weight:700; }
+.intro-duo { display:flex; align-items:center; gap:12px; margin-top:24px; font-size:17px; }
+.intro-duo>span { font-size:15px; color:var(--color-muted); }
+.intro-visual { position:absolute; left:650px; top:25px; width:900px; height:575px; border-radius:42px; outline:3px solid var(--color-ink); box-shadow:9px 10px 0 var(--color-ink); overflow:hidden; transform-origin:center; }
+.camera-corner { position:absolute; width:42px; height:42px; border:4px solid white; opacity:.8; }
+.camera-corner.tl { left:26px; top:26px; border-right:0; border-bottom:0; }
+.camera-corner.br { right:26px; bottom:26px; border-left:0; border-top:0; }
+.intro-quote { position:absolute; right:96px; top:505px; display:flex; align-items:center; gap:13px; background:var(--color-peach); padding:12px 22px; border:3px solid var(--color-ink); border-radius:24px; box-shadow:5px 5px 0 var(--color-ink); font:550 23px var(--font-display); z-index:5; }
+.intro-quote .film-wave { height:35px; }
+.intro-impact { left:230px; top:265px; }
+.film-ticker { position:absolute; left:-40px; top:637px; height:68px; min-width:2500px; padding:0 35px; display:flex; align-items:center; gap:50px; border-block:3px solid var(--color-ink); background:var(--color-sun); font:550 27px var(--font-display); letter-spacing:3px; z-index:6; }
+
+/* 02. Alternating emphasis, a spoken word and a shared connection. */
+.duo-headline { text-align:center; padding-top:6px; }
+.duo-headline h2 { font-size:65px; }
+.duo-headline h2>.kinetic-words { display:inline-block; }
+.film-native-duo { position:absolute; left:58px; right:58px; top:132px; display:grid; grid-template-columns:1fr 1fr; gap:38px; }
+.film-native-duo article { position:relative; height:453px; border-radius:28px; overflow:hidden; outline:3px solid var(--color-ink); box-shadow:7px 7px 0 var(--color-ink); transform-origin:center; }
+.film-native-duo .native-demo-scene { height:355px; }
+.native-role-label { position:absolute; top:20px; left:20px; }
+.native-role-copy { position:absolute; bottom:0; width:100%; height:98px; padding:14px 24px; border-top:3px solid var(--color-ink); background:var(--color-cream); }
+.native-role-copy b { display:block; font:550 28px var(--font-display); }
+.native-role-copy span { display:block; margin-top:5px; font-size:15px; font-weight:700; }
+.duo-connection { position:absolute; left:704px; top:330px; display:flex; align-items:center; gap:12px; padding:11px 17px; background:var(--color-sun); border:3px solid var(--color-ink); border-radius:25px; box-shadow:5px 5px 0 var(--color-ink); z-index:5; }
+.duo-your { position:absolute; left:620px; top:210px; padding:10px 24px; background:var(--color-mint); border:3px solid var(--color-ink); box-shadow:6px 6px 0 var(--color-ink); border-radius:16px; font:600 45px var(--font-display); z-index:6; }
+.duo-footer { position:absolute; top:633px; left:536px; }
+.duo-impact { left:620px; top:140px; }
+
+/* 03. A correctly framed, projected cursor and the real native pick/place scene. */
+.game-headline { position:absolute; left:48px; right:48px; top:3px; display:flex; align-items:center; gap:23px; }
+.game-headline h2 { font-size:49px; }
+.game-headline h2 .kinetic-words { display:inline-block; }
+.game-cinema { position:absolute; left:48px; top:110px; width:1060px; height:550px; outline:3px solid var(--color-ink); border-radius:30px; overflow:hidden; box-shadow:7px 7px 0 var(--color-ink); }
+.game-view-label { position:absolute; left:22px; top:19px; display:flex; align-items:center; gap:8px; background:#fff9f5ec; border-radius:20px; padding:8px 13px; font-size:10px; font-weight:900; letter-spacing:1.5px; }
+.game-view-label>span { width:7px; height:7px; background:var(--color-cta); border-radius:50%; }
+.game-lens { position:absolute; right:22px; top:19px; display:flex; align-items:center; gap:8px; background:#fff9f5ec; border-radius:20px; padding:8px 13px; font-size:10px; font-weight:900; letter-spacing:.9px; }
+.game-sidebar { position:absolute; right:48px; top:110px; width:382px; }
+.film-action-steps { display:flex; gap:9px; margin-bottom:24px; }
+.film-action-steps>div { flex:1; background:white; border:2px solid #2d37482a; border-radius:15px; padding:11px 9px; opacity:.6; }
+.film-action-steps span { display:block; font:550 22px var(--font-display); color:var(--color-muted); }
+.film-action-steps b { display:block; font-size:12px; margin-top:4px; }
+.film-action-steps .active { background:var(--color-sun); border-color:var(--color-ink); box-shadow:3px 3px 0 var(--color-ink); opacity:1; }
+.film-action-steps .done { background:var(--color-mint); border-color:var(--color-ink); opacity:1; }
+.film-action-steps svg { display:none; }
+.film-game-dialogue { display:grid; gap:18px; }
+.film-bubble { border:2.5px solid var(--color-ink); border-radius:22px 22px 22px 4px; box-shadow:4px 4px 0 var(--color-ink); padding:15px 19px 20px; background:var(--color-peach); }
+.film-bubble.sky { background:var(--color-sky); margin-left:20px; border-radius:22px 22px 4px 22px; }
+.film-bubble.mint { background:var(--color-mint); }
+.film-bubble>span { font-size:10px; letter-spacing:1.5px; font-weight:900; }
+.film-bubble p { font:500 25px/1.25 var(--font-display); margin-top:8px; }
+.spoken-emphasis { background:var(--color-sun); box-shadow:0 2px 0 var(--color-ink); border-radius:3px; }
+.film-cursor { position:absolute; left:0; top:0; z-index:6; filter:drop-shadow(2px 3px 0 #2d374833); pointer-events:none; }
+.film-cursor>span { position:absolute; top:32px; left:26px; padding:6px 11px; background:var(--color-grape); color:white; border:2px solid var(--color-ink); border-radius:9px; font-size:12px; font-weight:850; white-space:nowrap; }
+.film-cursor>i { position:absolute; width:56px; height:56px; border:3px solid var(--color-cta); border-radius:50%; left:-24px; top:-24px; }
+.film-cursor.is-clicking>svg { transform:scale(.8); transform-origin:top left; }
+.game-zoom-note { position:absolute; bottom:23px; left:322px; display:flex; align-items:center; gap:10px; padding:11px 18px; background:var(--color-sky); border:2px solid var(--color-ink); border-radius:20px; font-size:16px; font-weight:850; }
+.game-win { position:absolute; left:306px; top:350px; padding:15px 20px; display:flex; align-items:center; gap:10px; border:3px solid var(--color-ink); border-radius:20px; box-shadow:5px 5px 0 var(--color-ink); background:var(--color-mint); font:600 36px var(--font-display); }
+.game-win>span { position:absolute; bottom:-40px; left:90px; background:var(--color-sun); padding:4px 15px; border:2px solid var(--color-ink); border-radius:30px; font:850 15px var(--font-body); white-space:nowrap; }
+.game-impact { left:324px; top:190px; }
+
+/* 04. Full-resolution native canvases move between a triptych and hero frames.
+   Their layout dimensions never animate: no canvas / post-FX reallocations. */
+.film-worlds { overflow:hidden; }
+.worlds-heading { position:absolute; inset:30px 0 auto; text-align:center; z-index:6; }
+.worlds-heading h2 { font-size:78px; }
+.worlds-heading h2 .kinetic-words { display:inline-block; }
+.film-world-grid { position:absolute; inset:0; }
+.reel-shot { position:absolute; left:0; top:0; width:1600px; height:714px; border-radius:28px; outline:8px solid var(--color-ink); overflow:hidden; transform-origin:top left; background:var(--color-cream); }
+.world-mini-label { position:absolute; top:510px; width:480px; text-align:left; z-index:5; }
+.world-mini-label span { display:block; font-size:11px; font-weight:900; letter-spacing:1.7px; margin-bottom:6px; }
+.world-mini-label b { font:550 35px var(--font-display); letter-spacing:-.5px; }
+.world-shot-copy { position:absolute; left:52px; bottom:44px; padding:20px 26px 24px; border:2.5px solid var(--color-ink); border-radius:28px; box-shadow:6px 6px 0 var(--color-ink); background:#fff9f5f5; z-index:6; min-width:410px; }
+.world-shot-copy h2 { font-size:61px; margin:13px 0 8px; }
+.world-shot-copy .film-tag { padding:7px 13px; font-size:11px; }
+.world-quote { display:flex; align-items:center; gap:10px; font-size:22px; font-weight:750; }
+.world-order-count { position:absolute; right:90px; top:120px; padding:17px 23px; border:3px solid var(--color-ink); box-shadow:5px 5px 0 var(--color-ink); border-radius:20px; background:var(--color-mint); z-index:6; display:flex; align-items:center; gap:12px; font:550 27px var(--font-display); }
+.world-route-note { position:absolute; top:110px; right:75px; display:flex; align-items:center; gap:12px; background:var(--color-sun); border:3px solid var(--color-ink); border-radius:23px; box-shadow:5px 5px 0 var(--color-ink); padding:18px 22px; font-weight:900; }
+.world-route-note span { font-size:24px; font-family:var(--font-display); }
+.night-floor-note { position:absolute; right:75px; top:95px; display:grid; grid-template-columns:70px 1fr; grid-template-rows:auto auto; gap:0 13px; padding:15px 23px; background:var(--color-sun); border:3px solid var(--color-ink); border-radius:20px; box-shadow:5px 5px 0 var(--color-ink); z-index:7; }
+.night-floor-note>span { grid-row:span 2; font:600 57px var(--font-display); }
+.night-floor-note b { font:550 28px var(--font-display); }
+.night-floor-note small { font-size:14px; font-weight:850; }
+.night-impact { right:0; top:0; }
+.worlds-outro { position:absolute; top:593px; left:0; right:0; z-index:6; display:flex; align-items:center; justify-content:center; gap:28px; }
+.worlds-outro>.kinetic-words { font:550 38px var(--font-display); }
+.worlds-outro>.film-tag { font-size:14px; }
+
+/* 05. A real score counts up, real skill bars fill, then a native replay and review. */
+.coach-title { position:absolute; left:54px; top:20px; }
+.coach-title h2 { font-size:64px; line-height:1.03; margin-top:22px; }
+.coach-score { position:absolute; left:225px; top:275px; width:242px; height:242px; transform-origin:center; }
+.coach-score>svg { width:100%; height:100%; }
+.coach-score>div { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+.coach-score b { font:600 78px var(--font-display); letter-spacing:-3px; font-variant-numeric:tabular-nums; }
+.coach-score b small { font-size:25px; letter-spacing:0; }
+.coach-score>div>span { font-size:11px; font-weight:900; letter-spacing:1.6px; }
+.coach-score-stars { display:flex; justify-content:center; gap:11px; margin-top:9px; }
+.coach-score-stars>span { display:inline-block; }
+.coach-replay { position:absolute; left:54px; top:397px; width:595px; height:258px; border-radius:25px; outline:3px solid var(--color-ink); box-shadow:6px 6px 0 var(--color-ink); overflow:hidden; }
+.coach-replay>span { position:absolute; bottom:15px; left:15px; display:flex; align-items:center; gap:8px; padding:9px 12px; background:#fff9f5f2; border:2px solid var(--color-ink); border-radius:25px; font-size:10px; font-weight:900; letter-spacing:1px; }
+.native-report { position:absolute; left:714px; top:60px; width:830px; height:600px; background:white; border:3px solid var(--color-ink); border-radius:29px; box-shadow:7px 7px 0 var(--color-ink); padding:25px 27px; overflow:hidden; }
+.native-report-heading { display:flex; align-items:center; justify-content:space-between; gap:15px; padding-bottom:20px; border-bottom:2px dashed #2d37482a; }
+.native-report-heading h3 { font-size:28px; letter-spacing:-.6px; }
+.native-report-heading>div { font-size:12px; }
+.native-report-window { height:453px; margin-top:22px; overflow:hidden; }
+.film-score-bars { padding:6px 0 16px; }
+.film-score-bars * { transition:none!important; }
+.film-score-bars .text-sm { font-size:17px; }
+.film-score-bars .h-3 { height:18px; }
+.native-review-label { font-size:27px; margin:20px 0 18px!important; letter-spacing:-.5px!important; }
+.native-report-track p { font-size:17px; line-height:1.38; }
+.native-report-track .text-xs { font-size:11px; }
+.native-report-note { position:absolute; bottom:12px; left:28px; right:28px; padding-top:9px; background:white; color:var(--color-muted); font-size:10px; font-weight:750; }
+.coach-clear-stamp { position:absolute; left:138px; top:560px; padding:12px 17px; border:3px solid var(--color-ink); border-radius:16px; background:var(--color-sun); box-shadow:5px 5px 0 var(--color-ink); font:550 27px var(--font-display); display:flex; align-items:center; gap:10px; z-index:6; }
+.coach-impact { left:180px; top:280px; }
+
+/* 06. A short, moving brand resolution. */
+.film-outro { display:flex; flex-direction:column; align-items:center; padding-top:13px; }
+.outro-logo { z-index:2; }
+.film-outro h2 { font-size:83px; line-height:1.02; text-align:center; margin-top:20px; z-index:2; }
+.native-final-showcase { width:1100px; height:164px; margin-top:12px; }
+.film-final-button { display:flex; align-items:center; gap:15px; background:var(--color-cta); border:3px solid var(--color-ink); border-radius:22px; box-shadow:5px 5px 0 var(--color-ink); padding:13px 30px; font:550 26px var(--font-display); z-index:2; }
+.outro-team { position:absolute; top:637px; display:flex; align-items:center; gap:12px; font:550 29px var(--font-display); z-index:2; }
+.outro-ribbon { position:absolute; width:330px; padding:19px 20px; border:3px solid var(--color-ink); border-radius:14px; box-shadow:5px 5px 0 var(--color-ink); font:550 27px/1.4 var(--font-display); letter-spacing:1.2px; text-align:center; white-space:nowrap; }
+.outro-ribbon>span { display:block; }
+.ribbon-one { left:66px; top:230px; background:var(--color-peach); }
+.ribbon-two { right:66px; top:390px; background:var(--color-sky); }
+.film-celebration { position:absolute; inset:0; width:100%; height:100%; border:0; pointer-events:none; background:transparent; z-index:4; }
+
+/* Player chrome remains outside the film and is never part of exports. */
+.film-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:24px; font-weight:800; background:var(--color-cream); z-index:40; }
+.film-controls { position:absolute; z-index:60; bottom:28px; left:50%; transform:translate(-50%,16px); display:flex; align-items:center; gap:8px; width:min(720px,calc(100vw - 24px)); padding:9px 12px; border:2px solid var(--color-ink); border-radius:20px; box-shadow:4px 4px 0 var(--color-ink); background:#fff9f5f5; opacity:0; pointer-events:none; transition:opacity 180ms,transform 180ms; }
+.film-controls.visible,.film-controls:has(:focus-visible) { opacity:1; pointer-events:auto; transform:translate(-50%,0); }
+.film-controls button { min-width:44px; height:44px; display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:12px; }
+.film-controls button:hover { background:var(--color-sun); }
+.film-controls input { min-width:40px; flex:1; height:44px; accent-color:var(--color-cta-deep); cursor:pointer; }
+.film-controls select { max-width:87px; height:44px; padding:0 5px; font-size:12px; font-weight:800; border-radius:10px; cursor:pointer; }
+.film-time { font-size:12px; font-weight:900; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.film-motion-start { position:absolute; left:50%; top:65%; translate:-50% 0; display:flex; align-items:center; gap:10px; padding:15px 22px; border:2px solid var(--color-ink); border-radius:15px; background:var(--color-sun); font-weight:800; cursor:pointer; z-index:50; }
+.is-clean,.is-clean * { cursor:none!important; }
+@media(max-width:600px) {
+  .film-controls { bottom:max(16px,env(safe-area-inset-bottom)); padding:5px; gap:2px; flex-wrap:wrap; }
+  .film-controls button[aria-label="Replay from beginning"] { display:none; }
+  .film-controls input { order:2; flex-basis:100%; height:30px; }
+  .film-controls select { max-width:65px; font-size:10px; }
+  .film-time { font-size:10px; flex:1; }
+}
+@media(prefers-reduced-motion:reduce) { .film-controls { transition:none; } }
