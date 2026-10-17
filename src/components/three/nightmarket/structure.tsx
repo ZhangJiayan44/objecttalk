@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { MARKET_UPPER_HEIGHT } from '@shared/nightmarket';
-import { MARKET_DECKS, MARKET_DECK_BOARDS, MARKET_DECK_RAILS, MARKET_PIERS, MARKET_RAIL_POSTS, MARKET_STAIR, MARKET_STEPS } from '@shared/nightmarket-layout';
+import { MARKET_DECKS, MARKET_DECK_BOARDS, MARKET_DECK_RAILS, MARKET_PIERS, MARKET_RAIL_POSTS, MARKET_STAIR, MARKET_STAIR_POSTS, MARKET_STAIR_RAILS, MARKET_STAIR_STRINGERS, MARKET_STEPS } from '@shared/nightmarket-layout';
 import { Box } from '../furniture';
 
 export function Roof({ width = 4.8, depth = 3.8, y = 3.2, color = '#548a83' }: { width?: number; depth?: number; y?: number; color?: string }) {
@@ -65,21 +65,17 @@ export function SkywalkRails() {
 }
 
 export function MarketStairs() {
-  const { from, to, width } = MARKET_STAIR;
+  const { from, to } = MARKET_STAIR;
   return <group name="market-stairs">
     {MARKET_STEPS.map((s, i) => <Box key={i} size={[s.w, s.h, s.d]} position={[s.x, s.y, s.z]} color={i % 2 ? '#a8a394' : '#b6ad9c'} radius={0.01} />)}
-    {[-1, 1].map((side) => {
-      const z = from.z + side * width / 2;
-      return <group key={side}>
-        {Array.from({ length: 9 }, (_, i) => {
-          const x = from.x + (to.x - from.x) * i / 8;
-          if (MARKET_RAIL_POSTS.some((p) => Math.hypot(p[0] - x, p[2] - z) < 0.15)) return null;
-          return <Box key={i} size={[0.09, 0.98, 0.09]} position={[x, i * MARKET_UPPER_HEIGHT / 8 + 0.49, z]} color="#79584b" radius={0.01} />;
-        })}
-        <TimberBeam from={[from.x, 0.95, z]} to={[to.x, MARKET_UPPER_HEIGHT + 0.95, z]} width={0.075} color="#b59368" />
-        <TimberBeam from={[from.x, -0.08, z]} to={[to.x, MARKET_UPPER_HEIGHT - 0.08, z]} width={0.16} />
-        {[10, 13].map((x) => <Box key={x} size={[0.18, (x - from.x) / (to.x - from.x) * MARKET_UPPER_HEIGHT, 0.18]} position={[x, (x - from.x) / (to.x - from.x) * MARKET_UPPER_HEIGHT / 2, z]} color="#70554b" radius={0.02} />)}
-      </group>;
-    })}
+    {MARKET_STAIR_POSTS.map(([x, y, z], i) => <Box key={i} size={[0.09, 0.98, 0.09]} position={[x, y + 0.49, z]} color="#79584b" radius={0.01} />)}
+    {MARKET_STAIR_RAILS.flatMap(({ from: start, to: end }, i) => [0.28, 0.95].map((h) => <TimberBeam key={`${i}:${h}`} from={[start[0], start[1] + h, start[2]]} to={[end[0], end[1] + h, end[2]]} width={0.075} color="#b59368" />))}
+    {MARKET_STAIR_STRINGERS.map((beam, i) => <group key={i}>
+      <TimberBeam {...beam} width={0.16} />
+      {[10, 13].map((x) => {
+        const height = (x - from.x) / (to.x - from.x) * MARKET_UPPER_HEIGHT - 0.2;
+        return <Box key={x} size={[0.16, height, 0.16]} position={[x, height / 2, beam.from[2]]} color="#70554b" radius={0.02} />;
+      })}
+    </group>)}
   </group>;
 }

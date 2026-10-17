@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MARKET_ROADS, MARKET_SHOPS, MARKET_UPPER_HEIGHT, marketStep } from '../shared/nightmarket';
-import { MARKET_BACKDROP_BUILDINGS, MARKET_DECOR_PLOTS, MARKET_DECK_BOARDS, MARKET_DECK_RAILS, MARKET_DECKS, MARKET_GARDENS, MARKET_MERCHANT_PLATFORMS, MARKET_PIERS, MARKET_RAIL_POSTS, MARKET_STAIR, MARKET_STEPS, insideRect, overlapArea, shopRoofBounds } from '../shared/nightmarket-layout';
+import { MARKET_BACKDROP_BUILDINGS, MARKET_DECOR_PLOTS, MARKET_DECK_BOARDS, MARKET_DECK_RAILS, MARKET_DECKS, MARKET_GARDENS, MARKET_GROUND_PAVING, MARKET_MERCHANT_PLATFORMS, MARKET_PIERS, MARKET_RAIL_POSTS, MARKET_STAIR, MARKET_STAIR_OPENING, MARKET_STAIR_POSTS, MARKET_STAIR_STRINGERS, MARKET_STEPS, MARKET_STREET_KERBS, insideRect, overlapArea, shopRoofBounds } from '../shared/nightmarket-layout';
 
 describe('night-market architecture', () => {
   it('keeps neighboring shop eaves apart on the same floor', () => {
@@ -18,7 +18,7 @@ describe('night-market architecture', () => {
     expect(worst).toBeLessThan(0.00001);
     for (const road of MARKET_ROADS.filter((r) => r.level === 2)) {
       for (let x = road.x - road.w / 2 + 0.31; x < road.x + road.w / 2; x += 0.4) for (let z = road.z - road.d / 2 + 0.31; z < road.z + road.d / 2; z += 0.4) {
-        if (x < MARKET_STAIR.to.x && x > MARKET_STAIR.from.x && Math.abs(z - MARKET_STAIR.from.z) < MARKET_STAIR.width / 2) continue;
+        if (insideRect({ x, z }, MARKET_STAIR_OPENING)) continue;
         expect(MARKET_DECKS.some((r) => insideRect({ x, z }, r, 0.00002)), `missing deck at ${x},${z}`).toBe(true);
       }
     }
@@ -42,6 +42,37 @@ describe('night-market architecture', () => {
     expect(MARKET_DECK_RAILS.some(({ from, to }) => Math.abs(from[0] - 17.7) < 0.1 && Math.abs(to[0] - 17.7) < 0.1 && Math.min(from[2], to[2]) < -8 && Math.max(from[2], to[2]) > -8)).toBe(false);
   });
 
+  it('keeps platform rails, support braces and stringers clear of the stair flight', () => {
+    for (const { from, to } of MARKET_DECK_RAILS) {
+      for (const t of [0, 0.5, 1]) expect(insideRect({ x: from[0] + (to[0] - from[0]) * t, z: from[2] + (to[2] - from[2]) * t }, MARKET_STAIR_OPENING)).toBe(false);
+    }
+    for (const pier of MARKET_PIERS) expect(insideRect(pier, MARKET_STAIR_OPENING, 0.8), `pier and braces at ${pier.x},${pier.z}`).toBe(false);
+    for (const stringer of MARKET_STAIR_STRINGERS) {
+      expect(Math.abs(stringer.from[2] - MARKET_STAIR.from.z) - 0.08).toBeGreaterThan(MARKET_STAIR.width / 2 + 0.04);
+    }
+    const posts = [...MARKET_RAIL_POSTS, ...MARKET_STAIR_POSTS];
+    for (let i = 0; i < posts.length; i++) for (let j = i + 1; j < posts.length; j++) {
+      expect(Math.hypot(...posts[i].map((v, axis) => v - posts[j][axis]))).toBeGreaterThanOrEqual(0.1399);
+    }
+  });
+
+  it('keeps the upper landing walkable without stepping onto the removed side ledges', () => {
+    for (const z of [-4.55, -1.45]) {
+      const start = { x: 16.4, z, y: MARKET_UPPER_HEIGHT, yaw: 0 };
+      const stopped = marketStep(start, { ...start, x: 14.6 }, 1.8);
+      expect(stopped.x).toBeGreaterThanOrEqual(MARKET_STAIR.to.x);
+      expect(stopped.y).toBe(MARKET_UPPER_HEIGHT);
+      expect(MARKET_DECKS.some((deck) => insideRect(stopped, deck, 0.00002))).toBe(true);
+    }
+    const landing = { x: MARKET_STAIR.to.x, z: MARKET_STAIR.to.z, y: MARKET_UPPER_HEIGHT, yaw: 0 };
+    const north = marketStep(landing, { ...landing, z: -8 }, 5);
+    expect(north.z).toBeCloseTo(-8);
+    expect(north.y).toBe(MARKET_UPPER_HEIGHT);
+    const descended = marketStep(landing, { ...landing, x: MARKET_STAIR.from.x }, 8);
+    expect(descended.x).toBeCloseTo(MARKET_STAIR.from.x);
+    expect(descended.y).toBeCloseTo(0);
+  });
+
   it('fills the central blocked courtyard without obstructing its surrounding paths or the skywalk', () => {
     const garden = MARKET_GARDENS[0];
     for (const bed of MARKET_GARDENS) for (const road of MARKET_ROADS.filter((r) => r.level === 0)) expect(overlapArea(bed, road)).toBe(0);
@@ -51,6 +82,18 @@ describe('night-market architecture', () => {
     const crossed = marketStep(upper, { ...upper, x: -3 }, 5);
     expect(crossed.x).toBeCloseTo(-3);
     expect(crossed.y).toBe(MARKET_UPPER_HEIGHT);
+  });
+
+  it('makes the blocked entrance center a planted court and outlines only external street edges', () => {
+    for (const x of [-2, 0, 2]) for (const z of [0, 1, 2]) expect(MARKET_GARDENS.some((g) => insideRect({ x, z }, g))).toBe(true);
+    for (const garden of MARKET_GARDENS) for (const shop of MARKET_SHOPS.filter((s) => !s.elevation)) expect(overlapArea(garden, shopRoofBounds(shop)), `${garden.id} / ${shop.id}`).toBe(0);
+    for (let i = 0; i < MARKET_GARDENS.length; i++) for (let j = i + 1; j < MARKET_GARDENS.length; j++) expect(overlapArea(MARKET_GARDENS[i], MARKET_GARDENS[j])).toBe(0);
+    for (const { from, to } of MARKET_STREET_KERBS) {
+      const x = (from[0] + to[0]) / 2, z = (from[2] + to[2]) / 2;
+      const dx = from[0] === to[0] ? 0.12 : 0, dz = from[2] === to[2] ? 0.12 : 0;
+      const sides = [-1, 1].map((side) => MARKET_GROUND_PAVING.some((paving) => insideRect({ x: x + side * dx, z: z + side * dz }, paving)));
+      expect(sides.filter(Boolean), `curb inside a junction at ${x},${z}`).toHaveLength(1);
+    }
   });
 
   it('fills blocked pockets without covering streets, gardens, or shop roofs', () => {

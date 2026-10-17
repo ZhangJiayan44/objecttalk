@@ -1,4 +1,5 @@
-import { MARKET_NODES, MARKET_ROADS, MARKET_SHOPS, MARKET_UPPER_HEIGHT, type MarketShop } from './nightmarket';
+import { MARKET_NODES, MARKET_ROADS, MARKET_SHOPS, MARKET_STAIR, MARKET_UPPER_HEIGHT, type MarketShop } from './nightmarket';
+export { MARKET_STAIR } from './nightmarket';
 
 export interface MarketRect { x: number; z: number; w: number; d: number }
 export interface MarketRail { from: [number, number, number]; to: [number, number, number] }
@@ -16,8 +17,11 @@ export const shopBodyBounds = (shop: MarketShop) => shopRect(shop, { x: 0, z: -0
 
 /** The courtyard is visibly occupied right up to its non-walkable boundary. */
 export const MARKET_GARDENS = [
-  { id: 'lotus-courtyard', x: -3, z: -7.5, w: 5.8, d: 4.7, style: 'pond' },
-  { id: 'bamboo-courtyard', x: -4.65, z: 1.35, w: 2.5, d: 4.4, style: 'bamboo' },
+  { id: 'lotus-courtyard', x: -3, z: -7.5, w: 6.28, d: 4.88, style: 'pond' },
+  { id: 'bamboo-courtyard', x: -4.65, z: 1.35, w: 2.58, d: 4.58, style: 'bamboo' },
+  { id: 'festival-flower-court', x: -0.11, z: 0.85, w: 6.28, d: 3.58, style: 'flowers' },
+  { id: 'stair-herb-court', x: 5.1, z: -2.65, w: 2.08, d: 4.8, style: 'flowers' },
+  { id: 'north-inner-court', x: -3.72, z: -17.5, w: 6.12, d: 6.88, style: 'rockery' },
 ] as const;
 
 /** Furnished pockets occupy blocked land, with a clearance from the playable streets. */
@@ -29,9 +33,8 @@ export const MARKET_DECOR_PLOTS = [
   { id: 'pottery-preparation', x: 2, z: -27, w: 3, d: 3, style: 'pottery' },
 ] as const;
 
-export const MARKET_STAIR = { from: MARKET_NODES[11], to: MARKET_NODES[12], width: 2.8, steps: 24 };
 const run = MARKET_STAIR.to.x - MARKET_STAIR.from.x;
-const stairOpening: MarketRect = { x: (MARKET_STAIR.from.x + MARKET_STAIR.to.x) / 2, z: MARKET_STAIR.from.z, w: run, d: MARKET_STAIR.width };
+export const MARKET_STAIR_OPENING: MarketRect = { x: (MARKET_STAIR.from.x + MARKET_STAIR.to.x) / 2, z: MARKET_STAIR.from.z, w: run, d: MARKET_STAIR.openingWidth };
 export const MARKET_STEPS = Array.from({ length: MARKET_STAIR.steps }, (_, i) => ({
   x: MARKET_STAIR.from.x + (i + 0.5) * run / MARKET_STAIR.steps,
   z: MARKET_STAIR.from.z,
@@ -85,12 +88,14 @@ export const MARKET_MERCHANT_PLATFORMS: MarketRect[] = [
   { x: 19.5, z: -16.5, w: 4.4, d: 1.7 },
   ...[-3.3, 1.8].map((x) => ({ x, z: -17.1, w: 3.8, d: 3 })),
 ];
-export const MARKET_DECKS = partitionMarketRects([...upperRoads, ...MARKET_SHOP_PLATFORMS, ...MARKET_MERCHANT_PLATFORMS], [stairOpening]);
+export const MARKET_DECKS = partitionMarketRects([...upperRoads, ...MARKET_SHOP_PLATFORMS, ...MARKET_MERCHANT_PLATFORMS], [MARKET_STAIR_OPENING]);
 
 /** Piers stay outside street clearances and ground-floor eaves, including at crossing junctions. */
 export const MARKET_PIERS: { x: number; z: number }[] = [];
 const addPier = (x: number, z: number) => {
   if (MARKET_PIERS.some((p) => Math.hypot(p.x - x, p.z - z) < 0.5)) return;
+  // Include the 0.7 m diagonal braces, not only the post's centerline.
+  if (insideRect({ x, z }, MARKET_STAIR_OPENING, 0.85)) return;
   if (MARKET_ROADS.some((r) => r.level === 0 && insideRect({ x, z }, r, 0.55))) return;
   if (MARKET_SHOPS.some((s) => !s.elevation && insideRect({ x, z }, shopRoofBounds(s), 0.35))) return;
   MARKET_PIERS.push({ x, z });
@@ -120,9 +125,9 @@ export const MARKET_DECK_BOARDS = MARKET_DECKS.flatMap((deck) => {
 });
 
 /** Outer edges of the union; internal bridge seams never get their own rail. */
-function deckEdges(): MarketRail[] {
-  const xs = coordinates(MARKET_DECKS, 'x'), zs = coordinates(MARKET_DECKS, 'z');
-  const filled = (i: number, j: number) => i >= 0 && j >= 0 && i < xs.length - 1 && j < zs.length - 1 && MARKET_DECKS.some((r) => insideRect({ x: (xs[i] + xs[i + 1]) / 2, z: (zs[j] + zs[j + 1]) / 2 }, r));
+function boundaryRails(rects: readonly MarketRect[], elevation: number, forbidden: readonly MarketRect[] = []): MarketRail[] {
+  const xs = coordinates(rects, 'x'), zs = coordinates(rects, 'z');
+  const filled = (i: number, j: number) => i >= 0 && j >= 0 && i < xs.length - 1 && j < zs.length - 1 && rects.some((r) => insideRect({ x: (xs[i] + xs[i + 1]) / 2, z: (zs[j] + zs[j + 1]) / 2 }, r));
   const runs = new Map<string, { axis: 'x' | 'z'; fixed: number; spans: [number, number][] }>();
   const edge = (axis: 'x' | 'z', fixed: number, lo: number, hi: number) => {
     const key = `${axis}:${fixed}`;
@@ -135,10 +140,6 @@ function deckEdges(): MarketRail[] {
     if (!filled(i - 1, j)) edge('z', xs[i], zs[j], zs[j + 1]);
     if (!filled(i + 1, j)) edge('z', xs[i + 1], zs[j], zs[j + 1]);
   }
-  const forbidden = [
-    ...MARKET_SHOPS.filter((s) => s.elevation).map(shopBodyBounds),
-    { x: MARKET_STAIR.to.x, z: MARKET_STAIR.to.z, w: 0.06, d: MARKET_STAIR.width + 0.04 },
-  ];
   const result: MarketRail[] = [];
   for (const { axis, fixed, spans } of runs.values()) {
     const merged: [number, number][] = [];
@@ -155,13 +156,21 @@ function deckEdges(): MarketRail[] {
       visible = visible.flatMap(([a, b]) => hi <= a || lo >= b ? [[a, b] as [number, number]] : [[a, Math.min(b, lo)], [Math.max(a, hi), b]].filter(([x, y]) => y - x > 0.14) as [number, number][]);
     }
     for (const [a, b] of visible) if (b - a > 0.14) result.push({
-      from: axis === 'x' ? [a, MARKET_UPPER_HEIGHT, fixed] : [fixed, MARKET_UPPER_HEIGHT, a],
-      to: axis === 'x' ? [b, MARKET_UPPER_HEIGHT, fixed] : [fixed, MARKET_UPPER_HEIGHT, b],
+      from: axis === 'x' ? [a, elevation, fixed] : [fixed, elevation, a],
+      to: axis === 'x' ? [b, elevation, fixed] : [fixed, elevation, b],
     });
   }
   return result;
 }
-export const MARKET_DECK_RAILS = deckEdges();
+export const MARKET_DECK_RAILS = boundaryRails(MARKET_DECKS, MARKET_UPPER_HEIGHT, [
+  ...MARKET_SHOPS.filter((s) => s.elevation).map(shopBodyBounds),
+  { x: MARKET_STAIR.to.x, z: MARKET_STAIR.to.z, w: 0.06, d: MARKET_STAIR.width - 0.04 },
+]);
+/** A curb makes the exact street boundary readable, leaving shop counters and the stairs open. */
+export const MARKET_STREET_KERBS = boundaryRails(MARKET_GROUND_PAVING, 0, [
+  ...MARKET_SHOPS.filter((s) => !s.elevation).map((s) => shopRect(s, { x: 0, z: 0.25, w: 4.4, d: 4.5 })),
+  { x: (MARKET_STAIR.from.x + MARKET_STAIR.to.x) / 2, z: MARKET_STAIR.from.z, w: run, d: MARKET_STAIR.width + 0.2 },
+]);
 export const MARKET_RAIL_POSTS: [number, number, number][] = [];
 for (const { from, to } of MARKET_DECK_RAILS) {
   const count = Math.ceil(Math.hypot(to[0] - from[0], to[2] - from[2]) / 1.3);
@@ -170,6 +179,20 @@ for (const { from, to } of MARKET_DECK_RAILS) {
     if (!MARKET_RAIL_POSTS.some((q) => Math.hypot(p[0] - q[0], p[2] - q[2]) < 0.14)) MARKET_RAIL_POSTS.push(p);
   }
 }
+
+/** Posts sit on tread ends; strings sit outside stone faces, so timber never slices through them. */
+export const MARKET_STAIR_RAILS: MarketRail[] = [-1, 1].map((side) => ({
+  from: [MARKET_STAIR.from.x, 0, MARKET_STAIR.from.z + side * MARKET_STAIR.width / 2],
+  to: [MARKET_STAIR.to.x, MARKET_UPPER_HEIGHT, MARKET_STAIR.from.z + side * MARKET_STAIR.width / 2],
+}));
+export const MARKET_STAIR_POSTS = MARKET_STAIR_RAILS.flatMap(({ from, to }) => Array.from({ length: 9 }, (_, i) => {
+  const p: [number, number, number] = [from[0] + (to[0] - from[0]) * i / 8, from[1] + (to[1] - from[1]) * i / 8, from[2]];
+  return p;
+})).filter((p) => !MARKET_RAIL_POSTS.some((q) => Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) < 0.14));
+export const MARKET_STAIR_STRINGERS: MarketRail[] = MARKET_STAIR_RAILS.map(({ from, to }, i) => {
+  const z = from[2] + (i ? 1 : -1) * 0.14;
+  return { from: [from[0], -0.12, z], to: [to[0], MARKET_UPPER_HEIGHT - 0.12, z] };
+});
 
 /** Decorative town blocks are outside every playable lane on both floors. */
 export const MARKET_BACKDROP_BUILDINGS = [

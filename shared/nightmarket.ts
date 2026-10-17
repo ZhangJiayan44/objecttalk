@@ -57,6 +57,8 @@ export const MARKET_NODES: Point[] = [
   { x: -8, z: -14, y: MARKET_UPPER_HEIGHT }, { x: -8, z: -7, y: MARKET_UPPER_HEIGHT },
   { x: 20, z: -14, y: MARKET_UPPER_HEIGHT },
 ];
+/** The landing opens across the gallery's full width, without thin ledges beside the stairs. */
+export const MARKET_STAIR = { from: MARKET_NODES[11], to: MARKET_NODES[12], width: 2.8, openingWidth: 3.4, steps: 24 };
 export const MARKET_PATHS = [
   { a: 0, b: 1, width: 6.6, name: 'entrance street', level: 0 },
   { a: 1, b: 2, width: 4.6, name: 'Peach Lane', level: 0 },
@@ -98,7 +100,7 @@ export function collideMarket(p: Point, previous?: Point) {
   for (const r of MARKET_ROADS) {
     if (r.name === 'stair approach' && p.x > 8 + 0.0001 && Math.abs(p.z + 3) < 1.4) continue;
     const q = { x: Math.max(r.x - r.w / 2 + 0.25, Math.min(r.x + r.w / 2 - 0.25, p.x)), z: Math.max(r.z - r.d / 2 + 0.25, Math.min(r.z + r.d / 2 - 0.25, p.z)), y: 0 };
-    if (r.level === 2 && q.x > 8 && q.x < 16 - 0.0001 && Math.abs(q.z + 3) < 1.4) continue;
+    if (r.level === 2 && q.x > MARKET_STAIR.from.x && q.x < MARKET_STAIR.to.x && Math.abs(q.z - MARKET_STAIR.from.z) < MARKET_STAIR.openingWidth / 2) q.x = MARKET_STAIR.to.x;
     q.y = r.level === 2 ? MARKET_UPPER_HEIGHT : r.level === 1 ? Math.max(0, Math.min(1, (q.x - 8) / 8)) * MARKET_UPPER_HEIGHT : 0;
     if (previous && Math.abs(q.y - marketHeight(previous)) > Math.max(0.08, Math.hypot(q.x - previous.x, q.z - previous.z) * 0.9)) continue;
     const d = Math.hypot(q.x - p.x, q.z - p.z) + Math.abs(q.y - marketHeight(previous ?? p)) * 0.1;

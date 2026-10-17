@@ -68,11 +68,11 @@ function GlassCase({ look = 'cafe' }: { look?: CafeViewProps['look'] }) {
   const trim = look === 'cafe' ? '#c98f5a' : WOOD[look][1];
   return (
     <group position={[CASE_X, COUNTER_TOP, 0]}>
-      {/* base + shelves */}
+      {/* Clear shelves keep the food readable from the barista's downward view. */}
       {[0.02, 0.3, 0.58].map((y, i) => (
         <mesh key={i} position={[0, y, 0]} receiveShadow castShadow={i === 0}>
           <boxGeometry args={[w, 0.04, 0.62]} />
-          <meshStandardMaterial color={i === 0 ? trim : '#ffffff'} roughness={0.3} transparent={i > 0} opacity={i > 0 ? 0.55 : 1} />
+          <meshStandardMaterial color={i === 0 ? trim : '#dcebf2'} roughness={0.3} transparent={i > 0} opacity={i > 0 ? 0.18 : 1} depthWrite={i === 0} />
         </mesh>
       ))}
       {/* glass on the customer side only: the barista reaches in from the open back, like a real café case.

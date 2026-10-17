@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { MARKET_BACKDROP_BUILDINGS, MARKET_DECOR_PLOTS, MARKET_GARDENS } from '@shared/nightmarket-layout';
+import { MARKET_BACKDROP_BUILDINGS, MARKET_DECOR_PLOTS, MARKET_GARDENS, MARKET_PIERS, MARKET_STREET_KERBS } from '@shared/nightmarket-layout';
 import { Box } from '../furniture';
 import { Prop } from '../props';
 import { LanternString } from '../stalls';
 
 export function CourtyardGardens() {
-  return <group name="market-courtyard-gardens">{MARKET_GARDENS.map((g) => <group key={g.id} position={[g.x, 0, g.z]}>
+  return <group name="market-courtyard-gardens"><GardenPlanting />{MARKET_GARDENS.map((g) => <group key={g.id} name={g.id} position={[g.x, 0, g.z]}>
     <Box size={[g.w, 0.3, g.d]} position={[0, 0.15, 0]} color="#9a9c8b" radius={0.12} />
     <Box size={[g.w - 0.24, 0.05, g.d - 0.24]} position={[0, 0.325, 0]} color="#627f69" radius={0.08} />
     {[-1, 1].map((s) => <group key={s}>
@@ -25,14 +25,68 @@ export function CourtyardGardens() {
     <Prop name="pineTree" position={[1.8, 0.35, -1.15]} size={1.7} word={false} alive={false} />
     {[[-2.35, -1.55], [-1.35, -1.6], [-0.35, -1.65], [0.75, -1.55]].map(([x, z], i) => <Prop key={i} name={i % 2 ? 'rose' : 'tulip'} position={[x, 0.35, z]} size={0.7} word={false} alive={false} />)}
     {[[1.7, 0.8, 0.5], [2.15, 0.25, 0.35], [1.75, 1.5, 0.28]].map(([x, z, size], i) => <mesh key={i} position={[x, 0.35 + size * 0.35, z]} scale={[size, size * 0.75, size * 0.7]} rotation-y={i * 0.8} castShadow><icosahedronGeometry args={[1, 1]} /><meshStandardMaterial color={i % 2 ? '#9b9d8d' : '#8a9186'} roughness={1} /></mesh>)}
-    </> : <>
+    </> : g.style === 'bamboo' ? <>
       {[-0.55, 0.55].flatMap((x) => [-1.25, 1.25].map((z, i) => <group key={`${x}:${z}`} position={[x, 0.35, z]}>
         <mesh position={[0, 0.85, 0]} castShadow><cylinderGeometry args={[0.04, 0.055, 1.7 + i * 0.2, 7]} /><meshStandardMaterial color="#7d956e" roughness={0.9} /></mesh>
         {[0.65, 1.15, 1.55].flatMap((y) => [-1, 1].map((side) => <mesh key={`${y}:${side}`} position={[side * 0.2, y, 0]} scale={[0.32, 0.055, 0.11]} rotation-z={side * 0.35} castShadow><sphereGeometry args={[1, 8, 5]} /><meshStandardMaterial color={i ? '#799a75' : '#8ca77e'} roughness={0.9} /></mesh>))}
       </group>))}
       <Prop name="rose" position={[0, 0.35, 0]} size={0.65} word={false} alive={false} />
-    </>}
+    </> : null}
   </group>)}</group>;
+}
+
+/** Dense low planting makes closed courtyards legible while keeping the shops in view. */
+const plantingParts: Part[] = MARKET_GARDENS.filter((g) => g.style === 'flowers' || g.style === 'rockery').flatMap((g) => {
+  const parts: Part[] = [];
+  const columns = Math.max(1, Math.floor((g.w - 0.7) / 1.05)), rows = Math.max(1, Math.floor((g.d - 0.7) / 1.05));
+  for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
+    const x = g.x + (column - (columns - 1) / 2) * Math.min(1.12, (g.w - 1) / Math.max(1, columns - 1));
+    const z = g.z + (row - (rows - 1) / 2) * Math.min(1.12, (g.d - 1) / Math.max(1, rows - 1));
+    if (MARKET_PIERS.some((p) => Math.hypot(p.x - x, p.z - z) < 0.8)) continue;
+    const rock = g.style === 'rockery' && (row + column) % 3 === 0;
+    const height = rock ? 0.55 + column % 2 * 0.18 : 0.3;
+    parts.push({ position: [x, 0.4 + height * 0.55, z], size: [0.48, height, 0.43], color: rock ? '#a7a995' : (row + column) % 2 ? '#72916d' : '#849c75' });
+    if (!rock) for (let flower = 0; flower < 3; flower++) {
+      parts.push({ position: [x + (flower - 1) * 0.17, 0.7 + flower % 2 * 0.08, z + (flower % 2 ? 0.12 : -0.06)], size: [0.12, 0.09, 0.12], color: (row + column) % 2 ? '#e9c38b' : '#d5a2a1' });
+    }
+  }
+  return parts;
+});
+
+function GardenPlanting() {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  const geometry = useMemo(() => new THREE.IcosahedronGeometry(1, 1), []);
+  const material = useMemo(() => new THREE.MeshStandardMaterial({ roughness: 0.95 }), []);
+  useLayoutEffect(() => {
+    const dummy = new THREE.Object3D();
+    plantingParts.forEach((p, i) => {
+      dummy.position.set(...p.position); dummy.scale.set(...p.size); dummy.rotation.y = i * 0.7; dummy.updateMatrix();
+      ref.current!.setMatrixAt(i, dummy.matrix); ref.current!.setColorAt(i, new THREE.Color(p.color));
+    });
+    ref.current!.instanceMatrix.needsUpdate = true;
+    if (ref.current!.instanceColor) ref.current!.instanceColor.needsUpdate = true;
+    ref.current!.computeBoundingSphere();
+  }, []);
+  useEffect(() => () => { geometry.dispose(); material.dispose(); }, [geometry, material]);
+  return <instancedMesh name="market-courtyard-planting" ref={ref} args={[geometry, material, plantingParts.length]} castShadow receiveShadow />;
+}
+
+/** One batch for all curb stones; the street network remains the collision source of truth. */
+export function MarketStreetEdges() {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  const geometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  const material = useMemo(() => new THREE.MeshStandardMaterial({ color: '#c0b49e', roughness: 0.9 }), []);
+  useLayoutEffect(() => {
+    const dummy = new THREE.Object3D();
+    MARKET_STREET_KERBS.forEach(({ from, to }, i) => {
+      dummy.position.set((from[0] + to[0]) / 2, 0.085, (from[2] + to[2]) / 2);
+      dummy.scale.set(Math.abs(to[0] - from[0]) || 0.1, 0.17, Math.abs(to[2] - from[2]) || 0.1);
+      dummy.updateMatrix(); ref.current!.setMatrixAt(i, dummy.matrix);
+    });
+    ref.current!.instanceMatrix.needsUpdate = true; ref.current!.computeBoundingSphere();
+  }, []);
+  useEffect(() => () => { geometry.dispose(); material.dispose(); }, [geometry, material]);
+  return <instancedMesh name="market-street-edges" ref={ref} args={[geometry, material, MARKET_STREET_KERBS.length]} receiveShadow />;
 }
 
 function BambooPlanter({ x, z }: { x: number; z: number }) {

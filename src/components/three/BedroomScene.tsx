@@ -110,7 +110,8 @@ function DeskAndChair() {
         {/* laptop */}
         <group position={[0.05, d.h + 0.03, -0.3]} rotation-y={Math.PI / 2}>
           <Box size={[0.42, 0.02, 0.3]} position={[0, 0, 0]} color="#d1d5db" radius={0.01} />
-          <group position={[0, 0.01, -0.15]} rotation-x={-1.25}>
+          {/* The screen extends toward -z from its hinge; positive X lifts it above the desk. */}
+          <group position={[0, 0.01, -0.15]} rotation-x={1.25}>
             <Box size={[0.42, 0.02, 0.3]} position={[0, 0, -0.15]} color="#d1d5db" radius={0.01} />
             <mesh position={[0, 0.012, -0.15]} rotation-x={-Math.PI / 2}>
               <planeGeometry args={[0.38, 0.26]} />
@@ -154,7 +155,8 @@ function ToyBox({ open, interactive, near, onToggle }: { open: boolean; interact
   const lid = useRef<THREE.Group>(null);
   const hover = useRef(false);
   useFrame((_, dt) => {
-    if (lid.current) lid.current.rotation.x = THREE.MathUtils.damp(lid.current.rotation.x, open ? -1.9 : 0, 6, dt);
+    // The lid extends toward -z from the south hinge, so positive X opens upward.
+    if (lid.current) lid.current.rotation.x = THREE.MathUtils.damp(lid.current.rotation.x, open ? 1.8 : 0, 6, dt);
   });
   return (
     <group position={[t.x, 0, t.z]}>

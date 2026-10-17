@@ -20,7 +20,7 @@ import { LanternString, Steam } from './stalls';
 import { MARKET_GROUND_PAVING, type MarketRect } from '@shared/nightmarket-layout';
 import { Roof, MarketDecks, MarketStairs, SkywalkRails } from './nightmarket/structure';
 import { MarketPerson, MerchantQuarter } from './nightmarket/MerchantQuarter';
-import { CourtyardGardens, MarketPocketScenery, NightMarketBackdrop } from './nightmarket/Scenery';
+import { CourtyardGardens, MarketPocketScenery, MarketStreetEdges, NightMarketBackdrop } from './nightmarket/Scenery';
 
 interface Props {
   presentation?: PresentationShot;
@@ -117,10 +117,10 @@ function TieredDistrict() {
     <CourtyardGardens />
     <SkywalkRails />
     <Sign lines={['PASTRIES ←    DESSERTS ↑']} position={[7, MARKET_UPPER_HEIGHT + 1.8, -15.6]} size={[3.4, 0.65]} bg="#6c7865" fg="#f6dfb3" border="#ad926b" />
-    <Sign lines={['桥下通街', 'UNDERPASS']} position={[-8, 3.1, -5.2]} size={[2.3, 0.5]} bg="#526e66" fg="#f9e3b6" border="#ad926b" />
+    <Sign lines={['UNDERPASS']} position={[-8, 3.1, -5.2]} size={[2.3, 0.5]} bg="#526e66" fg="#f9e3b6" border="#ad926b" />
     <Sign lines={['TEA / PASTRIES / DESSERTS']} position={[8, 2.4, -1.2]} size={[3.4, 0.75]} bg="#58776b" fg="#f9e3b6" border="#ad926b" />
-    <Sign lines={['荷池院 ←', 'POND COURTYARD']} position={[-7.5, 2.5, -1]} size={[2.5, 0.6]} bg="#6d655c" fg="#f6dfb3" border="#ad926b" />
-    <Sign lines={['竹里巷 · BAMBOO LANE']} position={[-12.8, 2.4, -13.8]} size={[3.2, 0.5]} bg="#6c7865" fg="#f6dfb3" border="#ad926b" />
+    <Sign lines={['← POND COURTYARD']} position={[-7.5, 2.5, -1]} size={[2.5, 0.6]} bg="#6d655c" fg="#f6dfb3" border="#ad926b" />
+    <Sign lines={['BAMBOO LANE']} position={[-12.8, 2.4, -13.8]} size={[3.2, 0.5]} bg="#6c7865" fg="#f6dfb3" border="#ad926b" />
     {MARKET_PATHS.filter((p) => p.level !== 1).map((path) => {
       const a = MARKET_NODES[path.a], b = MARKET_NODES[path.b];
       const y = path.level === 2 ? MARKET_UPPER_HEIGHT + 3.2 : 4.4;
@@ -140,6 +140,7 @@ const StreetSet = memo(function StreetSet({ overview }: { overview: boolean }) {
     <mesh rotation-x={-Math.PI / 2} position={[0, -0.04, 0]} receiveShadow><planeGeometry args={[260, 260]} /><meshStandardMaterial color="#8a927d" roughness={1} /></mesh>
     <NightMarketBackdrop />
     {MARKET_GROUND_PAVING.map((road, index) => <PavedRoad key={index} road={road} />)}
+    <MarketStreetEdges />
     <MarketDecks />
     <MarketStairs />
     {[9, 15].map((z) => <group key={z}>
@@ -153,12 +154,12 @@ const StreetSet = memo(function StreetSet({ overview }: { overview: boolean }) {
     <group position={[0, 0, -33]}>
       {[-2, 2].flatMap((x) => [-1, 1].map((z) => <Box key={`${x}${z}`} size={[0.22, 3.4, 0.22]} position={[x, 1.7, z]} color="#a44f4a" radius={0.03} />))}
       <Roof width={5.5} depth={4.5} color="#689b8c" />
-      <Sign lines={['望月亭', 'Moon Pavilion']} position={[0, 2.6, 1.2]} size={[3.6, 0.6]} bg="#63504d" fg="#f8e2b6" border="#c49b68" />
+      <Sign lines={['MOON PAVILION']} position={[0, 2.6, 1.2]} size={[3.6, 0.6]} bg="#63504d" fg="#f8e2b6" border="#c49b68" />
     </group>
     <group position={[0, 0, 18.5]}>
       {[-3.1, 3.1].map((x) => <Box key={x} size={[0.32, 4.6, 0.35]} position={[x, 2.3, 0]} color="#b14f4c" radius={0.06} />)}
       <Box size={[7.2, 0.36, 0.65]} position={[0, 4.3, 0]} color="#568a81" radius={0.08} />
-      <Sign lines={['灯火夜市', 'LANTERN STREET']} position={[0, 3.75, -0.37]} rotation={[0, Math.PI, 0]} size={[3.8, 0.85]} bg="#66504d" fg="#f7dfb0" border="#c59b68" emissive={0.04} />
+      <Sign lines={['LANTERN STREET']} position={[0, 3.75, -0.37]} rotation={[0, Math.PI, 0]} size={[3.8, 0.85]} bg="#66504d" fg="#f7dfb0" border="#c59b68" emissive={0.04} />
     </group>
     {[-1, 1].map((side) => <group key={side} position={[side * 11.5, 0, 14]}>
       <mesh position={[0, 0.7, 0]} castShadow><cylinderGeometry args={[0.9, 0.9, 0.12, 24]} /><meshStandardMaterial color="#c79573" /></mesh>
@@ -204,7 +205,7 @@ function Contents(p: Props) {
       <mesh rotation-x={-Math.PI / 2} onClick={(e) => { e.stopPropagation(); if (p.interactive && clickInteracts()) p.onServe?.(); }}>
         <ringGeometry args={[1.5, 1.75, 48]} /><meshStandardMaterial color="#f3d17b" emissive="#e2af4f" emissiveIntensity={0.5} side={THREE.DoubleSide} />
       </mesh>
-      <Sign lines={['集合处 · Meeting Point']} position={[0, 0.12, 1.8]} rotation={[-Math.PI / 2, 0, 0]} size={[3.8, 0.6]} bg="#5b6f66" fg="#ffe3a2" border="#c4a767" />
+      <Sign lines={['MEETING POINT']} position={[0, 0.12, 1.8]} rotation={[-Math.PI / 2, 0, 0]} size={[3.8, 0.6]} bg="#5b6f66" fg="#ffe3a2" border="#c4a767" />
     </group>
     <PostFx ao={true} bloom={0.12} vignette={0.1} antialias={!!p.presentation} />
   </>;
