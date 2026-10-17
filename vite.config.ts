@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
   const publicBackend = process.env.VITE_BACKEND_URL ?? (mode === 'development' || mode === 'https' ? '' : deployment.backendUrl || '');
   const inPageServer = pages && !publicBackend;
   return {
-    base: pages ? (process.env.PAGES_BASE ?? '/ObjectTalk-Game/') : '/',
+    base: pages ? (process.env.PAGES_BASE ?? '/ObjectTalk/') : '/',
     // Decided at build time, so the normal build drops the in-page server entirely (and vice versa).
     define: {
       'import.meta.env.VITE_STATIC': JSON.stringify(inPageServer ? '1' : ''),

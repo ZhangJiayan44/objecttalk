@@ -1,5 +1,5 @@
 {
-  "name": "objecttalk-game",
+  "name": "objecttalk",
   "version": "0.1.0",
   "private": true,
   "description": "A two-player 3D English game where one player sees the goal and the other makes the move. Play with a friend or an AI teammate.",
@@ -96,10 +96,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wangzh12023/ObjectTalk-Game.git"
+    "url": "https://github.com/wangzh12023/ObjectTalk.git"
   },
-  "homepage": "https://objecttalk-game.vercel.app/",
+  "homepage": "https://objecttalk-demo.vercel.app/",
   "bugs": {
-    "url": "https://github.com/wangzh12023/ObjectTalk-Game/issues"
+    "url": "https://github.com/wangzh12023/ObjectTalk/issues"
   }
 }

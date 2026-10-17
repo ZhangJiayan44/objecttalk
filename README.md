@@ -8,19 +8,19 @@
 
 A two-player 3D English game. One player sees the goal. The other makes the move.
 
-[![CI](https://github.com/wangzh12023/ObjectTalk-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/wangzh12023/ObjectTalk-Game/actions/workflows/ci.yml)
-[![Pages](https://github.com/wangzh12023/ObjectTalk-Game/actions/workflows/pages.yml/badge.svg)](https://github.com/wangzh12023/ObjectTalk-Game/actions/workflows/pages.yml)
+[![CI](https://github.com/wangzh12023/ObjectTalk/actions/workflows/ci.yml/badge.svg)](https://github.com/wangzh12023/ObjectTalk/actions/workflows/ci.yml)
+[![Pages](https://github.com/wangzh12023/ObjectTalk/actions/workflows/pages.yml/badge.svg)](https://github.com/wangzh12023/ObjectTalk/actions/workflows/pages.yml)
 ![License: MIT](https://img.shields.io/badge/license-MIT-178342)
 ![React 19](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=111)
 ![Three.js](https://img.shields.io/badge/Three.js-3D-333?logo=threedotjs)
 
-[**Play in your browser**](https://objecttalk-game.vercel.app/) · [**Watch the film**](https://objecttalk-game.vercel.app/demo) · [**Pitch presentation**](https://objecttalk-game.vercel.app/pitch) · [简体中文](README.zh-CN.md)
+[**Play in your browser**](https://objecttalk-demo.vercel.app/) · [**Watch the film**](https://objecttalk-demo.vercel.app/demo) · [**Pitch presentation**](https://objecttalk-demo.vercel.app/pitch) · [简体中文](README.zh-CN.md)
 
 <img src="public/readme/hero.jpg" width="100%" alt="ObjectTalk running in the browser with the original 3D study scene" />
 
 </div>
 
-[GitHub Pages mirror](https://wangzh12023.github.io/ObjectTalk-Game/)
+[GitHub Pages mirror](https://wangzh12023.github.io/ObjectTalk/)
 
 ## English with a reason to be clear
 
@@ -98,15 +98,15 @@ The **53-second film** introduces the product and shows the original live 3D sce
 
 <img src="public/readme/pitch.jpg" width="100%" alt="The English ObjectTalk pitch with a live 3D study scene" />
 
-[Open the pitch](https://objecttalk-game.vercel.app/pitch) · [Download the 1080p60 film](https://objecttalk-game.vercel.app/demo/ObjectTalk-launch-film-53s-1080p60.mp4)
+[Open the pitch](https://objecttalk-demo.vercel.app/pitch) · [Download the 1080p60 film](https://objecttalk-demo.vercel.app/demo/ObjectTalk-launch-film-53s-1080p60.mp4)
 
 ## Run locally
 
 Requires **Node.js 22 or later**.
 
 ```bash
-git clone https://github.com/wangzh12023/ObjectTalk-Game.git
-cd ObjectTalk-Game
+git clone https://github.com/wangzh12023/ObjectTalk.git
+cd ObjectTalk
 npm ci
 npm run dev
 ```
