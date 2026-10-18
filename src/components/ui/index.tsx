@@ -228,7 +228,7 @@ export function Footer() {
                 Object Studio (Rodin)
               </Link>
             </li>
-            <li><a href="https://github.com/wangzh12023/ObjectTalk" className="hover:text-ink">Source on GitHub</a></li>
+            <li><a href="https://github.com/ZhangJiayan44/objecttalk" className="hover:text-ink">Source on GitHub</a></li>
             <li>
               <a href="https://hyper3d.ai" className="hover:text-ink">
                 3D by Hyper3D Rodin

@@ -8,13 +8,13 @@
 
 双人 3D 英语沟通游戏：一个人知道目标，另一个人负责行动。
 
-[开始试玩](https://objecttalk-demo.vercel.app/) · [观看影片](https://objecttalk-demo.vercel.app/demo) · [路演演示](https://objecttalk-demo.vercel.app/pitch) · [English](README.md)
+[开始试玩](https://zhangjiayan44.github.io/objecttalk/) · [观看影片](https://zhangjiayan44.github.io/objecttalk/demo) · [路演演示](https://zhangjiayan44.github.io/objecttalk/pitch) · [English](README.md)
 
 <img src="public/readme/hero.jpg" width="100%" alt="ObjectTalk 原生 3D 游戏画面" />
 
 </div>
 
-[GitHub Pages 备用入口](https://wangzh12023.github.io/ObjectTalk/)
+[GitHub Pages 备用入口](https://zhangjiayan44.github.io/objecttalk/)
 
 “把火箭移到左边。”——**谁的左边？**
 
@@ -104,14 +104,14 @@ ObjectTalk 负责游戏专用的规划和验证，[Hyper3D 官方 API 与工具]
 
 完整保留 **53 秒 1080p60 产品影片**和**十页英文路演页面**。演示可切换真实 3D 场景，支持方向键翻页、全屏播放与影片结束后自动进入下一页。
 
-[打开路演](https://objecttalk-demo.vercel.app/pitch) · [下载影片](https://objecttalk-demo.vercel.app/demo/ObjectTalk-launch-film-53s-1080p60.mp4?v=845ae0dc3541)
+[打开路演](https://zhangjiayan44.github.io/objecttalk/pitch) · [下载影片](https://zhangjiayan44.github.io/objecttalk/demo/ObjectTalk-launch-film-53s-1080p60.mp4?v=845ae0dc3541)
 
 ## 本地运行
 
 需要 Node.js 22 或更新版本。
 
 ```bash
-git clone https://github.com/wangzh12023/ObjectTalk.git
+git clone https://github.com/ZhangJiayan44/objecttalk.git
 cd ObjectTalk
 npm ci
 npm run dev
